@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-02 01:42 更新",
+  "updatedAt": "2026-08-02 02:25 更新",
   "shelters": [
     {
       "name": "三角防災拠点センター",
@@ -608,6 +608,96 @@
         80,
         85,
         85
+      ]
+    },
+    "byShelter": {
+      "三角防災拠点センター": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        180
+      ],
+      "不知火防災拠点センター": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        190
+      ],
+      "不知火小学校 ２Ｆ交流スペース": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        76
+      ],
+      "松橋東防災拠点センター": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        150
+      ],
+      "松橋西防災拠点センター": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        170
+      ],
+      "ウイングまつばせ": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        940
+      ],
+      "松橋中学校 武道館": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        90
+      ],
+      "小川防災拠点センター": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        210
+      ],
+      "小野部田小学校 体育館": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        95
+      ],
+      "豊野防災拠点センター": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        85
+      ],
+      "小川中学校 体育館": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        155
       ]
     }
   }
