@@ -79,6 +79,15 @@ header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:4px}
 .clearbtn{font:inherit; font-size:.72rem; font-weight:700; color:var(--text-secondary);
   background:none; border:1px solid var(--border); border-radius:8px; padding:5px 10px; cursor:pointer}
 .clearbtn:hover{background:var(--surface-1); color:var(--text-primary)}
+
+/* 協力者募集バナー */
+.recruitbanner{display:flex; align-items:center; gap:10px; margin:14px 0 0;
+  background:var(--surface-1); border:1px solid var(--border); border-left:4px solid var(--status-warning);
+  border-radius:10px; padding:10px 14px; font-size:.8rem; color:var(--text-secondary);
+  text-decoration:none; line-height:1.5}
+.recruitbanner b{color:var(--text-primary)}
+.recruitbanner .go{margin-left:auto; color:var(--accent); font-weight:700; white-space:nowrap}
+.recruitbanner:hover{background:var(--page)}
 .legend{display:flex; gap:16px; font-size:.72rem; color:var(--text-secondary); margin:8px 0 12px; flex-wrap:wrap}
 .legend .key{display:inline-flex; align-items:center; gap:6px}
 .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
@@ -190,6 +199,8 @@ footer a{color:var(--text-secondary)}
 <div class="notice hidden" id="fetchNotice"><div>⚠ 最新データを取得できなかったため、ページに内蔵のサンプルデータを表示しています。通信環境を確認して再読み込みしてください。</div></div>
 
 <div class="container">
+
+  <a class="recruitbanner" href="recruit.html">📢 <span><b>協力者募集</b> ─ 各避難所の状況を入力してくれる方を探しています</span><span class="go">詳しく →</span></a>
 
   <div class="filters">
     <label for="districtSel">地区</label>
