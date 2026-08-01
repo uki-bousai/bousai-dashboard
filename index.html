@@ -198,6 +198,8 @@ footer a{color:var(--text-secondary)}
 
 <div class="notice hidden" id="fetchNotice"><div>⚠ 最新データを取得できなかったため、ページに内蔵のサンプルデータを表示しています。通信環境を確認して再読み込みしてください。</div></div>
 
+<div class="notice hidden" id="provisionalNotice" style="border-color:var(--status-critical)"><div><b>⚠ 現在は仮のデータです。</b>実際の避難所・物資の状況ではありません。避難や物資の判断には使わないでください。正式なデータでの運用開始に向けて準備中です。</div></div>
+
 <div class="container">
 
   <a class="recruitbanner" href="recruit.html">📢 <span><b>協力者募集</b> ─ 各避難所の状況を入力してくれる方を探しています</span><span class="go">詳しく →</span></a>
@@ -1048,6 +1050,7 @@ async function loadData(){
   }
   document.getElementById("updatedAt").textContent = DATA.updatedAt || "";
   document.getElementById("sampleBadge").classList.toggle("hidden", !DATA.sample);
+  document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
   rebuildFilter();
   renderAll();
 }
