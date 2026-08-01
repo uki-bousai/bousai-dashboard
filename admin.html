@@ -154,6 +154,7 @@ button:disabled{opacity:.45; cursor:not-allowed}
     <button class="tab" data-panel="stocks">避難所在庫</button>
     <button class="tab" data-panel="supply">物資在庫<span class="cnt" id="cntSupply"></span></button>
     <button class="tab" data-panel="suggest">融通提案<span class="cnt" id="cntSuggest"></span></button>
+    <button class="tab" data-panel="history">履歴</button>
     <button class="tab" data-panel="settings">設定</button>
   </div>
 
@@ -210,6 +211,23 @@ button:disabled{opacity:.45; cursor:not-allowed}
         </table>
       </div>
       <p class="desc" id="suggestEmpty" style="display:none; margin-top:10px">現在、融通が必要な不足はありません。</p>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-history">
+    <div class="card">
+      <p class="desc">保存（公開）の履歴です。GitHubに自動記録されている更新履歴を新しい順に表示します。「変更内容」を押すと、その保存で何がどう変わったかをGitHub上で確認できます。</p>
+      <div style="margin-bottom:10px">
+        <button class="small" id="historyReload">履歴を更新</button>
+        <span id="historyStatus" style="font-size:.74rem; color:var(--text-secondary); margin-left:8px"></span>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>日時</th><th>更新者</th><th>内容</th><th></th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+      <div class="notice">さらに古い履歴やファイルごとの詳細は <a href="https://github.com/uki-bousai/bousai-dashboard/commits/main/data.json" target="_blank" rel="noopener">GitHubの履歴ページ</a> で確認できます。</div>
     </div>
   </section>
 
@@ -325,6 +343,7 @@ document.querySelectorAll(".tab[data-panel]").forEach(btn => {
       p.classList.toggle("active", p.id === "panel-" + btn.dataset.panel));
     if (btn.dataset.panel === "stocks") refreshStocksPanel();
     if (btn.dataset.panel === "suggest") renderSuggestions();
+    if (btn.dataset.panel === "history") loadHistory();
   });
 });
 function updateTabCounts(){
@@ -974,6 +993,52 @@ function collect(){
 
   return { updatedAt: now.stamp, shelters, supplies, trend };
 }
+
+/* ---------- 履歴（GitHubのコミット履歴を表示） ---------- */
+let historyLoaded = false;
+async function loadHistory(force){
+  if (historyLoaded && !force) return;
+  const st = $("historyStatus"), body = $("historyBody");
+  st.textContent = "読み込み中…";
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/commits?path=${encodeURIComponent(PATH)}&sha=${BRANCH}&per_page=30`,
+      { headers: { "Accept": "application/vnd.github+json" } });
+    if (res.status === 403) throw new Error("読み込み回数の上限に達しました。しばらく待ってから「履歴を更新」を押してください");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const commits = await res.json();
+    body.textContent = "";
+    commits.forEach(c => {
+      const msg = (c.commit.message || "").split("\n")[0];
+      const m = msg.match(/（更新者:\s*(.+?)）/);
+      const who = m ? m[1] : ((c.commit.author && c.commit.author.name) || "—");
+      const content = msg.replace(/（更新者:.*?）/, "").trim();
+      const when = new Date(c.commit.author.date).toLocaleString("ja-JP",
+        { timeZone: "Asia/Tokyo", year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      const tr = document.createElement("tr");
+      [when, who, content].forEach((v, i) => {
+        const td = document.createElement("td");
+        td.textContent = v;
+        td.style.padding = "6px 8px";
+        if (i === 0) td.style.whiteSpace = "nowrap";
+        tr.appendChild(td);
+      });
+      const td = document.createElement("td");
+      td.style.cssText = "padding:6px 8px; white-space:nowrap";
+      const a = document.createElement("a");
+      a.href = c.html_url; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = "変更内容";
+      td.appendChild(a);
+      tr.appendChild(td);
+      body.appendChild(tr);
+    });
+    historyLoaded = true;
+    st.textContent = commits.length ? `直近${commits.length}件を表示中` : "履歴はまだありません";
+  } catch (e) {
+    st.textContent = "履歴を取得できませんでした（" + e.message + "）";
+  }
+}
+$("historyReload").addEventListener("click", () => loadHistory(true));
 
 /* ---------- 読み込み・保存 ---------- */
 async function loadFromPublic(){
