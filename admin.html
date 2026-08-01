@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>管理者画面 ─ 避難所・物資 状況入力</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <style>
 :root{
   color-scheme: light;
@@ -157,7 +159,7 @@ button:disabled{opacity:.45; cursor:not-allowed}
 
   <section class="panel active" id="panel-shelter">
     <div class="card">
-      <p class="desc">受入可能数（定員）と現在の避難者数を入力してください。稼働率は自動計算されます。緯度・経度は地図表示用（「<b>📍検索</b>」を押すと避難所名から候補を検索して自動入力できます。見つからない場合は Googleマップで地点を右クリックして座標をコピー。空欄だと地図に出ません）。</p>
+      <p class="desc">受入可能数（定員）と現在の避難者数を入力してください。稼働率は自動計算されます。緯度・経度は地図表示用（「<b>📍検索</b>」で避難所名から自動検索、見つからないときは「<b>🗺地図</b>」で地図をタップして指定できます。空欄だと地図に出ません）。</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>避難所名</th><th>地区</th><th class="num">定員(人)</th><th class="num">避難者(人)</th><th class="num">稼働率</th><th class="num">緯度</th><th class="num">経度</th><th></th><th></th></tr></thead>
@@ -462,12 +464,19 @@ function shelterRow(s){
   lat.td.className = lng.td.className = "geo";
   lat.inp.style.textAlign = lng.inp.style.textAlign = "right";
   const geoTd = document.createElement("td"); geoTd.className = "act";
+  geoTd.style.whiteSpace = "nowrap";
   const geoBtn = document.createElement("button");
   geoBtn.className = "small"; geoBtn.type = "button"; geoBtn.textContent = "📍検索";
   geoBtn.title = "避難所名から緯度・経度を検索して自動入力";
   geoBtn.addEventListener("click", () =>
     geocodeShelter(name.inp.value.trim(), district.inp.value.trim(), lat.inp, lng.inp));
-  geoTd.appendChild(geoBtn);
+  const mapBtn = document.createElement("button");
+  mapBtn.className = "small"; mapBtn.type = "button"; mapBtn.textContent = "🗺地図";
+  mapBtn.title = "地図をタップして場所を指定";
+  mapBtn.style.marginLeft = "4px";
+  mapBtn.addEventListener("click", () =>
+    showMapPicker(name.inp.value.trim() || "避難所", lat.inp, lng.inp));
+  geoTd.append(geoBtn, mapBtn);
   tr.append(name.td, district.td, cap.td, occ.td, rate.td, lat.td, lng.td, geoTd, delCell(tr, "避難所"));
   tr._refresh = () => {
     const c = Number(cap.inp.value) || 0, o = Number(occ.inp.value) || 0;
@@ -499,9 +508,22 @@ function totalOccupantsInput(){
    検索は施設名そのままで行い（県名を付けると地理院の検索がマッチしなくなるため）、
    AREA_BOX の緯度経度の範囲外の候補を除外することで県内に絞る */
 const AREA_NAME = "熊本県";
+const AREA_CITY = "宇城市";
 const AREA_BOX  = { minLat: 32.0, maxLat: 33.3, minLng: 129.9, maxLng: 131.4 };
 const inArea = c => c.lat >= AREA_BOX.minLat && c.lat <= AREA_BOX.maxLat &&
                     c.lng >= AREA_BOX.minLng && c.lng <= AREA_BOX.maxLng;
+
+/* 「不知火小学校 ２Ｆ交流スペース」→「不知火小学校」のように、
+   検索の邪魔になる付属情報（部屋名・階数・体育館など）を落とした建物名を返す */
+function baseFacilityName(name){
+  // 全角英数字を半角に
+  let s = name.replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  // 空白より後ろ（部屋名など）と括弧書きを落とす
+  s = s.split(/[\s　]+/)[0].replace(/[（(].*$/, "");
+  // 末尾の付属施設名を落とす（例: 松橋中学校体育館 → 松橋中学校）
+  s = s.replace(/(体育館|講堂|武道場|運動場|グラウンド|多目的ホール|ホール|集会所|研修室|会議室|和室|交流スペース|\d+[FＦ階]|別館|新館)$/, "");
+  return s.trim();
+}
 
 async function searchGSI(q){
   const res = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q));
@@ -530,8 +552,15 @@ async function geocodeShelter(name, district, latInp, lngInp){
     return;
   }
   setStatus(`「${name}」の場所を検索中…（${AREA_NAME}内）`);
-  // 名称単独 → 地区+名称 の順で検索し、範囲外の候補は除外、座標がほぼ同じ候補はまとめる
-  const queries = [...new Set(district ? [name, `${district} ${name}`] : [name])];
+  // 名称そのまま → 建物の基本名 → 市名+基本名 の順で検索し、
+  // 範囲外の候補は除外、座標がほぼ同じ候補はまとめる
+  const base = baseFacilityName(name);
+  const queries = [...new Set([
+    name,
+    ...(district ? [`${district} ${name}`] : []),
+    base,
+    `${AREA_CITY} ${base}`
+  ].filter(Boolean))];
   const found = [], seen = new Set();
   for (const q of queries){
     const results = await Promise.allSettled([searchGSI(q), searchOSM(q)]);
@@ -589,6 +618,77 @@ function showGeoChooser(name, candidates, onPick){
   overlay.appendChild(box);
   overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+}
+
+/* ---------- 地図タップで場所を指定（検索で見つからない施設用） ---------- */
+function showMapPicker(name, latInp, lngInp){
+  if (typeof L === "undefined"){
+    setStatus("地図を読み込めませんでした。通信環境を確認して再読み込みしてください", "err");
+    return;
+  }
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:14px";
+  const box = document.createElement("div");
+  box.className = "card";
+  box.style.cssText = "width:100%; max-width:640px";
+  const h = document.createElement("h2"); h.textContent = `「${name}」の場所を地図でタップ`;
+  const p = document.createElement("p"); p.className = "desc";
+  p.textContent = "地図を動かして、避難所の場所をタップしてください。タップし直すと修正できます。";
+  const mapDiv = document.createElement("div");
+  mapDiv.style.cssText = "height:min(55vh,420px); border-radius:10px; overflow:hidden; border:1px solid var(--border)";
+  const coords = document.createElement("div");
+  coords.className = "notice";
+  coords.textContent = "まだ場所が選ばれていません";
+  const btnRow = document.createElement("div");
+  btnRow.style.cssText = "display:flex; gap:10px; margin-top:12px; align-items:center";
+  const okBtn = document.createElement("button");
+  okBtn.className = "primary"; okBtn.type = "button"; okBtn.textContent = "この場所に決定"; okBtn.disabled = true;
+  const cancel = document.createElement("button");
+  cancel.type = "button"; cancel.textContent = "キャンセル";
+  btnRow.append(okBtn, cancel);
+  box.append(h, p, mapDiv, coords, btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  const map = L.map(mapDiv);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // 初期表示: 入力済みの座標 > 他の避難所の範囲 > 市の中心付近
+  const curLat = parseFloat(latInp.value), curLng = parseFloat(lngInp.value);
+  let marker = null, picked = null;
+  const setPick = ll => {
+    picked = ll;
+    if (!marker) marker = L.marker(ll).addTo(map);
+    else marker.setLatLng(ll);
+    coords.textContent = `選択中: 緯度 ${ll.lat.toFixed(6)}, 経度 ${ll.lng.toFixed(6)}`;
+    okBtn.disabled = false;
+  };
+  if (Number.isFinite(curLat) && Number.isFinite(curLng)){
+    map.setView([curLat, curLng], 16);
+    setPick({ lat: curLat, lng: curLng });
+  } else {
+    const others = [...$("shelterBody").children]
+      .map(tr => tr._get())
+      .filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+      .map(s => [s.lat, s.lng]);
+    if (others.length) map.fitBounds(L.latLngBounds(others).pad(0.3), { maxZoom: 14 });
+    else map.setView([(AREA_BOX.minLat + AREA_BOX.maxLat) / 2, (AREA_BOX.minLng + AREA_BOX.maxLng) / 2], 10);
+  }
+  map.on("click", e => setPick(e.latlng));
+  setTimeout(() => map.invalidateSize(), 100);
+
+  const close = () => { map.remove(); overlay.remove(); };
+  okBtn.addEventListener("click", () => {
+    latInp.value = picked.lat.toFixed(6);
+    lngInp.value = picked.lng.toFixed(6);
+    markDirty();
+    close();
+    setStatus(`「${name}」の座標を地図から入力しました。保存を忘れずに`, "ok");
+  });
+  cancel.addEventListener("click", () => { close(); setStatus("座標の入力をキャンセルしました"); });
 }
 
 /* ---------- 避難所在庫 ---------- */
