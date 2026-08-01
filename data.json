@@ -1,6 +1,5 @@
 {
-  "updatedAt": "2026-08-01 17:00 更新（サンプルデータ）",
-  "sample": true,
+  "updatedAt": "2026-08-02 01:42 更新",
   "shelters": [
     {
       "name": "三角防災拠点センター",
@@ -79,7 +78,7 @@
       "lng": 130.66183,
       "stocks": {
         "飲料水": 274,
-        "食料": 294,
+        "食料": 295,
         "経口補水液": 40,
         "離乳食": 6,
         "アレルギー対応食": 5,
@@ -381,26 +380,26 @@
     {
       "name": "飲料水",
       "unit": "本(500ml)",
-      "perPerson": 6,
       "required": 14046,
       "stock": 2850,
-      "incoming": 3000
+      "incoming": 3000,
+      "perPerson": 6
     },
     {
       "name": "食料",
       "unit": "食",
-      "perPerson": 3,
       "required": 7023,
       "stock": 1560,
-      "incoming": 1500
+      "incoming": 1500,
+      "perPerson": 3
     },
     {
       "name": "経口補水液",
       "unit": "本",
-      "perPerson": 0.5,
       "required": 1171,
       "stock": 180,
-      "incoming": 300
+      "incoming": 300,
+      "perPerson": 0.5
     },
     {
       "name": "離乳食",
@@ -426,26 +425,26 @@
     {
       "name": "簡易トイレ",
       "unit": "基",
-      "perPerson": 0.02,
       "required": 47,
       "stock": 9,
-      "incoming": 10
+      "incoming": 10,
+      "perPerson": 0.02
     },
     {
       "name": "携帯トイレ",
       "unit": "回分",
-      "perPerson": 5,
       "required": 11705,
       "stock": 2400,
-      "incoming": 3000
+      "incoming": 3000,
+      "perPerson": 5
     },
     {
       "name": "トイレットペーパー",
       "unit": "ロール",
-      "perPerson": 0.15,
       "required": 352,
       "stock": 120,
-      "incoming": 100
+      "incoming": 100,
+      "perPerson": 0.15
     },
     {
       "name": "おむつ",
@@ -464,50 +463,50 @@
     {
       "name": "マスク",
       "unit": "枚",
-      "perPerson": 1,
       "required": 2341,
       "stock": 450,
-      "incoming": 500
+      "incoming": 500,
+      "perPerson": 1
     },
     {
       "name": "手指消毒液",
       "unit": "本",
-      "perPerson": 0.01,
       "required": 24,
       "stock": 12,
-      "incoming": 0
+      "incoming": 0,
+      "perPerson": 0.01
     },
     {
       "name": "衛生用品セット",
       "unit": "組",
-      "perPerson": 1,
       "required": 2341,
       "stock": 540,
-      "incoming": 800
+      "incoming": 800,
+      "perPerson": 1
     },
     {
       "name": "毛布",
       "unit": "枚",
-      "perPerson": 1,
       "required": 2341,
       "stock": 780,
-      "incoming": 500
+      "incoming": 500,
+      "perPerson": 1
     },
     {
       "name": "敷きマット",
       "unit": "枚",
-      "perPerson": 1,
       "required": 2341,
       "stock": 360,
-      "incoming": 400
+      "incoming": 400,
+      "perPerson": 1
     },
     {
       "name": "段ボールベッド",
       "unit": "台",
-      "perPerson": 1,
       "required": 2341,
       "stock": 90,
-      "incoming": 200
+      "incoming": 200,
+      "perPerson": 1
     },
     {
       "name": "パーティション",
@@ -519,10 +518,10 @@
     {
       "name": "タオル",
       "unit": "枚",
-      "perPerson": 1,
       "required": 2341,
       "stock": 540,
-      "incoming": 0
+      "incoming": 0,
+      "perPerson": 1
     },
     {
       "name": "発電機",
@@ -566,7 +565,8 @@
       "7/29",
       "7/30",
       "7/31",
-      "8/1"
+      "8/1",
+      "8/2"
     ],
     "byDistrict": {
       "三角町": [
@@ -574,6 +574,7 @@
         120,
         150,
         170,
+        180,
         180
       ],
       "不知火町": [
@@ -581,6 +582,7 @@
         160,
         220,
         250,
+        266,
         266
       ],
       "松橋町": [
@@ -588,6 +590,7 @@
         820,
         1100,
         1280,
+        1350,
         1350
       ],
       "小川町": [
@@ -595,6 +598,7 @@
         280,
         380,
         430,
+        460,
         460
       ],
       "豊野町": [
@@ -602,6 +606,7 @@
         55,
         70,
         80,
+        85,
         85
       ]
     }
