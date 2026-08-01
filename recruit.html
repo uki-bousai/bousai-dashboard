@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="避難所・物資 状況ダッシュボードの入力協力者を募集しています。担当する避難所の状況を1日1〜2回、スマホから入力するだけです。">
+<title>協力者募集 ─ 避難所・物資 状況ダッシュボード</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --border:rgba(11,11,11,.10); --accent:#2a78d6; --amber:#b97a10;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --border:rgba(255,255,255,.10); --accent:#3987e5; --amber:#e0a63c;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  background:var(--page); color:var(--text-primary); line-height:1.8; padding-bottom:60px;
+}
+.container{max-width:680px; margin:0 auto; padding:24px 20px}
+h1{font-size:1.3rem; line-height:1.5; margin:10px 0 4px}
+h1 .tag{display:inline-block; font-size:.72rem; color:#fff; background:var(--amber);
+  border-radius:99px; padding:2px 12px; vertical-align:middle; margin-right:8px}
+.lead{font-size:.86rem; color:var(--text-secondary); margin:14px 0 22px}
+.card{background:var(--surface-1); border:1px solid var(--border); border-radius:14px;
+  padding:18px 20px; margin-bottom:16px}
+.card h2{font-size:.95rem; margin-bottom:10px}
+.card p, .card li{font-size:.85rem; color:var(--text-secondary)}
+.card ul{padding-left:1.3em}
+.card li{margin-bottom:6px}
+.card b{color:var(--text-primary)}
+.steps{counter-reset:n; list-style:none; padding:0}
+.steps li{counter-increment:n; position:relative; padding-left:38px; margin-bottom:12px}
+.steps li::before{content:counter(n); position:absolute; left:0; top:2px;
+  width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff;
+  font-size:.8rem; font-weight:700; display:flex; align-items:center; justify-content:center}
+.notice{background:var(--page); border:1px solid var(--border); border-radius:10px;
+  padding:10px 14px; font-size:.78rem; color:var(--text-secondary); margin-top:12px}
+a{color:var(--accent)}
+.backlink{display:inline-block; font-size:.8rem; margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="backlink" href="index.html">← ダッシュボードに戻る</a>
+  <h1><span class="tag">協力者募集</span>避難所の「今」を入力してくれる方を探しています</h1>
+  <p class="lead">
+    このダッシュボードは、避難所の受入状況と物資の在庫を市民のみなさんに公開するためのものです。
+    正確な情報を届けるには、<b>各避難所の状況を知っている方の入力</b>が欠かせません。
+    避難所の運営に関わっている方、避難所で過ごしている方、市役所職員の方──力を貸してください。
+  </p>
+
+  <div class="card">
+    <h2>お願いしたいこと</h2>
+    <ul>
+      <li>担当する避難所の<b>避難者数</b>と<b>物資の在庫</b>を、<b>1日1〜2回</b>入力する</li>
+      <li>1回の入力は<b>スマホで2〜3分</b>。決まった時間でなくて構いません</li>
+      <li>わかる範囲・できる範囲でOK。数字は概数で十分です</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>必要なもの</h2>
+    <ul>
+      <li>スマホ（またはパソコン）だけ。<b>アプリのインストールや会員登録は不要</b>です</li>
+      <li>ID・パスワードの類は<b>「名前」と「合言葉」</b>をこちらで発行してお渡しします</li>
+      <li>費用は一切かかりません</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>参加までの流れ</h2>
+    <ol class="steps">
+      <li><b>連絡する</b> ─ InstagramのDM・コメント、または避難所でお声がけください。「○○避難所を担当できます」だけで大丈夫です</li>
+      <li><b>合言葉を受け取る</b> ─ あなた専用の名前と合言葉をお渡しします</li>
+      <li><b>入力する</b> ─ <a href="admin.html">管理者画面</a>を開いてログインし、担当避難所の数字を入れて「保存して公開」を押すだけ。1〜2分で市民向けページに反映されます</li>
+    </ol>
+    <div class="notice">
+      入力方法の詳しい説明は <a href="https://github.com/uki-bousai/bousai-dashboard/blob/main/MANUAL.md">運用マニュアル</a> にあります。
+      わからないことはいつでも聞いてください。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>市役所・避難所運営の方へ</h2>
+    <p>
+      公式の情報提供・データ連携についてもご相談させてください。
+      現在の掲載データは仮のものです。正確な情報をいただければ即日反映できます。
+      仕組みはすべて無償・オープンソースで、市の運用への引き継ぎも可能です。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>お願い・注意</h2>
+    <ul>
+      <li>このページのデータは<b>すべて公開</b>されます。<b>避難者の名前などの個人情報は絶対に入力しないでください</b></li>
+      <li>数値は速報値として扱われます。正確でなければならないというプレッシャーは感じないでください</li>
+      <li>ご自身と家族の安全・生活を最優先に。無理のない範囲でのご協力で十分です</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
