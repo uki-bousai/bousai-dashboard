@@ -495,6 +495,13 @@ function totalOccupantsInput(){
 }
 
 /* ---------- 座標検索（国土地理院 + OpenStreetMap。無料・キー不要） ---------- */
+/* 検索範囲の限定。別の地域で使う場合はここを変更（AREA_NAME は検索語に付き、
+   AREA_BOX の緯度経度の範囲外の候補は除外される） */
+const AREA_NAME = "熊本県";
+const AREA_BOX  = { minLat: 32.0, maxLat: 33.3, minLng: 129.9, maxLng: 131.4 };
+const inArea = c => c.lat >= AREA_BOX.minLat && c.lat <= AREA_BOX.maxLat &&
+                    c.lng >= AREA_BOX.minLng && c.lng <= AREA_BOX.maxLng;
+
 async function searchGSI(q){
   const res = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q));
   if (!res.ok) return [];
@@ -505,7 +512,9 @@ async function searchGSI(q){
   }));
 }
 async function searchOSM(q){
-  const res = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=ja&countrycodes=jp&q=" + encodeURIComponent(q));
+  const viewbox = `${AREA_BOX.minLng},${AREA_BOX.maxLat},${AREA_BOX.maxLng},${AREA_BOX.minLat}`;
+  const res = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=ja&countrycodes=jp" +
+    `&viewbox=${viewbox}&bounded=1&q=` + encodeURIComponent(q));
   if (!res.ok) return [];
   const json = await res.json();
   return (Array.isArray(json) ? json : []).map(x => ({
@@ -519,9 +528,13 @@ async function geocodeShelter(name, district, latInp, lngInp){
     setStatus("先に避難所名を入力してから「📍検索」を押してください", "err");
     return;
   }
-  setStatus(`「${name}」の場所を検索中…`);
-  // 名称単独 → 名称+地区 の順で検索し、座標がほぼ同じ候補はまとめる
-  const queries = [...new Set(district ? [name, `${district} ${name}`] : [name])];
+  setStatus(`「${name}」の場所を検索中…（${AREA_NAME}内）`);
+  // 地域名付き → 名称単独 の順で検索し、範囲外の候補は除外、座標がほぼ同じ候補はまとめる
+  const queries = [...new Set([
+    `${AREA_NAME} ${name}`,
+    ...(district ? [`${AREA_NAME} ${district} ${name}`] : []),
+    name
+  ])];
   const found = [], seen = new Set();
   for (const q of queries){
     const results = await Promise.allSettled([searchGSI(q), searchOSM(q)]);
@@ -529,6 +542,7 @@ async function geocodeShelter(name, district, latInp, lngInp){
       if (r.status !== "fulfilled") return;
       r.value.forEach(c => {
         if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng)) return;
+        if (!inArea(c)) return;   // 県外の同名施設を除外
         const key = c.lat.toFixed(3) + "," + c.lng.toFixed(3);
         if (!seen.has(key)){ seen.add(key); found.push(c); }
       });
@@ -536,7 +550,7 @@ async function geocodeShelter(name, district, latInp, lngInp){
     if (found.length >= 5) break;
   }
   if (!found.length){
-    setStatus("場所が見つかりませんでした。名称を正式名称に変えて再検索するか、Googleマップで地点を右クリックして座標を貼り付けてください", "err");
+    setStatus(`${AREA_NAME}内で場所が見つかりませんでした。名称を正式名称に変えて再検索するか、Googleマップで地点を右クリックして座標を貼り付けてください`, "err");
     return;
   }
   setStatus("候補が見つかりました。正しい場所を選んでください");
