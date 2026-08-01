@@ -173,6 +173,8 @@ footer a{color:var(--text-secondary)}
   .row{grid-template-columns:1fr; gap:2px}
   .row .name{text-align:left}
   .row .name small{display:inline; margin-left:6px}
+  /* 品目名がバーの真上に来るため「必要量 100%」ラベルと重なる。説明文に縦線=100%とあるので非表示に */
+  .refcap{display:none}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .tile .value.hero{font-size:2.3rem}
 }
