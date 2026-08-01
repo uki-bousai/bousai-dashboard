@@ -728,11 +728,14 @@ function collect(){
 
   const now = jstNow();
 
-  // 推移: 今日の地区別合計を追記（同日なら上書き）。既存の履歴は保持
+  // 推移: 今日の地区別・避難所別の合計を追記（同日なら上書き）。既存の履歴は保持
   const trend = data.trend && Array.isArray(data.trend.dates)
-    ? { dates:[...data.trend.dates], byDistrict:Object.fromEntries(
-        Object.entries(data.trend.byDistrict).map(([k,v]) => [k, [...v]])) }
-    : { dates:[], byDistrict:{} };
+    ? { dates:[...data.trend.dates],
+        byDistrict:Object.fromEntries(
+          Object.entries(data.trend.byDistrict).map(([k,v]) => [k, [...v]])),
+        byShelter:Object.fromEntries(
+          Object.entries(data.trend.byShelter || {}).map(([k,v]) => [k, [...v]])) }
+    : { dates:[], byDistrict:{}, byShelter:{} };
   const totals = {};
   shelters.forEach(s => { totals[s.district] = (totals[s.district] || 0) + s.occupants; });
   const allDistricts = new Set([...Object.keys(trend.byDistrict), ...Object.keys(totals)]);
@@ -746,11 +749,23 @@ function collect(){
     if (sameDay) arr[lastIdx] = v; else arr.push(v);
     while (arr.length < trend.dates.length) arr.splice(arr.length - 1, 0, 0);
   });
+  // 避難所別（記録開始前・閉鎖後の日付は null にして、グラフ側で区別できるようにする）
+  const shTotals = {};
+  shelters.forEach(s => { shTotals[s.name] = (shTotals[s.name] || 0) + s.occupants; });
+  const allShelters = new Set([...Object.keys(trend.byShelter), ...Object.keys(shTotals)]);
+  allShelters.forEach(n => {
+    if (!trend.byShelter[n]) trend.byShelter[n] = new Array(trend.dates.length - 1).fill(null);
+    const arr = trend.byShelter[n];
+    const v = Object.prototype.hasOwnProperty.call(shTotals, n) ? shTotals[n] : null;
+    if (sameDay) arr[lastIdx] = v; else arr.push(v);
+    while (arr.length < trend.dates.length) arr.splice(arr.length - 1, 0, null);
+  });
   const KEEP = 60;
   if (trend.dates.length > KEEP){
     const cut = trend.dates.length - KEEP;
     trend.dates.splice(0, cut);
     Object.values(trend.byDistrict).forEach(arr => arr.splice(0, cut));
+    Object.values(trend.byShelter).forEach(arr => arr.splice(0, cut));
   }
 
   return { updatedAt: now.stamp, shelters, supplies, trend };
