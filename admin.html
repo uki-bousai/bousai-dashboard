@@ -157,10 +157,10 @@ button:disabled{opacity:.45; cursor:not-allowed}
 
   <section class="panel active" id="panel-shelter">
     <div class="card">
-      <p class="desc">受入可能数（定員）と現在の避難者数を入力してください。稼働率は自動計算されます。緯度・経度は地図表示用（Googleマップで地点を右クリックしてコピー。空欄だと地図に出ません）。</p>
+      <p class="desc">受入可能数（定員）と現在の避難者数を入力してください。稼働率は自動計算されます。緯度・経度は地図表示用（「<b>📍検索</b>」を押すと避難所名から候補を検索して自動入力できます。見つからない場合は Googleマップで地点を右クリックして座標をコピー。空欄だと地図に出ません）。</p>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>避難所名</th><th>地区</th><th class="num">定員(人)</th><th class="num">避難者(人)</th><th class="num">稼働率</th><th class="num">緯度</th><th class="num">経度</th><th></th></tr></thead>
+          <thead><tr><th>避難所名</th><th>地区</th><th class="num">定員(人)</th><th class="num">避難者(人)</th><th class="num">稼働率</th><th class="num">緯度</th><th class="num">経度</th><th></th><th></th></tr></thead>
           <tbody id="shelterBody"></tbody>
         </table>
       </div>
@@ -461,7 +461,14 @@ function shelterRow(s){
   const lng = inputCell(s.lng ?? "", {num:false, placeholder:"130.6…"});
   lat.td.className = lng.td.className = "geo";
   lat.inp.style.textAlign = lng.inp.style.textAlign = "right";
-  tr.append(name.td, district.td, cap.td, occ.td, rate.td, lat.td, lng.td, delCell(tr, "避難所"));
+  const geoTd = document.createElement("td"); geoTd.className = "act";
+  const geoBtn = document.createElement("button");
+  geoBtn.className = "small"; geoBtn.type = "button"; geoBtn.textContent = "📍検索";
+  geoBtn.title = "避難所名から緯度・経度を検索して自動入力";
+  geoBtn.addEventListener("click", () =>
+    geocodeShelter(name.inp.value.trim(), district.inp.value.trim(), lat.inp, lng.inp));
+  geoTd.appendChild(geoBtn);
+  tr.append(name.td, district.td, cap.td, occ.td, rate.td, lat.td, lng.td, geoTd, delCell(tr, "避難所"));
   tr._refresh = () => {
     const c = Number(cap.inp.value) || 0, o = Number(occ.inp.value) || 0;
     setChip(rate.chip, c > 0 ? o / c : null, "occupancy");
@@ -485,6 +492,92 @@ function shelterRow(s){
 
 function totalOccupantsInput(){
   return [...$("shelterBody").children].reduce((a,tr) => a + tr._get().occupants, 0);
+}
+
+/* ---------- 座標検索（国土地理院 + OpenStreetMap。無料・キー不要） ---------- */
+async function searchGSI(q){
+  const res = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q));
+  if (!res.ok) return [];
+  const json = await res.json();
+  return (Array.isArray(json) ? json : []).slice(0, 5).map(x => ({
+    label: x.properties.title, source: "国土地理院",
+    lat: x.geometry.coordinates[1], lng: x.geometry.coordinates[0]
+  }));
+}
+async function searchOSM(q){
+  const res = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=ja&countrycodes=jp&q=" + encodeURIComponent(q));
+  if (!res.ok) return [];
+  const json = await res.json();
+  return (Array.isArray(json) ? json : []).map(x => ({
+    label: x.display_name, source: "OpenStreetMap",
+    lat: parseFloat(x.lat), lng: parseFloat(x.lon)
+  }));
+}
+
+async function geocodeShelter(name, district, latInp, lngInp){
+  if (!name){
+    setStatus("先に避難所名を入力してから「📍検索」を押してください", "err");
+    return;
+  }
+  setStatus(`「${name}」の場所を検索中…`);
+  // 名称単独 → 名称+地区 の順で検索し、座標がほぼ同じ候補はまとめる
+  const queries = [...new Set(district ? [name, `${district} ${name}`] : [name])];
+  const found = [], seen = new Set();
+  for (const q of queries){
+    const results = await Promise.allSettled([searchGSI(q), searchOSM(q)]);
+    results.forEach(r => {
+      if (r.status !== "fulfilled") return;
+      r.value.forEach(c => {
+        if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng)) return;
+        const key = c.lat.toFixed(3) + "," + c.lng.toFixed(3);
+        if (!seen.has(key)){ seen.add(key); found.push(c); }
+      });
+    });
+    if (found.length >= 5) break;
+  }
+  if (!found.length){
+    setStatus("場所が見つかりませんでした。名称を正式名称に変えて再検索するか、Googleマップで地点を右クリックして座標を貼り付けてください", "err");
+    return;
+  }
+  setStatus("候補が見つかりました。正しい場所を選んでください");
+  showGeoChooser(name, found.slice(0, 6), c => {
+    latInp.value = c.lat.toFixed(6);
+    lngInp.value = c.lng.toFixed(6);
+    markDirty();
+    setStatus(`「${name}」の座標を入力しました。地図で正しい位置か確認のうえ保存してください`, "ok");
+  });
+}
+
+function showGeoChooser(name, candidates, onPick){
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px";
+  const box = document.createElement("div");
+  box.className = "card";
+  box.style.cssText = "width:100%; max-width:480px; max-height:80vh; overflow-y:auto";
+  const h = document.createElement("h2"); h.textContent = `「${name}」の場所の候補`;
+  const p = document.createElement("p"); p.className = "desc";
+  p.textContent = "正しい場所を選ぶと緯度・経度が入力されます。地図アプリで座標を確認してから選ぶと確実です。";
+  box.append(h, p);
+  candidates.forEach(c => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; font-weight:400; line-height:1.5";
+    const t = document.createElement("div"); t.style.fontWeight = "700"; t.textContent = c.label;
+    const s = document.createElement("div");
+    s.style.cssText = "font-size:.72rem; color:var(--text-secondary)";
+    s.textContent = `${c.source} ／ 緯度 ${c.lat.toFixed(5)}, 経度 ${c.lng.toFixed(5)}`;
+    b.append(t, s);
+    b.addEventListener("click", () => { overlay.remove(); onPick(c); });
+    box.appendChild(b);
+  });
+  const cancel = document.createElement("button");
+  cancel.type = "button"; cancel.textContent = "キャンセル";
+  cancel.style.cssText = "margin-top:12px";
+  cancel.addEventListener("click", () => { overlay.remove(); setStatus("座標の入力をキャンセルしました"); });
+  box.appendChild(cancel);
+  overlay.appendChild(box);
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 /* ---------- 避難所在庫 ---------- */
