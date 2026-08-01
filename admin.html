@@ -124,6 +124,18 @@ button:disabled{opacity:.45; cursor:not-allowed}
 #status.err{color:var(--status-critical); font-weight:700}
 #dirtyMark{display:none; font-size:.72rem; font-weight:700; color:var(--status-warning)}
 #dirtyMark.show{display:inline}
+
+/* ログイン画面（中継サーバー方式のときのみ表示） */
+#loginOverlay{position:fixed; inset:0; z-index:60; background:var(--page);
+  display:none; align-items:center; justify-content:center; padding:20px}
+#loginOverlay.show{display:flex}
+#loginOverlay .loginbox{width:100%; max-width:400px}
+#loginOverlay input[type="text"], #loginOverlay input[type="password"]{
+  font:inherit; font-size:.9rem; color:var(--text-primary); width:100%;
+  background:var(--page); border:1px solid var(--border); border-radius:8px;
+  padding:9px 12px; margin:2px 0 10px}
+#loginErr{display:none; color:var(--status-critical); font-size:.76rem; font-weight:700; margin-top:4px}
+#loginErr.show{display:block}
 </style>
 </head>
 <body>
@@ -200,7 +212,25 @@ button:disabled{opacity:.45; cursor:not-allowed}
   </section>
 
   <section class="panel" id="panel-settings">
-    <div class="card">
+    <div class="card" id="workerAuthBox" style="display:none; margin-bottom:12px">
+      <h2>管理者ログイン</h2>
+      <p class="desc">閲覧・編集は誰でもできます。<b>保存には</b>管理責任者から受け取った<b>名前と合言葉</b>が必要です。合言葉は中継サーバーにのみ送信されます。</p>
+      <div class="tokenrow">
+        <div class="grow">
+          <label for="adminName">名前</label>
+          <input type="text" id="adminName" autocomplete="username">
+        </div>
+        <div class="grow">
+          <label for="adminPass">合言葉</label>
+          <input type="password" id="adminPass" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="saveAuth" checked>
+        <label for="saveAuth" style="font-weight:400">この端末に合言葉を保存する（共用端末では外してください）</label>
+      </div>
+    </div>
+    <div class="card" id="tokenAuthBox" style="margin-bottom:12px">
       <h2>保存用トークン</h2>
       <p class="desc">閲覧・編集は誰でもできます。<b>保存には</b> GitHub のアクセストークン（このリポジトリの Contents: Read and write 権限）が必要です。トークンは GitHub にのみ送信されます。</p>
       <div class="tokenrow">
@@ -208,12 +238,14 @@ button:disabled{opacity:.45; cursor:not-allowed}
           <label for="token">アクセストークン</label>
           <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
         </div>
-        <button id="loadBtn">最新データを読み込み直す</button>
       </div>
       <div class="check">
         <input type="checkbox" id="saveToken" checked>
         <label for="saveToken" style="font-weight:400">この端末にトークンを保存する（共用端末では外してください）</label>
       </div>
+    </div>
+    <div class="card">
+      <button id="loadBtn">最新データを読み込み直す</button>
       <div class="notice" id="repoInfo"></div>
       <div class="notice" id="trendSummary"></div>
     </div>
@@ -229,6 +261,26 @@ button:disabled{opacity:.45; cursor:not-allowed}
   </div>
 </div>
 
+<div id="loginOverlay">
+  <div class="loginbox card">
+    <h2>管理者ログイン</h2>
+    <p class="desc">管理責任者から受け取った名前と合言葉を入力してください。</p>
+    <label for="loginName">名前</label>
+    <input type="text" id="loginName" autocomplete="username">
+    <label for="loginPass">合言葉</label>
+    <input type="password" id="loginPass" autocomplete="current-password">
+    <div class="check" style="margin-top:0">
+      <input type="checkbox" id="loginSave" checked>
+      <label for="loginSave" style="font-weight:400">この端末に保存する（共用端末では外してください）</label>
+    </div>
+    <div id="loginErr"></div>
+    <div style="display:flex; gap:12px; margin-top:16px; align-items:center">
+      <button class="primary" id="loginBtn">ログイン</button>
+      <button id="loginSkip" style="border:none; background:none; color:var(--text-muted); font-size:.74rem; font-weight:400">閲覧のみで開く</button>
+    </div>
+  </div>
+</div>
+
 <script>
 "use strict";
 /* ============================================================
@@ -240,9 +292,17 @@ const BRANCH = "main";
 const PATH   = "data.json";
 const API    = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(PATH)}`;
 
-document.getElementById("repoInfo").textContent =
-  `保存先: github.com/${OWNER}/${REPO} の ${BRANCH} ブランチ（${PATH}）。` +
-  "トークンは GitHub → Settings → Developer settings → Fine-grained personal access tokens で、このリポジトリのみ・Contents: Read and write 権限で作成してください。";
+/* 中継サーバー（Cloudflare Worker）のURL。設定すると「名前+合言葉」の
+   ログイン方式になり、管理者はGitHubアカウント不要になる（worker/worker.js 参照）。
+   空欄のままなら従来どおり各自のGitHubトークンで保存する。
+   例: const WORKER_URL = "https://bousai-relay.example.workers.dev"; */
+const WORKER_URL = "";
+const WORKER_MODE = WORKER_URL.trim() !== "";
+
+document.getElementById("repoInfo").textContent = WORKER_MODE
+  ? `保存先: github.com/${OWNER}/${REPO} の ${BRANCH} ブランチ（${PATH}）。保存は中継サーバー経由で行われます。名前と合言葉は管理責任者から受け取ってください。`
+  : `保存先: github.com/${OWNER}/${REPO} の ${BRANCH} ブランチ（${PATH}）。` +
+    "トークンは GitHub → Settings → Developer settings → Fine-grained personal access tokens で、このリポジトリのみ・Contents: Read and write 権限で作成してください。";
 
 let data = null;
 let fileSha = null;
@@ -270,7 +330,7 @@ function updateTabCounts(){
   $("cntSupply").textContent = `(${$("supplyBody").children.length})`;
 }
 
-/* ---------- トークン ---------- */
+/* ---------- 認証（トークン方式） ---------- */
 const tokenInput = $("token");
 const saved = localStorage.getItem("bousai_token");
 if (saved) tokenInput.value = saved;
@@ -280,6 +340,34 @@ function persistToken(){
   else localStorage.removeItem("bousai_token");
 }
 $("saveToken").addEventListener("change", persistToken);
+
+/* ---------- 認証（中継サーバー方式: 名前+合言葉） ---------- */
+function currentAuth(){ return { name: $("adminName").value.trim(), password: $("adminPass").value }; }
+function persistAuth(){
+  const a = currentAuth();
+  if ($("saveAuth").checked && a.name && a.password) localStorage.setItem("bousai_auth", JSON.stringify(a));
+  else localStorage.removeItem("bousai_auth");
+}
+if (WORKER_MODE){
+  $("workerAuthBox").style.display = "";
+  $("tokenAuthBox").style.display = "none";
+  try {
+    const a = JSON.parse(localStorage.getItem("bousai_auth") || "null");
+    if (a){ $("adminName").value = a.name || ""; $("adminPass").value = a.password || ""; }
+  } catch (e) {}
+  $("saveAuth").addEventListener("change", persistAuth);
+}
+
+async function workerPost(path, payload){
+  const res = await fetch(WORKER_URL.trim().replace(/\/+$/, "") + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) {}
+  return { res, body };
+}
 
 /* ---------- GitHub API ---------- */
 function ghHeaders(){
@@ -689,12 +777,22 @@ $("loadBtn").addEventListener("click", async () => {
 });
 
 $("saveBtn").addEventListener("click", async () => {
-  if (!currentToken()){
-    setStatus("トークンを入力してください（「設定」タブ）", "err");
-    document.querySelector('.tab[data-panel="settings"]').click();
-    return;
+  if (WORKER_MODE){
+    const a = currentAuth();
+    if (!a.name || !a.password){
+      setStatus("名前と合言葉を入力してください（「設定」タブ）", "err");
+      document.querySelector('.tab[data-panel="settings"]').click();
+      return;
+    }
+    persistAuth();
+  } else {
+    if (!currentToken()){
+      setStatus("トークンを入力してください（「設定」タブ）", "err");
+      document.querySelector('.tab[data-panel="settings"]').click();
+      return;
+    }
+    persistToken();
   }
-  persistToken();
   let next;
   try { next = collect(); }
   catch (e) { setStatus(e.message, "err"); return; }
@@ -702,9 +800,15 @@ $("saveBtn").addEventListener("click", async () => {
   $("saveBtn").disabled = true;
   setStatus("保存中…");
   try {
-    await fetchLatest();   // 最新SHAを取得（書き込み権限の事前確認を兼ねる）
-    const body = JSON.stringify(next, null, 2) + "\n";
-    await saveToGitHub(body, `状況更新 ${next.updatedAt}`);
+    if (WORKER_MODE){
+      const { res, body } = await workerPost("/save", { ...currentAuth(), data: next });
+      if (res.status === 401) throw new Error("名前または合言葉が違います。管理責任者に確認してください");
+      if (!res.ok) throw new Error((body && body.error) || "保存に失敗しました（HTTP " + res.status + "）");
+    } else {
+      await fetchLatest();   // 最新SHAを取得（書き込み権限の事前確認を兼ねる）
+      const bodyText = JSON.stringify(next, null, 2) + "\n";
+      await saveToGitHub(bodyText, `状況更新 ${next.updatedAt}`);
+    }
     data = next;
     renderForms();
     clearDirty();
@@ -716,10 +820,56 @@ $("saveBtn").addEventListener("click", async () => {
   }
 });
 
+/* ---------- ログイン画面（中継サーバー方式のみ） ---------- */
+function showLoginErr(msg){
+  const el = $("loginErr");
+  el.textContent = msg;
+  el.classList.add("show");
+}
+function closeLogin(){ $("loginOverlay").classList.remove("show"); }
+async function initLogin(){
+  if (!WORKER_MODE) return;
+  const a = currentAuth();
+  if (a.name && a.password){
+    try {
+      const { res } = await workerPost("/auth", a);
+      if (res.ok) return;   // 保存済みの合言葉が有効ならそのまま入る
+    } catch (e) {}
+  }
+  $("loginName").value = a.name || "";
+  $("loginOverlay").classList.add("show");
+  $("loginName").focus();
+}
+$("loginBtn").addEventListener("click", async () => {
+  const a = { name: $("loginName").value.trim(), password: $("loginPass").value };
+  if (!a.name || !a.password){ showLoginErr("名前と合言葉を入力してください"); return; }
+  $("loginBtn").disabled = true;
+  $("loginErr").classList.remove("show");
+  try {
+    const { res, body } = await workerPost("/auth", a);
+    if (res.ok){
+      $("adminName").value = a.name;
+      $("adminPass").value = a.password;
+      $("saveAuth").checked = $("loginSave").checked;
+      persistAuth();
+      closeLogin();
+    } else {
+      showLoginErr((body && body.error) || "ログインできませんでした（HTTP " + res.status + "）");
+    }
+  } catch (e) {
+    showLoginErr("中継サーバーに接続できませんでした。通信環境を確認してください");
+  } finally {
+    $("loginBtn").disabled = false;
+  }
+});
+$("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("loginSkip").addEventListener("click", closeLogin);
+
 addEventListener("beforeunload", e => {
   if (dirty){ e.preventDefault(); e.returnValue = ""; }
 });
 
+initLogin();
 loadFromPublic();
 </script>
 </body>

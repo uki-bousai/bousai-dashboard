@@ -9,6 +9,7 @@
 | `admin.html` | **管理者画面**。フォームで入力し、GitHub API 経由で `data.json` を更新 |
 | `data.json` | 表示データ本体。管理者画面の保存で自動更新される |
 | `MANUAL.md` | **運用マニュアル**。管理者向けの日々の使い方・トラブル対処 |
+| `worker/worker.js` | **中継サーバー**（Cloudflare Worker）。設定すると管理者はGitHubアカウント不要の「名前+合言葉」ログインで保存できる |
 
 👉 日々の運用手順は **[運用マニュアル（MANUAL.md）](MANUAL.md)** を参照してください。
 
@@ -46,7 +47,9 @@
 
 ## 管理者の準備（管理者ごとに1回）
 
-管理者画面での保存には GitHub のアクセストークンが必要です。
+**中継サーバー（`worker/worker.js`）を設定済みの場合**、管理者は GitHub アカウント不要です。管理責任者から受け取った名前と合言葉でログインするだけで保存できます（設定方法は `MANUAL.md` の12章）。
+
+以下は中継サーバーを使わない場合（`admin.html` の `WORKER_URL` が空欄）の手順です。管理者画面での保存には GitHub のアクセストークンが必要です。
 
 1. GitHub にログイン → 右上アイコン → **Settings**
 2. 左メニュー最下部 **Developer settings** → **Personal access tokens → Fine-grained tokens** → **Generate new token**
