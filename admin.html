@@ -495,8 +495,9 @@ function totalOccupantsInput(){
 }
 
 /* ---------- 座標検索（国土地理院 + OpenStreetMap。無料・キー不要） ---------- */
-/* 検索範囲の限定。別の地域で使う場合はここを変更（AREA_NAME は検索語に付き、
-   AREA_BOX の緯度経度の範囲外の候補は除外される） */
+/* 検索範囲の限定。別の地域で使う場合はここを変更。
+   検索は施設名そのままで行い（県名を付けると地理院の検索がマッチしなくなるため）、
+   AREA_BOX の緯度経度の範囲外の候補を除外することで県内に絞る */
 const AREA_NAME = "熊本県";
 const AREA_BOX  = { minLat: 32.0, maxLat: 33.3, minLng: 129.9, maxLng: 131.4 };
 const inArea = c => c.lat >= AREA_BOX.minLat && c.lat <= AREA_BOX.maxLat &&
@@ -529,12 +530,8 @@ async function geocodeShelter(name, district, latInp, lngInp){
     return;
   }
   setStatus(`「${name}」の場所を検索中…（${AREA_NAME}内）`);
-  // 地域名付き → 名称単独 の順で検索し、範囲外の候補は除外、座標がほぼ同じ候補はまとめる
-  const queries = [...new Set([
-    `${AREA_NAME} ${name}`,
-    ...(district ? [`${AREA_NAME} ${district} ${name}`] : []),
-    name
-  ])];
+  // 名称単独 → 地区+名称 の順で検索し、範囲外の候補は除外、座標がほぼ同じ候補はまとめる
+  const queries = [...new Set(district ? [name, `${district} ${name}`] : [name])];
   const found = [], seen = new Set();
   for (const q of queries){
     const results = await Promise.allSettled([searchGSI(q), searchOSM(q)]);
