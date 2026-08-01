@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="地震被災地の避難所の受入可能数・避難者数と、物資の調達状況を公開するページ。データは管理者画面から随時更新されます。">
+<title>避難所・物資 状況ダッシュボード</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+  --series-1:#2a78d6;          /* 在庫・避難者数（青 450） */
+  --series-1-light:#86b6ef;    /* 調達手配中（青 250） */
+  --track:#cde2fb;             /* メーターの未充足トラック（青 100） */
+  --status-warning:#fab219; --status-critical:#d03b3b; --status-good:#0ca30c;
+  --delta-good:#006300;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+    --series-1:#3987e5;
+    --series-1-light:#184f95;
+    --track:#0d366b;
+    --delta-good:#0ca30c;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  background:var(--page); color:var(--text-primary); line-height:1.5;
+  padding:0 0 60px;
+}
+header{padding:22px 20px 4px; max-width:1080px; margin:0 auto}
+header h1{font-size:1.25rem; font-weight:700}
+header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:4px}
+.badge{display:inline-block; font-size:.68rem; font-weight:700; color:var(--text-secondary);
+  border:1px solid var(--border); border-radius:99px; padding:1px 10px; margin-left:8px; vertical-align:2px}
+.container{max-width:1080px; margin:0 auto; padding:0 20px}
+.notice{max-width:1080px; margin:10px auto 0; padding:0 20px}
+.notice>div{background:var(--surface-1); border:1px solid var(--status-warning); border-radius:10px;
+  padding:10px 14px; font-size:.78rem; color:var(--text-secondary)}
+
+/* フィルター行（全カードの上に1行） */
+.filters{display:flex; align-items:center; gap:10px; margin:16px 0 14px; flex-wrap:wrap}
+.filters label{font-size:.78rem; color:var(--text-secondary); font-weight:700}
+.filters select{
+  font:inherit; font-size:.82rem; color:var(--text-primary);
+  background:var(--surface-1); border:1px solid var(--border); border-radius:8px; padding:6px 10px;
+}
+.updated{font-size:.72rem; color:var(--text-muted); margin-left:auto}
+
+/* KPI 行 */
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:14px}
+.tile{background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:14px 16px}
+.tile .label{font-size:.74rem; color:var(--text-secondary); font-weight:700}
+.tile .value{font-size:1.7rem; font-weight:600; margin-top:2px}
+.tile .value.hero{font-size:3rem; line-height:1.15}
+.tile .value small{font-size:.85rem; font-weight:400; color:var(--text-secondary); margin-left:2px}
+.tile .note{font-size:.72rem; color:var(--text-secondary); margin-top:4px}
+.tile .note .crit{color:var(--status-critical); font-weight:700}
+.meter{height:8px; border-radius:4px; background:var(--track); margin-top:10px; overflow:hidden}
+.meter>span{display:block; height:100%; border-radius:0 4px 4px 0; background:var(--series-1)}
+
+/* カード共通 */
+.card{background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:16px 18px 18px; margin-bottom:14px}
+.card-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:2px}
+.card-head h2{font-size:.95rem; font-weight:700}
+.card-head .desc{font-size:.74rem; color:var(--text-secondary)}
+.toggle{margin-left:auto; font:inherit; font-size:.72rem; font-weight:700; color:var(--text-secondary);
+  background:none; border:1px solid var(--border); border-radius:8px; padding:4px 10px; cursor:pointer}
+.toggle:hover{background:var(--page)}
+.legend{display:flex; gap:16px; font-size:.72rem; color:var(--text-secondary); margin:8px 0 12px; flex-wrap:wrap}
+.legend .key{display:inline-flex; align-items:center; gap:6px}
+.swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
+.swatch.line{width:14px; height:2px; border-radius:1px}
+.swatch.trackkey{background:var(--track)}
+.statusnote{font-size:.72rem; color:var(--text-secondary)}
+.statusnote b.warn{color:var(--text-primary)}
+
+/* 横棒チャート行 */
+.rows{display:grid; gap:9px}
+.row{display:grid; grid-template-columns:11.5em 1fr; gap:12px; align-items:center; padding:2px 0; border-radius:6px}
+.row:hover{background:var(--page)}
+.row .name{font-size:.78rem; color:var(--text-primary); text-align:right; line-height:1.3}
+.row .name small{display:block; font-size:.66rem; color:var(--text-muted)}
+.barzone{position:relative; height:26px; display:flex; align-items:center}
+.track,.fillwrap{position:absolute; top:4px; height:18px}
+.track{background:var(--track); border-radius:0 4px 4px 0}
+.fillwrap{display:flex; gap:2px}
+.fillwrap .seg{height:100%}
+.fillwrap .seg:last-child{border-radius:0 4px 4px 0}
+.seg.s1{background:var(--series-1)}
+.seg.s2{background:var(--series-1-light)}
+.seg.warn{background:var(--status-warning)}
+.seg.crit{background:var(--status-critical)}
+.vlabel{position:absolute; top:50%; transform:translateY(-50%); font-size:.7rem; color:var(--text-secondary); white-space:nowrap}
+.vlabel b{color:var(--text-primary); font-weight:600}
+.vlabel .flag{font-weight:700}
+.vlabel .flag.crit{color:var(--status-critical)}
+.vlabel .flag.warn{color:var(--text-primary)}
+.refline{position:absolute; top:0; bottom:0; width:1px; background:var(--axis)}
+.refcap{position:absolute; top:-14px; transform:translateX(-50%); font-size:.62rem; color:var(--text-muted); white-space:nowrap}
+
+/* 避難所ごとの不足物資 */
+.shortrow{display:grid; grid-template-columns:11.5em 1fr; gap:12px; align-items:baseline; padding:4px 0}
+.shortrow .name{font-size:.78rem; text-align:right; line-height:1.3}
+.shortrow .name small{display:block; font-size:.66rem; color:var(--text-muted)}
+.shortitems{display:flex; gap:6px; flex-wrap:wrap}
+.shortitem{font-size:.72rem; color:var(--status-critical); font-weight:700;
+  border:1px solid var(--status-critical); border-radius:99px; padding:1px 10px}
+.shortitem.more{color:var(--text-muted); border-color:var(--border)}
+@media (max-width:640px){
+  .shortrow{grid-template-columns:1fr; gap:2px}
+  .shortrow .name{text-align:left}
+  .shortrow .name small{display:inline; margin-left:6px}
+}
+
+/* 地図 */
+#map{height:420px; border-radius:10px; overflow:hidden; background:var(--page)}
+@media (max-width:640px){ #map{height:320px} }
+.leaflet-popup-content{margin:12px 14px; line-height:1.5}
+.popup-title{font-weight:700; font-size:.84rem; margin-bottom:2px}
+.popup-district{font-size:.7rem; color:var(--text-muted); margin-bottom:6px}
+.popup-row{font-size:.76rem; color:var(--text-secondary)}
+.popup-row b{color:var(--text-primary); font-weight:600}
+.popup-flag{font-size:.76rem; font-weight:700; margin-top:4px}
+.popup-flag.crit{color:var(--status-critical)}
+.maplegend{display:flex; gap:14px; font-size:.72rem; color:var(--text-secondary); margin-top:10px; flex-wrap:wrap}
+.maplegend .key{display:inline-flex; align-items:center; gap:6px}
+.dot{width:11px; height:11px; border-radius:50%; display:inline-block; border:2px solid var(--surface-1); box-shadow:0 0 0 1px var(--border)}
+@media (prefers-color-scheme: dark){
+  #map .leaflet-tile{filter:brightness(.75) contrast(1.05)}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface-1); color:var(--text-primary)}
+}
+
+/* 折れ線チャート */
+.linewrap{position:relative}
+svg text{font-family:inherit}
+
+/* ツールチップ */
+#tip{position:fixed; z-index:50; pointer-events:none; display:none;
+  background:var(--surface-1); border:1px solid var(--border); border-radius:8px;
+  box-shadow:0 4px 14px rgba(0,0,0,.18); padding:8px 12px; font-size:.74rem; max-width:260px}
+#tip .t-title{color:var(--text-secondary); font-weight:700; margin-bottom:3px}
+#tip .t-row{display:flex; align-items:center; gap:7px; margin-top:2px}
+#tip .t-key{width:10px; height:2px; border-radius:1px; flex:none}
+#tip .t-val{font-weight:600; color:var(--text-primary)}
+#tip .t-name{color:var(--text-secondary)}
+
+/* 表ビュー */
+table{width:100%; border-collapse:collapse; font-size:.76rem; margin-top:8px}
+th,td{padding:6px 10px; border-bottom:1px solid var(--grid); text-align:right; font-variant-numeric:tabular-nums}
+th{color:var(--text-secondary); font-size:.7rem}
+th:first-child,td:first-child{text-align:left; font-variant-numeric:normal}
+td .crit{color:var(--status-critical); font-weight:700}
+td .good{color:var(--delta-good); font-weight:700}
+.hidden{display:none}
+
+footer{max-width:1080px; margin:20px auto 0; padding:0 20px; font-size:.72rem; color:var(--text-muted); line-height:1.7}
+footer a{color:var(--text-secondary)}
+
+@media (max-width:640px){
+  .row{grid-template-columns:1fr; gap:2px}
+  .row .name{text-align:left}
+  .row .name small{display:inline; margin-left:6px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .tile .value.hero{font-size:2.3rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>避難所・物資 状況ダッシュボード<span class="badge hidden" id="sampleBadge">サンプルデータ</span></h1>
+  <p class="sub">避難所の受入可能数・避難者数と、物資の調達状況</p>
+</header>
+
+<div class="notice hidden" id="fetchNotice"><div>⚠ 最新データを取得できなかったため、ページに内蔵のサンプルデータを表示しています。通信環境を確認して再読み込みしてください。</div></div>
+
+<div class="container">
+
+  <div class="filters">
+    <label for="districtSel">地区</label>
+    <select id="districtSel"><option value="">すべての地区</option></select>
+    <span class="updated" id="updatedAt"></span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card" id="mapCard">
+    <div class="card-head">
+      <h2>避難所マップ</h2>
+      <span class="desc">マーカーを選択すると、その避難所の受入状況が表示されます</span>
+    </div>
+    <div id="map"></div>
+    <div class="maplegend">
+      <span class="key"><span class="dot" style="background:var(--series-1)"></span>受入可</span>
+      <span class="key"><span class="dot" style="background:var(--status-warning)"></span>⚠ 逼迫（90%以上）</span>
+      <span class="key"><span class="dot" style="background:var(--status-critical)"></span>⛔ 定員超過</span>
+      <span class="key"><span class="dot" style="background:var(--text-muted)"></span>データ入力待ち</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>避難所別 受入状況</h2>
+      <span class="desc">棒の長さは人数（横軸は共通スケール）。稼働率の高い順</span>
+      <button class="toggle" data-target="shelter">表で見る</button>
+    </div>
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:var(--series-1)"></span>避難者数</span>
+      <span class="key"><span class="swatch trackkey"></span>受入可能数（定員）</span>
+      <span class="statusnote">稼働率 90%以上は <b class="warn">⚠ 逼迫</b>、100%超は <b style="color:var(--status-critical)">⛔ 定員超過</b> と表示</span>
+    </div>
+    <div class="rows" id="shelterChart"></div>
+    <div class="hidden" id="shelterTable"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>避難所ごとの不足物資</h2>
+      <span class="desc">各避難所の在庫と必要量/日（避難者数×1人1日あたり）から自動判定。不足数の多い順</span>
+    </div>
+    <div class="rows" id="shortageList"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>物資の調達状況</h2>
+      <span class="desc">1日あたりの必要量（避難者数×1人1日あたりで自動計算。縦線＝100%）に対する在庫と調達手配中の量。充足率の低い順</span>
+      <button class="toggle" data-target="supply">表で見る</button>
+    </div>
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:var(--series-1)"></span>在庫</span>
+      <span class="key"><span class="swatch" style="background:var(--series-1-light)"></span>調達手配中</span>
+      <span class="statusnote">手配分を含めても必要量に届かない品目は <b style="color:var(--status-critical)">⛔ 不足</b> と表示</span>
+    </div>
+    <div class="rows" id="supplyChart"></div>
+    <div class="hidden" id="supplyTable"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>避難者数の推移</h2>
+      <span class="desc" id="trendDesc"></span>
+      <button class="toggle" data-target="trend">表で見る</button>
+    </div>
+    <div class="linewrap" id="trendChart"></div>
+    <div class="hidden" id="trendTable"></div>
+  </section>
+
+</div>
+
+<div id="tip" role="status"></div>
+
+<footer>
+  <p>このページのデータは災害対策本部が管理者画面から更新しています。数値は速報値であり、実際の状況と異なる場合があります。</p>
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   データは同じディレクトリの data.json から読み込む。
+   取得できない場合（オフライン・file://直開き等）は
+   下の FALLBACK（サンプル）を表示する。
+   ============================================================ */
+const FALLBACK = {
+  updatedAt: "サンプルデータ表示中",
+  sample: true,
+  shelters: [
+    { name:"中央小学校",               district:"中央地区", capacity:450, occupants:512 },
+    { name:"中央公民館",               district:"中央地区", capacity:200, occupants:168 },
+    { name:"第二中学校",               district:"中央地区", capacity:600, occupants:430 },
+    { name:"港小学校",                 district:"港地区",   capacity:380, occupants:395 },
+    { name:"港スポーツセンター",       district:"港地区",   capacity:800, occupants:610 },
+    { name:"港南会館",                 district:"港地区",   capacity:150, occupants:88  },
+    { name:"山手小学校",               district:"山手地区", capacity:400, occupants:210 },
+    { name:"山手台高校",               district:"山手地区", capacity:550, occupants:275 },
+    { name:"山手コミュニティセンター", district:"山手地区", capacity:120, occupants:118 },
+    { name:"川北中学校",               district:"川北地区", capacity:500, occupants:465 },
+    { name:"川北会館",                 district:"川北地区", capacity:180, occupants:95  },
+    { name:"川北体育館",               district:"川北地区", capacity:700, occupants:380 }
+  ],
+  supplies: [
+    { name:"飲料水",         unit:"本(500ml)", required:33800, stock:21500, incoming:8000 },
+    { name:"食料",           unit:"食",        required:33800, stock:18200, incoming:12000 },
+    { name:"毛布",           unit:"枚",        required:4500,  stock:4100,  incoming:800 },
+    { name:"簡易トイレ",     unit:"基",        required:190,   stock:96,    incoming:40 },
+    { name:"衛生用品セット", unit:"組",        required:3800,  stock:2900,  incoming:1200 },
+    { name:"乳幼児用ミルク", unit:"缶",        required:320,   stock:140,   incoming:60 },
+    { name:"おむつ",         unit:"枚",        required:8600,  stock:5200,  incoming:2400 },
+    { name:"生理用品",       unit:"パック",    required:1500,  stock:1350,  incoming:400 }
+  ],
+  trend: {
+    dates: ["7/26","7/27","7/28","7/29","7/30","7/31","8/1"],
+    byDistrict: {
+      "中央地区": [420, 780, 950, 1080, 1120, 1110, 1110],
+      "港地区":   [350, 640, 830, 980, 1050, 1090, 1093],
+      "山手地区": [180, 360, 480, 560, 590, 600, 603],
+      "川北地区": [300, 520, 700, 820, 890, 930, 940]
+    }
+  }
+};
+
+let DATA = FALLBACK;
+let currentDistrict = "";   // "" = すべて
+
+const fmt = n => n.toLocaleString("ja-JP");
+const pct = r => Math.round(r * 100);
+
+// 必要量: 1人1日あたり(perPerson)が設定されていれば 全避難者数×原単位 で自動計算。
+// 未設定の品目は required の手入力値を使う
+const totalOccupantsAll = () => DATA.shelters.reduce((a,s) => a + s.occupants, 0);
+function effectiveRequired(s){
+  return s.perPerson > 0 ? Math.ceil(totalOccupantsAll() * s.perPerson) : (s.required || 0);
+}
+// 市全体の在庫 = 本部在庫 + 各避難所の在庫合計
+function cityStock(it){
+  return (it.stock || 0) + DATA.shelters.reduce((a,sh) => a + ((sh.stocks || {})[it.name] || 0), 0);
+}
+// その避難所での必要量/日: perPersonがあれば人数×原単位、なければ市全体必要量を人数比で按分
+function shelterNeed(sh, it, totalOcc){
+  if (it.perPerson > 0) return Math.ceil(sh.occupants * it.perPerson);
+  return totalOcc > 0 ? Math.ceil((it.required || 0) * sh.occupants / totalOcc) : 0;
+}
+// 避難所の不足物資を在庫と必要量から自動判定
+function computedShortages(sh){
+  const totalOcc = totalOccupantsAll();
+  return DATA.supplies
+    .map(it => {
+      const need = shelterNeed(sh, it, totalOcc);
+      const have = (sh.stocks || {})[it.name] || 0;
+      return { name: it.name, unit: it.unit, need, lack: need - have };
+    })
+    .filter(x => x.need > 0 && x.lack > 0)
+    .sort((a,b) => b.lack / b.need - a.lack / a.need);
+}
+
+/* ---------- フィルター ---------- */
+const sel = document.getElementById("districtSel");
+sel.addEventListener("change", () => { currentDistrict = sel.value; renderAll(); });
+
+function rebuildFilter(){
+  const districts = [...new Set(DATA.shelters.map(s => s.district))];
+  const prev = currentDistrict;
+  sel.textContent = "";
+  const all = document.createElement("option");
+  all.value = ""; all.textContent = "すべての地区";
+  sel.appendChild(all);
+  districts.forEach(d => {
+    const o = document.createElement("option");
+    o.value = d; o.textContent = d;
+    sel.appendChild(o);
+  });
+  currentDistrict = districts.includes(prev) ? prev : "";
+  sel.value = currentDistrict;
+}
+
+/* ---------- ツールチップ ---------- */
+const tip = document.getElementById("tip");
+function showTip(evt, build){
+  tip.textContent = "";
+  build(tip);
+  tip.style.display = "block";
+  const pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  const r = tip.getBoundingClientRect();
+  if (x + r.width > innerWidth - 8)  x = evt.clientX - r.width - pad;
+  if (y + r.height > innerHeight - 8) y = evt.clientY - r.height - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip(){ tip.style.display = "none"; }
+
+function tipTitle(el, text){
+  const t = document.createElement("div");
+  t.className = "t-title"; t.textContent = text; el.appendChild(t);
+}
+function tipRow(el, color, value, name){
+  const row = document.createElement("div"); row.className = "t-row";
+  if (color){
+    const k = document.createElement("span"); k.className = "t-key";
+    k.style.background = color; row.appendChild(k);
+  }
+  const v = document.createElement("span"); v.className = "t-val"; v.textContent = value;
+  row.appendChild(v);
+  if (name){
+    const n = document.createElement("span"); n.className = "t-name"; n.textContent = name;
+    row.appendChild(n);
+  }
+  el.appendChild(row);
+}
+function attachTip(el, build){
+  el.addEventListener("pointermove", e => showTip(e, build));
+  el.addEventListener("pointerleave", hideTip);
+  el.tabIndex = 0;
+  el.addEventListener("focus", () => {
+    const r = el.getBoundingClientRect();
+    showTip({ clientX: r.left + r.width/2, clientY: r.top }, build);
+  });
+  el.addEventListener("blur", hideTip);
+}
+
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+/* ---------- 地図（Leaflet） ---------- */
+let map = null, markerLayer = null;
+
+function shelterStatus(s){
+  if (!s.capacity) return { color: cssVar("--text-muted"), label: "データ入力待ち", crit: false };
+  const r = s.occupants / s.capacity;
+  if (r > 1)    return { color: cssVar("--status-critical"), label: "⛔ 定員超過", crit: true };
+  if (r >= 0.9) return { color: cssVar("--status-warning"),  label: "⚠ 逼迫",     crit: false };
+  return { color: cssVar("--series-1"), label: "受入可", crit: false };
+}
+
+function popupContent(s){
+  const div = document.createElement("div");
+  const title = document.createElement("div"); title.className = "popup-title"; title.textContent = s.name;
+  const district = document.createElement("div"); district.className = "popup-district"; district.textContent = s.district;
+  div.append(title, district);
+  const row = (label, value) => {
+    const r = document.createElement("div"); r.className = "popup-row";
+    const b = document.createElement("b"); b.textContent = value;
+    r.appendChild(b);
+    r.appendChild(document.createTextNode(" " + label));
+    div.appendChild(r);
+  };
+  if (s.capacity){
+    const ratio = s.occupants / s.capacity;
+    row("避難者数", fmt(s.occupants) + "人");
+    row("受入可能数", fmt(s.capacity) + "人");
+    row("稼働率", pct(ratio) + "%");
+    const rem = s.capacity - s.occupants;
+    row("受入余力", rem >= 0 ? `あと${fmt(rem)}人` : `${fmt(-rem)}人超過`);
+  } else {
+    const r = document.createElement("div"); r.className = "popup-row";
+    r.textContent = "人数は未入力です";
+    div.appendChild(r);
+  }
+  const st = shelterStatus(s);
+  const flag = document.createElement("div");
+  flag.className = "popup-flag" + (st.crit ? " crit" : "");
+  flag.textContent = st.label;
+  div.appendChild(flag);
+  const shorts = computedShortages(s);
+  if (shorts.length){
+    const r = document.createElement("div"); r.className = "popup-flag crit";
+    const top = shorts.slice(0, 3).map(x => `${x.name} ${fmt(x.lack)}${x.unit}`);
+    r.textContent = "不足: " + top.join("、") +
+      (shorts.length > 3 ? ` 他${shorts.length - 3}件` : "");
+    div.appendChild(r);
+  }
+  return div;
+}
+
+/* ---------- 避難所ごとの不足物資（在庫と必要量から自動判定） ---------- */
+function renderShortages(shelters){
+  const box = document.getElementById("shortageList");
+  box.textContent = "";
+  const withShorts = shelters
+    .map(s => ({ s, shorts: computedShortages(s) }))
+    .filter(x => x.shorts.length);
+  if (!withShorts.length){
+    const p = document.createElement("p");
+    p.style.cssText = "font-size:.78rem;color:var(--text-muted)";
+    p.textContent = "現在、不足はありません。";
+    box.appendChild(p);
+    return;
+  }
+  withShorts.sort((a,b) => b.shorts.length - a.shorts.length);
+  const MAX_TAGS = 8;
+  withShorts.forEach(({s, shorts}) => {
+    const row = document.createElement("div"); row.className = "shortrow";
+    const name = document.createElement("div"); name.className = "name";
+    name.textContent = s.name;
+    const small = document.createElement("small"); small.textContent = s.district;
+    name.appendChild(small);
+    const items = document.createElement("div"); items.className = "shortitems";
+    shorts.slice(0, MAX_TAGS).forEach(x => {
+      const tag = document.createElement("span"); tag.className = "shortitem";
+      tag.textContent = `${x.name} ${fmt(x.lack)}${x.unit}`;
+      tag.title = `必要量/日 ${fmt(x.need)}${x.unit} に対して ${fmt(x.lack)}${x.unit} 不足`;
+      items.appendChild(tag);
+    });
+    if (shorts.length > MAX_TAGS){
+      const more = document.createElement("span"); more.className = "shortitem more";
+      more.textContent = `他${shorts.length - MAX_TAGS}件`;
+      items.appendChild(more);
+    }
+    row.append(name, items);
+    box.appendChild(row);
+  });
+}
+
+function renderMap(shelters){
+  const card = document.getElementById("mapCard");
+  if (typeof L === "undefined"){ card.classList.add("hidden"); return; }
+  const located = shelters.filter(s => typeof s.lat === "number" && typeof s.lng === "number");
+  if (!located.length){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+
+  if (!map){
+    map = L.map("map", { scrollWheelZoom: false });
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+  }
+  if (markerLayer) markerLayer.remove();
+  markerLayer = L.layerGroup().addTo(map);
+
+  // 深刻な状態ほど手前に描画（マーカーが重なっても超過・逼迫が隠れない）
+  const severity = s => !s.capacity ? 0 : s.occupants/s.capacity > 1 ? 3 : s.occupants/s.capacity >= 0.9 ? 2 : 1;
+  [...located].sort((a,b) => severity(a) - severity(b)).forEach(s => {
+    const st = shelterStatus(s);
+    L.circleMarker([s.lat, s.lng], {
+      radius: 9, color: cssVar("--surface-1"), weight: 2,
+      fillColor: st.color, fillOpacity: 1
+    }).bindPopup(popupContent(s), { maxWidth: 240 })
+      .bindTooltip(s.name, { direction: "top", offset: [0, -8] })
+      .addTo(markerLayer);
+  });
+  map.fitBounds(L.latLngBounds(located.map(s => [s.lat, s.lng])).pad(0.18));
+}
+
+/* ---------- KPI ---------- */
+function renderKPIs(shelters, supplies){
+  const box = document.getElementById("kpis");
+  box.textContent = "";
+  const totalOcc = shelters.reduce((a,s) => a + s.occupants, 0);
+  const totalCap = shelters.reduce((a,s) => a + s.capacity, 0);
+  const rate = totalCap ? totalOcc / totalCap : 0;
+  const over = shelters.filter(s => s.occupants > s.capacity).length;
+  const validSupplies = supplies.filter(s => effectiveRequired(s) > 0);
+  const short = validSupplies.filter(s => cityStock(s) + s.incoming < effectiveRequired(s)).length;
+
+  function tile({label, value, unit, hero, note, noteCrit, meter}){
+    const t = document.createElement("div"); t.className = "tile";
+    const l = document.createElement("div"); l.className = "label"; l.textContent = label;
+    const v = document.createElement("div"); v.className = "value" + (hero ? " hero" : "");
+    v.textContent = value;
+    if (unit){ const u = document.createElement("small"); u.textContent = unit; v.appendChild(u); }
+    t.append(l, v);
+    if (meter !== undefined){
+      const m = document.createElement("div"); m.className = "meter";
+      const f = document.createElement("span"); f.style.width = Math.min(meter*100,100) + "%";
+      if (meter >= 1) f.style.background = "var(--status-critical)";
+      else if (meter >= 0.9) f.style.background = "var(--status-warning)";
+      m.appendChild(f); t.appendChild(m);
+    }
+    if (note){
+      const n = document.createElement("div"); n.className = "note";
+      if (noteCrit){ const c = document.createElement("span"); c.className = "crit"; c.textContent = note; n.appendChild(c); }
+      else n.textContent = note;
+      t.appendChild(n);
+    }
+    box.appendChild(t);
+  }
+
+  tile({ label:"現在の避難者数", value:fmt(totalOcc), unit:"人", hero:true });
+  tile({ label:"受入可能数（合計）", value:fmt(totalCap), unit:"人",
+         note:`稼働率 ${pct(rate)}%`, meter:rate });
+  tile({ label:"開設避難所", value:fmt(shelters.length), unit:"ヶ所",
+         note: over > 0 ? `⛔ うち定員超過 ${over}ヶ所` : "定員超過なし", noteCrit: over > 0 });
+  tile({ label:"物資の不足品目", value: validSupplies.length ? fmt(short) : "－", unit: validSupplies.length ? "品目" : "",
+         note: !validSupplies.length ? "物資データは入力待ち"
+             : short > 0 ? "手配分を含めても必要量に未達" : "すべて充足見込み",
+         noteCrit: short > 0 });
+}
+
+/* ---------- 避難所別チャート（人数の共通スケール横棒） ---------- */
+function renderShelters(shelters){
+  const box = document.getElementById("shelterChart");
+  box.textContent = "";
+  const sorted = [...shelters].sort((a,b) => b.occupants/b.capacity - a.occupants/a.capacity);
+  const maxVal = Math.max(1, ...sorted.map(s => Math.max(s.capacity, s.occupants)));
+  const scaleMax = maxVal * 1.28;   // 右側にラベル分の余白
+
+  sorted.forEach(s => {
+    const ratio = s.capacity ? s.occupants / s.capacity : 0;
+    const row = document.createElement("div"); row.className = "row";
+
+    const name = document.createElement("div"); name.className = "name";
+    name.textContent = s.name;
+    const small = document.createElement("small"); small.textContent = s.district;
+    name.appendChild(small);
+
+    const zone = document.createElement("div"); zone.className = "barzone";
+    const track = document.createElement("div"); track.className = "track";
+    track.style.left = 0; track.style.width = (s.capacity/scaleMax*100) + "%";
+    const fillwrap = document.createElement("div"); fillwrap.className = "fillwrap";
+    fillwrap.style.left = 0; fillwrap.style.width = (s.occupants/scaleMax*100) + "%";
+    const seg = document.createElement("div");
+    seg.className = "seg " + (ratio > 1 ? "crit" : ratio >= 0.9 ? "warn" : "s1");
+    seg.style.width = "100%";
+    fillwrap.appendChild(seg);
+
+    const label = document.createElement("div"); label.className = "vlabel";
+    label.style.left = (Math.max(s.capacity, s.occupants)/scaleMax*100) + "%";
+    label.style.paddingLeft = "8px";
+    const b = document.createElement("b"); b.textContent = fmt(s.occupants);
+    label.appendChild(b);
+    label.appendChild(document.createTextNode(` / ${fmt(s.capacity)}人（${pct(ratio)}%）`));
+    if (ratio > 1){
+      const f = document.createElement("span"); f.className = "flag crit"; f.textContent = " ⛔超過";
+      label.appendChild(f);
+    } else if (ratio >= 0.9){
+      const f = document.createElement("span"); f.className = "flag warn"; f.textContent = " ⚠逼迫";
+      label.appendChild(f);
+    }
+
+    zone.append(track, fillwrap, label);
+    row.append(name, zone);
+    attachTip(row, el => {
+      tipTitle(el, `${s.name}（${s.district}）`);
+      tipRow(el, cssVar("--series-1"), `${fmt(s.occupants)}人`, "避難者数");
+      tipRow(el, cssVar("--track"), `${fmt(s.capacity)}人`, "受入可能数");
+      tipRow(el, null, `${pct(ratio)}%`, "稼働率");
+      const rem = s.capacity - s.occupants;
+      tipRow(el, null, rem >= 0 ? `あと${fmt(rem)}人` : `${fmt(-rem)}人超過`, "受入余力");
+    });
+    box.appendChild(row);
+  });
+
+  // 表ビュー
+  const tb = document.getElementById("shelterTable");
+  tb.textContent = "";
+  const table = document.createElement("table");
+  table.innerHTML = "<thead><tr><th>避難所</th><th>地区</th><th>避難者数</th><th>受入可能数</th><th>稼働率</th><th>受入余力</th></tr></thead>";
+  const body = document.createElement("tbody");
+  sorted.forEach(s => {
+    const tr = document.createElement("tr");
+    const cells = [s.name, s.district, fmt(s.occupants)+"人", fmt(s.capacity)+"人", pct(s.capacity ? s.occupants/s.capacity : 0)+"%"];
+    cells.forEach((c,i) => {
+      const td = document.createElement("td");
+      if (i === 1){ td.style.textAlign = "left"; }
+      td.textContent = c;
+      tr.appendChild(td);
+    });
+    const td = document.createElement("td");
+    const rem = s.capacity - s.occupants;
+    const span = document.createElement("span");
+    span.className = rem < 0 ? "crit" : "";
+    span.textContent = rem >= 0 ? `あと${fmt(rem)}人` : `${fmt(-rem)}人超過`;
+    td.appendChild(span);
+    tr.appendChild(td);
+    body.appendChild(tr);
+  });
+  table.appendChild(body);
+  tb.appendChild(table);
+}
+
+/* ---------- 物資チャート（必要量=100% の充足率スケール） ---------- */
+function renderSupplies(allSupplies){
+  const box = document.getElementById("supplyChart");
+  box.textContent = "";
+  const supplies = allSupplies
+    .map(s => ({ ...s, req: effectiveRequired(s), cstock: cityStock(s) }))
+    .filter(s => s.req > 0);
+  if (!supplies.length){
+    const p = document.createElement("p");
+    p.style.cssText = "font-size:.78rem;color:var(--text-muted)";
+    p.textContent = "物資データは入力待ちです。";
+    box.appendChild(p);
+    document.getElementById("supplyTable").textContent = "";
+    return;
+  }
+  const sorted = [...supplies].sort((a,b) =>
+    (a.cstock + a.incoming)/a.req - (b.cstock + b.incoming)/b.req);
+  const maxRatio = Math.max(1, ...sorted.map(s => (s.cstock+s.incoming)/s.req));
+  const scaleMax = maxRatio * 1.34;  // ラベル余白
+  const refPos = 1/scaleMax*100;
+
+  sorted.forEach((s, idx) => {
+    const total = s.cstock + s.incoming;
+    const ratio = total / s.req;
+    const row = document.createElement("div"); row.className = "row";
+
+    const name = document.createElement("div"); name.className = "name";
+    name.textContent = s.name;
+    const small = document.createElement("small");
+    small.textContent = s.perPerson > 0
+      ? `必要量/日 ${fmt(s.req)}${s.unit}（1人 ${s.perPerson}）`
+      : `必要量 ${fmt(s.req)}${s.unit}`;
+    name.appendChild(small);
+
+    const zone = document.createElement("div"); zone.className = "barzone";
+    const track = document.createElement("div"); track.className = "track";
+    track.style.left = 0; track.style.width = refPos + "%";
+    const fillwrap = document.createElement("div"); fillwrap.className = "fillwrap";
+    fillwrap.style.left = 0; fillwrap.style.width = (ratio/scaleMax*100) + "%";
+    const seg1 = document.createElement("div"); seg1.className = "seg s1";
+    seg1.style.width = total ? (s.cstock/total*100) + "%" : "0%";
+    const seg2 = document.createElement("div"); seg2.className = "seg s2";
+    seg2.style.flex = "1";
+    fillwrap.append(seg1, seg2);
+
+    const ref = document.createElement("div"); ref.className = "refline";
+    ref.style.left = refPos + "%";
+    if (idx === 0){
+      const cap = document.createElement("div"); cap.className = "refcap";
+      cap.style.left = refPos + "%"; cap.textContent = "必要量 100%";
+      zone.appendChild(cap);
+    }
+
+    const label = document.createElement("div"); label.className = "vlabel";
+    label.style.left = (Math.max(ratio, 1)/scaleMax*100) + "%";
+    label.style.paddingLeft = "8px";
+    const b = document.createElement("b"); b.textContent = `${pct(ratio)}%`;
+    label.appendChild(b);
+    if (ratio < 1){
+      const f = document.createElement("span"); f.className = "flag crit";
+      f.textContent = ` ⛔不足 ${fmt(s.req - total)}`;
+      label.appendChild(f);
+    }
+
+    zone.append(track, fillwrap, ref, label);
+    row.append(name, zone);
+    attachTip(row, el => {
+      tipTitle(el, s.perPerson > 0
+        ? `${s.name}（必要量/日 ${fmt(s.req)}${s.unit} ＝ 避難者${fmt(totalOccupantsAll())}人 × 1人 ${s.perPerson}${s.unit}）`
+        : `${s.name}（必要量 ${fmt(s.req)}${s.unit}）`);
+      tipRow(el, cssVar("--series-1"), `${fmt(s.cstock)}${s.unit}`, "在庫（本部＋避難所）");
+      tipRow(el, null, `${fmt(s.stock || 0)}${s.unit}`, "うち本部・倉庫");
+      tipRow(el, cssVar("--series-1-light"), `${fmt(s.incoming)}${s.unit}`, "調達手配中");
+      tipRow(el, null, `${pct(ratio)}%`, "充足率（手配分含む）");
+      if (ratio < 1) tipRow(el, null, `${fmt(s.req-total)}${s.unit}`, "不足");
+    });
+    box.appendChild(row);
+  });
+
+  // 表ビュー
+  const tb = document.getElementById("supplyTable");
+  tb.textContent = "";
+  const table = document.createElement("table");
+  table.innerHTML = "<thead><tr><th>品目</th><th>1人1日あたり</th><th>必要量/日</th><th>在庫(本部+避難所)</th><th>調達手配中</th><th>充足率</th><th>過不足</th></tr></thead>";
+  const body = document.createElement("tbody");
+  sorted.forEach(s => {
+    const total = s.cstock + s.incoming;
+    const tr = document.createElement("tr");
+    [`${s.name}（${s.unit}）`, s.perPerson > 0 ? String(s.perPerson) : "手入力", fmt(s.req), fmt(s.cstock), fmt(s.incoming), pct(total/s.req)+"%"]
+      .forEach(c => { const td = document.createElement("td"); td.textContent = c; tr.appendChild(td); });
+    const td = document.createElement("td");
+    const span = document.createElement("span");
+    span.className = total < s.req ? "crit" : "good";
+    span.textContent = total < s.req ? `▲${fmt(s.req-total)}` : `+${fmt(total-s.req)}`;
+    td.appendChild(span);
+    tr.appendChild(td);
+    body.appendChild(tr);
+  });
+  table.appendChild(body);
+  tb.appendChild(table);
+}
+
+/* ---------- 推移チャート（SVG折れ線・クロスヘア） ---------- */
+function renderTrend(){
+  const box = document.getElementById("trendChart");
+  box.textContent = "";
+  const dates = DATA.trend.dates;
+  const dist = DATA.trend.byDistrict;
+  if (!dates.length){ document.getElementById("trendDesc").textContent = "データなし"; return; }
+  const series = (currentDistrict && dist[currentDistrict])
+    ? dist[currentDistrict]
+    : dates.map((_,i) => Object.values(dist).reduce((a,arr) => a + (arr[i]||0), 0));
+  document.getElementById("trendDesc").textContent =
+    (currentDistrict || "全地区") + "の避難者数（日次）";
+
+  // viewBox幅を実表示幅に合わせ、文字サイズが縮まないようにする
+  const W = Math.max(320, Math.min(760, box.clientWidth || 720));
+  const H = W < 480 ? 200 : 240, padL = 46, padR = 54, padT = 16, padB = 30;
+  const maxV = Math.max(1, ...series);
+  const step = maxV > 4000 ? 1000 : maxV > 2000 ? 500 : maxV > 800 ? 200 : 100;
+  const yMax = Math.ceil(maxV / step) * step;
+  const x = i => dates.length > 1 ? padL + i * (W - padL - padR) / (dates.length - 1) : W/2;
+  const y = v => padT + (1 - v / yMax) * (H - padT - padB);
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.style.width = "100%"; svg.style.display = "block";
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs) => {
+    const el = document.createElementNS(NS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  };
+
+  // グリッド（実線ヘアライン）とY目盛り
+  for (let v = 0; v <= yMax; v += step){
+    svg.appendChild(mk("line", {x1:padL, x2:W-padR, y1:y(v), y2:y(v),
+      stroke:"var(--grid)", "stroke-width":1}));
+    const t = mk("text", {x:padL-8, y:y(v)+4, "text-anchor":"end",
+      "font-size":11, fill:"var(--text-muted)"});
+    t.style.fontVariantNumeric = "tabular-nums";
+    t.textContent = fmt(v);
+    svg.appendChild(t);
+  }
+  // X目盛り（幅が足りないときは1つおき）
+  const xStep = (W - padL - padR) / Math.max(1, dates.length - 1) < 40 ? 2 : 1;
+  dates.forEach((d,i) => {
+    if (i % xStep !== 0 && i !== dates.length - 1) return;
+    if (xStep > 1 && i === dates.length - 2) return;
+    const t = mk("text", {x:x(i), y:H-8, "text-anchor":"middle",
+      "font-size":11, fill:"var(--text-muted)"});
+    t.textContent = d;
+    svg.appendChild(t);
+  });
+  // ベースライン
+  svg.appendChild(mk("line", {x1:padL, x2:W-padR, y1:y(0), y2:y(0),
+    stroke:"var(--axis)", "stroke-width":1}));
+
+  // 面ウォッシュ + 折れ線
+  const pts = series.map((v,i) => `${x(i)},${y(v)}`).join(" ");
+  svg.appendChild(mk("polygon", {
+    points:`${x(0)},${y(0)} ${pts} ${x(series.length-1)},${y(0)}`,
+    fill:"var(--series-1)", opacity:.1}));
+  svg.appendChild(mk("polyline", {points:pts, fill:"none",
+    stroke:"var(--series-1)", "stroke-width":2,
+    "stroke-linejoin":"round", "stroke-linecap":"round"}));
+
+  // 終端ドット（サーフェスリング付き）と終端ラベル
+  const last = series.length - 1;
+  svg.appendChild(mk("circle", {cx:x(last), cy:y(series[last]), r:6, fill:"var(--surface-1)"}));
+  svg.appendChild(mk("circle", {cx:x(last), cy:y(series[last]), r:4, fill:"var(--series-1)"}));
+  const endLabel = mk("text", {x:x(last)+10, y:y(series[last])+4,
+    "font-size":12, "font-weight":600, fill:"var(--text-primary)"});
+  endLabel.textContent = fmt(series[last]);
+  svg.appendChild(endLabel);
+
+  // クロスヘア
+  const cross = mk("line", {y1:padT, y2:H-padB, stroke:"var(--axis)",
+    "stroke-width":1, visibility:"hidden"});
+  const hoverDot = mk("circle", {r:4, fill:"var(--series-1)",
+    stroke:"var(--surface-1)", "stroke-width":2, visibility:"hidden"});
+  svg.append(cross, hoverDot);
+
+  svg.addEventListener("pointermove", e => {
+    const rect = svg.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / rect.width * W;
+    let i = Math.round((mx - padL) / ((W - padL - padR) / Math.max(1, dates.length - 1)));
+    i = Math.max(0, Math.min(dates.length - 1, i));
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+    cross.setAttribute("visibility", "visible");
+    hoverDot.setAttribute("cx", x(i)); hoverDot.setAttribute("cy", y(series[i]));
+    hoverDot.setAttribute("visibility", "visible");
+    showTip(e, el => {
+      tipTitle(el, dates[i]);
+      tipRow(el, cssVar("--series-1"), `${fmt(series[i])}人`, currentDistrict || "全地区 合計");
+      if (!currentDistrict){
+        for (const d in dist) tipRow(el, null, `${fmt(dist[d][i]||0)}人`, d);
+      }
+    });
+  });
+  svg.addEventListener("pointerleave", () => {
+    cross.setAttribute("visibility", "hidden");
+    hoverDot.setAttribute("visibility", "hidden");
+    hideTip();
+  });
+
+  box.appendChild(svg);
+
+  // 表ビュー
+  const tb = document.getElementById("trendTable");
+  tb.textContent = "";
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  ["日付", currentDistrict || "全地区 合計", ...(currentDistrict ? [] : Object.keys(dist))]
+    .forEach(h => { const th = document.createElement("th"); th.textContent = h; hr.appendChild(th); });
+  thead.appendChild(hr); table.appendChild(thead);
+  const body = document.createElement("tbody");
+  dates.forEach((d,i) => {
+    const tr = document.createElement("tr");
+    const cells = [d, fmt(series[i])];
+    if (!currentDistrict) for (const k in dist) cells.push(fmt(dist[k][i]||0));
+    cells.forEach(c => { const td = document.createElement("td"); td.textContent = c; tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  table.appendChild(body);
+  tb.appendChild(table);
+}
+
+/* ---------- 表ビュー切り替え ---------- */
+document.querySelectorAll(".toggle").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const key = btn.dataset.target;
+    const chart = document.getElementById(key + "Chart");
+    const table = document.getElementById(key + "Table");
+    const showTable = table.classList.contains("hidden");
+    chart.classList.toggle("hidden", showTable);
+    table.classList.toggle("hidden", !showTable);
+    btn.textContent = showTable ? "グラフで見る" : "表で見る";
+  });
+});
+
+/* ---------- 一括描画（フィルターは下の全カードを対象） ---------- */
+function renderAll(){
+  const shelters = currentDistrict
+    ? DATA.shelters.filter(s => s.district === currentDistrict)
+    : DATA.shelters;
+  // 物資は地区別データを持たないため常に全体
+  renderKPIs(shelters, DATA.supplies);
+  renderMap(shelters);
+  renderShelters(shelters);
+  renderShortages(shelters);
+  renderSupplies(DATA.supplies);
+  renderTrend();
+}
+
+/* ---------- データ読み込み ---------- */
+async function loadData(){
+  try {
+    // キャッシュ回避のためクエリを付けて取得
+    const res = await fetch("data.json?_=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const json = await res.json();
+    if (!json.shelters || !json.supplies || !json.trend) throw new Error("形式不正");
+    DATA = json;
+  } catch (e) {
+    DATA = FALLBACK;
+    document.getElementById("fetchNotice").classList.remove("hidden");
+  }
+  document.getElementById("updatedAt").textContent = DATA.updatedAt || "";
+  document.getElementById("sampleBadge").classList.toggle("hidden", !DATA.sample);
+  rebuildFilter();
+  renderAll();
+}
+loadData();
+// 5分ごとに最新データを再取得（表示中の絞り込みは維持）
+setInterval(loadData, 5 * 60 * 1000);
+// Leaflet は defer 読み込みのため、ロード完了後に地図を描き直す
+addEventListener("load", () => renderAll());
+
+let resizeTimer, lastW = innerWidth;
+addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (Math.abs(innerWidth - lastW) > 40){ lastW = innerWidth; renderTrend(); }
+  }, 150);
+});
+</script>
+</body>
+</html>
