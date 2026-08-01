@@ -296,7 +296,7 @@ const API    = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeU
    ログイン方式になり、管理者はGitHubアカウント不要になる（worker/worker.js 参照）。
    空欄のままなら従来どおり各自のGitHubトークンで保存する。
    例: const WORKER_URL = "https://bousai-relay.example.workers.dev"; */
-const WORKER_URL = "";
+const WORKER_URL = "https://bousai-relay.a-sawada813.workers.dev";
 const WORKER_MODE = WORKER_URL.trim() !== "";
 
 document.getElementById("repoInfo").textContent = WORKER_MODE
