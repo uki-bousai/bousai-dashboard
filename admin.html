@@ -154,6 +154,7 @@ button:disabled{opacity:.45; cursor:not-allowed}
     <button class="tab" data-panel="stocks">避難所在庫</button>
     <button class="tab" data-panel="supply">物資在庫<span class="cnt" id="cntSupply"></span></button>
     <button class="tab" data-panel="suggest">融通提案<span class="cnt" id="cntSuggest"></span></button>
+    <button class="tab" data-panel="points">支援拠点<span class="cnt" id="cntPoints"></span></button>
     <button class="tab" data-panel="history">履歴</button>
     <button class="tab" data-panel="settings">設定</button>
   </div>
@@ -211,6 +212,19 @@ button:disabled{opacity:.45; cursor:not-allowed}
         </table>
       </div>
       <p class="desc" id="suggestEmpty" style="display:none; margin-top:10px">現在、融通が必要な不足はありません。</p>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-points">
+    <div class="card">
+      <p class="desc">個人・団体のご厚意で支援物資を集めて受け渡ししている場所を、市民向けページで紹介します（避難所とは別の緑のマーカーで地図にも表示）。<b>個人のお宅の場合は、場所や連絡先の公開について必ず本人の同意を確認してください。</b>内容が変わったら随時更新を。</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>拠点名</th><th>地区</th><th>受け渡せる物資</th><th>メモ（受付時間・連絡方法など）</th><th class="num">緯度</th><th class="num">経度</th><th></th><th></th></tr></thead>
+          <tbody id="pointsBody"></tbody>
+        </table>
+      </div>
+      <button class="small addrow" id="addPoint">＋ 拠点を追加</button>
     </div>
   </section>
 
@@ -356,6 +370,7 @@ document.querySelectorAll(".tab[data-panel]").forEach(btn => {
 function updateTabCounts(){
   $("cntShelter").textContent = `(${$("shelterBody").children.length})`;
   $("cntSupply").textContent = `(${$("supplyBody").children.length})`;
+  $("cntPoints").textContent = `(${$("pointsBody").children.length})`;
 }
 
 /* ---------- 認証（トークン方式） ---------- */
@@ -528,6 +543,45 @@ function shelterRow(s){
 function totalOccupantsInput(){
   return [...$("shelterBody").children].reduce((a,tr) => a + tr._get().occupants, 0);
 }
+
+/* ---------- 支援拠点（民間の物資集積場所） ---------- */
+function pointRow(p){
+  const tr = document.createElement("tr");
+  const name = inputCell(p.name || "", {placeholder:"例: ○○商店 店頭"});
+  const district = inputCell(p.district || "", {placeholder:"地区名"});
+  const items = inputCell(p.items || "", {placeholder:"例: 飲料水3箱、毛布10枚"});
+  const note = inputCell(p.note || "", {placeholder:"例: 10〜17時／DMで連絡"});
+  const lat = inputCell(p.lat ?? "", {num:false, placeholder:"32.6…"});
+  const lng = inputCell(p.lng ?? "", {num:false, placeholder:"130.6…"});
+  lat.td.className = lng.td.className = "geo";
+  lat.inp.style.textAlign = lng.inp.style.textAlign = "right";
+  const geoTd = document.createElement("td"); geoTd.className = "act";
+  geoTd.style.whiteSpace = "nowrap";
+  const geoBtn = document.createElement("button");
+  geoBtn.className = "small"; geoBtn.type = "button"; geoBtn.textContent = "📍検索";
+  geoBtn.addEventListener("click", () =>
+    geocodeShelter(name.inp.value.trim(), district.inp.value.trim(), lat.inp, lng.inp));
+  const mapBtn = document.createElement("button");
+  mapBtn.className = "small"; mapBtn.type = "button"; mapBtn.textContent = "🗺地図";
+  mapBtn.style.marginLeft = "4px";
+  mapBtn.addEventListener("click", () =>
+    showMapPicker(name.inp.value.trim() || "支援拠点", lat.inp, lng.inp));
+  geoTd.append(geoBtn, mapBtn);
+  tr.append(name.td, district.td, items.td, note.td, lat.td, lng.td, geoTd, delCell(tr, "支援拠点"));
+  tr._get = () => {
+    const latV = parseFloat(lat.inp.value), lngV = parseFloat(lng.inp.value);
+    const o = {
+      name: name.inp.value.trim(),
+      district: district.inp.value.trim(),
+      items: items.inp.value.trim(),
+      note: note.inp.value.trim()
+    };
+    if (Number.isFinite(latV) && Number.isFinite(lngV)){ o.lat = latV; o.lng = lngV; }
+    return o;
+  };
+  return tr;
+}
+
 
 /* ---------- 座標検索（国土地理院 + OpenStreetMap。無料・キー不要） ---------- */
 /* 検索範囲の限定。別の地域で使う場合はここを変更。
@@ -907,6 +961,8 @@ function renderForms(){
   data.shelters.forEach(s => sb.appendChild(shelterRow(s)));
   const pb = $("supplyBody"); pb.textContent = "";
   data.supplies.forEach(s => pb.appendChild(supplyRow(s)));
+  const ptb = $("pointsBody"); ptb.textContent = "";
+  (data.supplyPoints || []).forEach(p => ptb.appendChild(pointRow(p)));
   refreshAutoRequired();
   refreshStocksPanel();
   renderSuggestions();
@@ -925,6 +981,10 @@ $("addShelter").addEventListener("click", () => {
 });
 $("addSupply").addEventListener("click", () => {
   $("supplyBody").appendChild(supplyRow({name:"", unit:"", required:0, stock:0, incoming:0}));
+  markDirty(); updateTabCounts();
+});
+$("addPoint").addEventListener("click", () => {
+  $("pointsBody").appendChild(pointRow({}));
   markDirty(); updateTabCounts();
 });
 // 避難者数の変更を必要量/日の自動計算に反映
@@ -999,7 +1059,8 @@ function collect(){
     Object.values(trend.byShelter).forEach(arr => arr.splice(0, cut));
   }
 
-  return { updatedAt: now.stamp, provisional: $("provisionalChk").checked, shelters, supplies, trend };
+  const supplyPoints = [...$("pointsBody").children].map(tr => tr._get()).filter(p => p.name);
+  return { updatedAt: now.stamp, provisional: $("provisionalChk").checked, shelters, supplies, supplyPoints, trend };
 }
 
 /* ---------- 履歴（GitHubのコミット履歴を表示） ---------- */
