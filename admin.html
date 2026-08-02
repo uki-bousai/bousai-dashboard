@@ -218,6 +218,11 @@ button:disabled{opacity:.45; cursor:not-allowed}
   <section class="panel" id="panel-points">
     <div class="card">
       <p class="desc">個人・団体のご厚意で支援物資を集めて受け渡ししている場所を、市民向けページで紹介します（避難所とは別の緑のマーカーで地図にも表示）。<b>個人のお宅の場合は、場所や連絡先の公開について必ず本人の同意を確認してください。</b>内容が変わったら随時更新を。</p>
+      <div class="notice" style="margin:0 0 10px">
+        物資は「<b>品名と数</b>」を「、」で区切って書くだけでOKです（例: 飲料水3箱、毛布10枚、子ども服）。
+        下のボタンをタップすると、選択中の行に品名が入ります。
+        <div id="itemChips" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
+      </div>
       <div class="tablewrap">
         <table>
           <thead><tr><th>拠点名</th><th>地区</th><th>受け渡せる物資</th><th>メモ（受付時間・連絡方法など）</th><th class="num">緯度</th><th class="num">経度</th><th></th><th></th></tr></thead>
@@ -550,6 +555,7 @@ function pointRow(p){
   const name = inputCell(p.name || "", {placeholder:"例: ○○商店 店頭"});
   const district = inputCell(p.district || "", {placeholder:"地区名"});
   const items = inputCell(p.items || "", {placeholder:"例: 飲料水3箱、毛布10枚"});
+  items.inp.addEventListener("focus", () => { lastItemsInput = items.inp; });
   const note = inputCell(p.note || "", {placeholder:"例: 10〜17時／DMで連絡"});
   const lat = inputCell(p.lat ?? "", {num:false, placeholder:"32.6…"});
   const lng = inputCell(p.lng ?? "", {num:false, placeholder:"130.6…"});
@@ -986,6 +992,27 @@ $("addSupply").addEventListener("click", () => {
 $("addPoint").addEventListener("click", () => {
   $("pointsBody").appendChild(pointRow({}));
   markDirty(); updateTabCounts();
+});
+
+// 支援拠点: よく使う品名のタップ入力（選択中の行、なければ最後の行に追記）
+let lastItemsInput = null;
+["飲料水", "食料", "毛布", "おむつ", "ミルク", "生理用品", "衛生用品", "衣類", "簡易トイレ", "カセットコンロ", "日用品"].forEach(name => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "small"; b.textContent = name;
+  b.addEventListener("click", () => {
+    let inp = lastItemsInput;
+    if (!inp || !inp.isConnected){
+      let rows = $("pointsBody").children;
+      if (!rows.length){ $("pointsBody").appendChild(pointRow({})); updateTabCounts(); rows = $("pointsBody").children; }
+      inp = rows[rows.length - 1].querySelectorAll("input")[2];
+      lastItemsInput = inp;
+    }
+    const cur = inp.value.trim();
+    inp.value = cur ? cur.replace(/[、,]\s*$/, "") + "、" + name : name;
+    inp.focus();
+    markDirty();
+  });
+  $("itemChips").appendChild(b);
 });
 // 避難者数の変更を必要量/日の自動計算に反映
 $("shelterBody").addEventListener("input", refreshAutoRequired);

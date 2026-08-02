@@ -648,12 +648,13 @@ function renderPoints(points){
       name.appendChild(small);
     }
     const items = document.createElement("div"); items.className = "shortitems";
-    if (p.items){
+    // 「飲料水3箱、毛布10枚」のような自由記載を「、」等で区切ってタグ表示にする
+    (p.items || "").split(/[、,・\/]+/).map(t => t.trim()).filter(Boolean).forEach(t => {
       const tag = document.createElement("span"); tag.className = "shortitem";
       tag.style.cssText = "color:var(--good-text); border-color:var(--status-good)";
-      tag.textContent = p.items;
+      tag.textContent = t;
       items.appendChild(tag);
-    }
+    });
     if (p.note){
       const noteEl = document.createElement("span");
       noteEl.style.cssText = "font-size:.72rem; color:var(--text-secondary)";
