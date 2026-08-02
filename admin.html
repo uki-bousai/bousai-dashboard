@@ -677,9 +677,9 @@ function showMapPicker(name, latInp, lngInp){
   document.body.appendChild(overlay);
 
   const map = L.map(mapDiv);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
     maxZoom: 18,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'
   }).addTo(map);
 
   // 初期表示: 入力済みの座標 > 他の避難所の範囲 > 市の中心付近
