@@ -1,12 +1,12 @@
 {
   "provisional": true,
   "supplyPoints": [],
-  "updatedAt": "2026-08-02 21:34 更新",
+  "updatedAt": "2026-08-02 22:06 更新",
   "shelters": [
     {
       "name": "三角防災拠点センター",
       "district": "三角町",
-      "capacity": 250,
+      "capacity": 200,
       "occupants": 26,
       "lat": 32.616,
       "lng": 130.489,
@@ -26,7 +26,7 @@
     {
       "name": "不知火防災拠点センター",
       "district": "不知火町",
-      "capacity": 300,
+      "capacity": 350,
       "occupants": 335,
       "lat": 32.64634,
       "lng": 130.66808,
@@ -46,7 +46,7 @@
     {
       "name": "不知火小学校 ２Ｆ交流スペース",
       "district": "不知火町",
-      "capacity": 80,
+      "capacity": 55,
       "occupants": 52,
       "lat": 32.64461,
       "lng": 130.66183,
@@ -66,7 +66,7 @@
     {
       "name": "松橋東防災拠点センター",
       "district": "松橋町",
-      "capacity": 220,
+      "capacity": 500,
       "occupants": 539,
       "lat": 32.6322,
       "lng": 130.7066,
@@ -86,7 +86,7 @@
     {
       "name": "松橋西防災拠点センター",
       "district": "松橋町",
-      "capacity": 260,
+      "capacity": 400,
       "occupants": 316,
       "lat": 32.65166,
       "lng": 130.67907,
@@ -106,7 +106,7 @@
     {
       "name": "ウイングまつばせ",
       "district": "松橋町",
-      "capacity": 900,
+      "capacity": 800,
       "occupants": 507,
       "lat": 32.648,
       "lng": 130.6832,
@@ -126,7 +126,7 @@
     {
       "name": "松橋中学校 武道場",
       "district": "松橋町",
-      "capacity": 150,
+      "capacity": 100,
       "occupants": 7,
       "lat": 32.651,
       "lng": 130.6785,
@@ -146,7 +146,7 @@
     {
       "name": "小川防災拠点センター",
       "district": "小川町",
-      "capacity": 280,
+      "capacity": 1000,
       "occupants": 1088,
       "lat": 32.59258,
       "lng": 130.7045,
@@ -166,7 +166,7 @@
     {
       "name": "小野部田小学校 体育館",
       "district": "小川町",
-      "capacity": 180,
+      "capacity": 200,
       "occupants": 136,
       "lat": 32.60698,
       "lng": 130.71903,
@@ -186,7 +186,7 @@
     {
       "name": "豊野防災拠点センター",
       "district": "豊野町",
-      "capacity": 200,
+      "capacity": 250,
       "occupants": 103,
       "lat": 32.6404,
       "lng": 130.7532,
@@ -206,7 +206,7 @@
     {
       "name": "小川中学校 体育館",
       "district": "小川町",
-      "capacity": 170,
+      "capacity": 250,
       "occupants": 31,
       "lat": 32.58945,
       "lng": 130.71384,
