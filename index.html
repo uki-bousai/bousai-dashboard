@@ -277,7 +277,7 @@ footer a{color:var(--text-secondary)}
     <div class="legend">
       <span class="key"><span class="swatch" style="background:var(--series-1)"></span>在庫</span>
       <span class="key" id="supplyKeyIncoming"><span class="swatch" style="background:var(--series-1-light)"></span>調達手配中</span>
-      <span class="statusnote" id="supplyStatusnote">手配分を含めても必要量に届かない品目は <b style="color:var(--status-critical)">⛔ 不足</b> と表示</span>
+      <span class="statusnote" id="supplyStatusnote">残り<b>1日分</b>未満は <b style="color:var(--status-critical)">⛔</b>、<b>3日分</b>未満は <b class="warn">⚠ 要補給</b> と表示（備蓄の目標は3日分）</span>
     </div>
     <div class="rows" id="supplyChart"></div>
     <div class="hidden" id="supplyTable"></div>
@@ -675,10 +675,13 @@ function renderKPIs(shelters, supplies, shelterObj){
   const rate = totalCap ? totalOcc / totalCap : 0;
   const over = shelters.filter(s => s.occupants > s.capacity).length;
   const validSupplies = supplies.filter(s => effectiveRequired(s) > 0);
-  // 避難所を絞り込み中は、その避難所の在庫と必要量から不足品目を数える
+  // 避難所を絞り込み中は、その避難所の在庫と必要量から不足品目を数える。
+  // 全体表示では「残り3日分（備蓄目標）に満たない品目」を数える
+  const daysOf = s => (cityStock(s) + s.incoming) / effectiveRequired(s);
   const short = shelterObj
     ? computedShortages(shelterObj).length
-    : validSupplies.filter(s => cityStock(s) + s.incoming < effectiveRequired(s)).length;
+    : validSupplies.filter(s => daysOf(s) < 3).length;
+  const critShort = shelterObj ? 0 : validSupplies.filter(s => daysOf(s) < 1).length;
 
   function tile({label, value, unit, hero, note, noteCrit, meter}){
     const t = document.createElement("div"); t.className = "tile";
@@ -714,11 +717,13 @@ function renderKPIs(shelters, supplies, shelterObj){
     tile({ label:"開設避難所", value:fmt(shelters.length), unit:"ヶ所",
            note: over > 0 ? `⛔ うち定員超過 ${over}ヶ所` : "定員超過なし", noteCrit: over > 0 });
   }
-  tile({ label: shelterObj ? "この避難所の不足品目" : "物資の不足品目",
+  tile({ label: shelterObj ? "この避難所の不足品目" : "補給が必要な物資",
          value: validSupplies.length ? fmt(short) : "－", unit: validSupplies.length ? "品目" : "",
          note: !validSupplies.length ? "物資データは入力待ち"
-             : short > 0 ? (shelterObj ? "在庫が必要量/日に未達" : "手配分を含めても必要量に未達") : "すべて充足見込み",
-         noteCrit: short > 0 });
+             : shelterObj ? (short > 0 ? "在庫が必要量/日に未達" : "すべて充足見込み")
+             : critShort > 0 ? `⛔ うち${fmt(critShort)}品目は残り1日分なし`
+             : short > 0 ? "残り3日分（目標）に届かない品目" : "すべて3日分以上を確保",
+         noteCrit: shelterObj ? short > 0 : critShort > 0 });
 }
 
 /* ---------- 避難所別チャート（人数の共通スケール横棒） ---------- */
@@ -821,11 +826,9 @@ function renderSupplies(allSupplies, shelterObj){
   document.getElementById("supplyTitle").textContent =
     shelterObj ? `物資の在庫状況（${shelterObj.name}）` : "物資の調達状況";
   document.getElementById("supplyDesc").textContent = shelterObj
-    ? "この避難所の必要量/日（避難者数×1人1日あたり。縦線＝100%）に対する避難所在庫。充足率の低い順"
-    : "1日あたりの必要量（避難者数×1人1日あたりで自動計算。縦線＝100%）に対する在庫と調達手配中の量。充足率の低い順";
+    ? "この避難所の在庫があと何日分あるか（在庫÷1日あたりの必要量。縦線＝目標の3日分）。少ない順"
+    : "在庫と調達手配中を合わせて、あと何日分あるか（÷1日あたりの必要量。縦線＝目標の3日分）。少ない順";
   document.getElementById("supplyKeyIncoming").style.display = shelterObj ? "none" : "";
-  document.getElementById("supplyStatusnote").firstChild.textContent =
-    shelterObj ? "在庫が必要量/日に届かない品目は " : "手配分を含めても必要量に届かない品目は ";
 
   if (!supplies.length){
     const p = document.createElement("p");
@@ -837,9 +840,12 @@ function renderSupplies(allSupplies, shelterObj){
   }
   const sorted = [...supplies].sort((a,b) =>
     (a.cstock + a.incoming)/a.req - (b.cstock + b.incoming)/b.req);
-  const maxRatio = Math.max(1, ...sorted.map(s => (s.cstock+s.incoming)/s.req));
+  // バーの長さ＝残り日数。基準線は備蓄目標の3日分
+  const TARGET_DAYS = 3;
+  const maxRatio = Math.max(TARGET_DAYS, ...sorted.map(s => (s.cstock+s.incoming)/s.req));
   const scaleMax = maxRatio * 1.34;  // ラベル余白
-  const refPos = 1/scaleMax*100;
+  const refPos = TARGET_DAYS/scaleMax*100;
+  const fmtDays = d => (Math.round(d * 10) / 10) + "日分";
 
   sorted.forEach((s, idx) => {
     const total = s.cstock + s.incoming;
@@ -869,18 +875,22 @@ function renderSupplies(allSupplies, shelterObj){
     ref.style.left = refPos + "%";
     if (idx === 0){
       const cap = document.createElement("div"); cap.className = "refcap";
-      cap.style.left = refPos + "%"; cap.textContent = "必要量 100%";
+      cap.style.left = refPos + "%"; cap.textContent = "目標 3日分";
       zone.appendChild(cap);
     }
 
     const label = document.createElement("div"); label.className = "vlabel";
-    label.style.left = (Math.max(ratio, 1)/scaleMax*100) + "%";
+    label.style.left = (Math.max(ratio, TARGET_DAYS)/scaleMax*100) + "%";
     label.style.paddingLeft = "8px";
-    const b = document.createElement("b"); b.textContent = `${pct(ratio)}%`;
+    const b = document.createElement("b"); b.textContent = `残り${fmtDays(ratio)}`;
     label.appendChild(b);
     if (ratio < 1){
       const f = document.createElement("span"); f.className = "flag crit";
-      f.textContent = ` ⛔不足 ${fmt(s.req - total)}`;
+      f.textContent = " ⛔1日分なし";
+      label.appendChild(f);
+    } else if (ratio < TARGET_DAYS){
+      const f = document.createElement("span"); f.className = "flag warn";
+      f.textContent = " ⚠要補給";
       label.appendChild(f);
     }
 
@@ -892,7 +902,7 @@ function renderSupplies(allSupplies, shelterObj){
           ? `${s.name}（必要量/日 ${fmt(s.req)}${s.unit} ＝ 避難者${fmt(shelterObj.occupants)}人 × 1人 ${s.perPerson}${s.unit}）`
           : `${s.name}（必要量/日 ${fmt(s.req)}${s.unit}）`);
         tipRow(el, cssVar("--series-1"), `${fmt(s.cstock)}${s.unit}`, "在庫（この避難所）");
-        tipRow(el, null, `${pct(ratio)}%`, "充足率");
+        tipRow(el, null, `残り${fmtDays(ratio)}`, "在庫の持ち日数");
       } else {
         tipTitle(el, s.perPerson > 0
           ? `${s.name}（必要量/日 ${fmt(s.req)}${s.unit} ＝ 避難者${fmt(totalOccupantsAll())}人 × 1人 ${s.perPerson}${s.unit}）`
@@ -900,9 +910,9 @@ function renderSupplies(allSupplies, shelterObj){
         tipRow(el, cssVar("--series-1"), `${fmt(s.cstock)}${s.unit}`, "在庫（本部＋避難所）");
         tipRow(el, null, `${fmt(s.stock || 0)}${s.unit}`, "うち本部・倉庫");
         tipRow(el, cssVar("--series-1-light"), `${fmt(s.incoming)}${s.unit}`, "調達手配中");
-        tipRow(el, null, `${pct(ratio)}%`, "充足率（手配分含む）");
+        tipRow(el, null, `残り${fmtDays(ratio)}`, "在庫の持ち日数（手配分含む）");
       }
-      if (ratio < 1) tipRow(el, null, `${fmt(s.req-total)}${s.unit}`, "不足");
+      if (ratio < 1) tipRow(el, null, `${fmt(s.req-total)}${s.unit}`, "今日の必要量に対する不足");
     });
     box.appendChild(row);
   });
@@ -912,15 +922,15 @@ function renderSupplies(allSupplies, shelterObj){
   tb.textContent = "";
   const table = document.createElement("table");
   table.innerHTML = shelterObj
-    ? "<thead><tr><th>品目</th><th>1人1日あたり</th><th>必要量/日</th><th>在庫(この避難所)</th><th>充足率</th><th>過不足</th></tr></thead>"
-    : "<thead><tr><th>品目</th><th>1人1日あたり</th><th>必要量/日</th><th>在庫(本部+避難所)</th><th>調達手配中</th><th>充足率</th><th>過不足</th></tr></thead>";
+    ? "<thead><tr><th>品目</th><th>1人1日あたり</th><th>必要量/日</th><th>在庫(この避難所)</th><th>残り日数</th><th>過不足/日</th></tr></thead>"
+    : "<thead><tr><th>品目</th><th>1人1日あたり</th><th>必要量/日</th><th>在庫(本部+避難所)</th><th>調達手配中</th><th>残り日数</th><th>過不足/日</th></tr></thead>";
   const body = document.createElement("tbody");
   sorted.forEach(s => {
     const total = s.cstock + s.incoming;
     const tr = document.createElement("tr");
     const cols = shelterObj
-      ? [`${s.name}（${s.unit}）`, s.perPerson > 0 ? String(s.perPerson) : "手入力", fmt(s.req), fmt(s.cstock), pct(total/s.req)+"%"]
-      : [`${s.name}（${s.unit}）`, s.perPerson > 0 ? String(s.perPerson) : "手入力", fmt(s.req), fmt(s.cstock), fmt(s.incoming), pct(total/s.req)+"%"];
+      ? [`${s.name}（${s.unit}）`, s.perPerson > 0 ? String(s.perPerson) : "手入力", fmt(s.req), fmt(s.cstock), fmtDays(total/s.req)]
+      : [`${s.name}（${s.unit}）`, s.perPerson > 0 ? String(s.perPerson) : "手入力", fmt(s.req), fmt(s.cstock), fmt(s.incoming), fmtDays(total/s.req)];
     cols.forEach(c => { const td = document.createElement("td"); td.textContent = c; tr.appendChild(td); });
     const td = document.createElement("td");
     const span = document.createElement("span");

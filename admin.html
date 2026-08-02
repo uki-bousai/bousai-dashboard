@@ -182,7 +182,7 @@ button:disabled{opacity:.45; cursor:not-allowed}
       </div>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>品目名</th><th>単位</th><th class="num">必要量/日</th><th class="num">在庫</th><th class="num">状態</th></tr></thead>
+          <thead><tr><th>品目名</th><th>単位</th><th class="num">必要量/日</th><th class="num">在庫</th><th class="num">残り日数</th></tr></thead>
           <tbody id="stockBody"></tbody>
         </table>
       </div>
@@ -191,10 +191,10 @@ button:disabled{opacity:.45; cursor:not-allowed}
 
   <section class="panel" id="panel-supply">
     <div class="card">
-      <p class="desc">品目の一覧（マスタ）と、本部・倉庫の在庫、調達手配中の量を管理します。「1人1日あたり」を入れると必要量/日は <b>市全体の避難者数×1人1日あたり</b> で自動計算（例: 飲料水6本、食料3食、簡易トイレ0.02基=50人に1基）。人数から計算できない品目（ミルク等）は空欄にして必要量を手入力。避難所ごとの在庫は「避難所在庫」タブで入力します。充足率＝(本部在庫＋避難所在庫計＋手配中)÷必要量/日。</p>
+      <p class="desc">品目の一覧（マスタ）と、本部・倉庫の在庫、調達手配中の量を管理します。「1人1日あたり」を入れると必要量/日は <b>市全体の避難者数×1人1日あたり</b> で自動計算（例: 飲料水6本、食料3食、簡易トイレ0.02基=50人に1基）。人数から計算できない品目（ミルク等）は空欄にして必要量を手入力。避難所ごとの在庫は「避難所在庫」タブで入力します。<b>残り日数＝(本部在庫＋避難所在庫計＋手配中)÷必要量/日</b>。1日分未満は⛔、3日分未満は⚠（備蓄の目標は3日分）。</p>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>品目名</th><th>単位</th><th class="num">1人1日あたり</th><th class="num">必要量/日</th><th class="num">本部在庫</th><th class="num">避難所在庫計</th><th class="num">手配中</th><th class="num">充足率</th><th></th></tr></thead>
+          <thead><tr><th>品目名</th><th>単位</th><th class="num">1人1日あたり</th><th class="num">必要量/日</th><th class="num">本部在庫</th><th class="num">避難所在庫計</th><th class="num">手配中</th><th class="num">残り日数</th><th></th></tr></thead>
           <tbody id="supplyBody"></tbody>
         </table>
       </div>
@@ -491,8 +491,11 @@ function setChip(chip, ratio, kind){
     chip.className = "chip " + (ratio > 1 ? "crit" : ratio >= 0.9 ? "warn" : "ok");
     chip.textContent = ratio > 1 ? "⛔" + p : ratio >= 0.9 ? "⚠" + p : p;
   } else {
-    chip.className = "chip " + (ratio < 1 ? "crit" : "ok");
-    chip.textContent = ratio < 1 ? "⛔" + p : p;
+    // 物資は「残り何日分あるか」で表示（1日分未満=⛔ / 3日分未満=⚠ / 目標3日分）
+    const days = Math.round(ratio * 10) / 10;
+    const label = days + "日分";
+    chip.className = "chip " + (ratio < 1 ? "crit" : ratio < 3 ? "warn" : "ok");
+    chip.textContent = ratio < 1 ? "⛔" + label : ratio < 3 ? "⚠" + label : label;
   }
 }
 
@@ -944,7 +947,7 @@ function renderSuggestions(){
       x.from,
       "→",
       x.to,
-      Math.round(x.d.after * 100) + "%" + (x.d.unresolved > 0 ? `（なお${fmt(x.d.unresolved)}${x.unit}不足）` : "")
+      (Math.round(x.d.after * 10) / 10) + "日分" + (x.d.unresolved > 0 ? `（なお${fmt(x.d.unresolved)}${x.unit}不足）` : "")
     ];
     cells.forEach((c, i) => {
       const td = document.createElement("td");
