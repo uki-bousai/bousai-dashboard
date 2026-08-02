@@ -233,6 +233,7 @@ footer a{color:var(--text-secondary)}
       <span class="key"><span class="dot" style="background:var(--status-warning)"></span>⚠ 逼迫（90%以上）</span>
       <span class="key"><span class="dot" style="background:var(--status-critical)"></span>⛔ 定員超過</span>
       <span class="key"><span class="dot" style="background:var(--text-muted)"></span>データ入力待ち</span>
+      <span class="key hidden" id="pointsLegend"><span class="dot" style="background:var(--status-good)"></span>支援物資の拠点（民間）</span>
     </div>
   </section>
 
@@ -257,6 +258,14 @@ footer a{color:var(--text-secondary)}
       <span class="desc">各避難所の在庫と必要量/日（避難者数×1人1日あたり）から自動判定。不足数の多い順</span>
     </div>
     <div class="rows" id="shortageList"></div>
+  </section>
+
+  <section class="card hidden" id="pointsCard">
+    <div class="card-head">
+      <h2>支援物資の拠点（民間）</h2>
+      <span class="desc">個人・団体のご厚意で物資を受け渡ししている場所です。内容や受付時間は変わることがあります</span>
+    </div>
+    <div class="rows" id="pointsList"></div>
   </section>
 
   <section class="card">
@@ -559,11 +568,12 @@ function renderShortages(shelters){
   });
 }
 
-function renderMap(shelters){
+function renderMap(shelters, points){
   const card = document.getElementById("mapCard");
   if (typeof L === "undefined"){ card.classList.add("hidden"); return; }
   const located = shelters.filter(s => typeof s.lat === "number" && typeof s.lng === "number");
-  if (!located.length){ card.classList.add("hidden"); return; }
+  const locatedPts = (points || []).filter(p => typeof p.lat === "number" && typeof p.lng === "number");
+  if (!located.length && !locatedPts.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
 
   if (!map){
@@ -591,10 +601,68 @@ function renderMap(shelters){
     if (currentShelter !== s.name) m.on("click", () => selectShelter(s));
     markersByName[s.name] = m;
   });
-  map.fitBounds(L.latLngBounds(located.map(s => [s.lat, s.lng])).pad(0.18), { maxZoom: 16 });
+  // 支援物資の拠点（民間）: 緑の四角マーカー
+  locatedPts.forEach(p => {
+    const div = document.createElement("div");
+    const title = document.createElement("div"); title.className = "popup-title"; title.textContent = p.name;
+    const dist = document.createElement("div"); dist.className = "popup-district";
+    dist.textContent = (p.district ? p.district + " ／ " : "") + "支援物資の拠点（民間）";
+    div.append(title, dist);
+    if (p.items){
+      const r = document.createElement("div"); r.className = "popup-row";
+      const b = document.createElement("b"); b.textContent = p.items;
+      r.appendChild(b); div.appendChild(r);
+    }
+    if (p.note){
+      const r = document.createElement("div"); r.className = "popup-row"; r.textContent = p.note;
+      div.appendChild(r);
+    }
+    L.circleMarker([p.lat, p.lng], {
+      radius: 8, color: cssVar("--surface-1"), weight: 2,
+      fillColor: cssVar("--status-good"), fillOpacity: 1
+    }).bindPopup(div, { maxWidth: 240 })
+      .bindTooltip(p.name, { direction: "top", offset: [0, -8] })
+      .addTo(markerLayer);
+  });
+  const allPts = [...located.map(s => [s.lat, s.lng]), ...locatedPts.map(p => [p.lat, p.lng])];
+  map.fitBounds(L.latLngBounds(allPts).pad(0.18), { maxZoom: 16 });
   // 絞り込み中はその避難所のポップアップを開いた状態にする
   if (currentShelter && markersByName[currentShelter])
     setTimeout(() => markersByName[currentShelter].openPopup(), 0);
+}
+
+/* ---------- 支援物資の拠点（民間） ---------- */
+function renderPoints(points){
+  const card = document.getElementById("pointsCard");
+  const box = document.getElementById("pointsList");
+  box.textContent = "";
+  document.getElementById("pointsLegend").classList.toggle("hidden", !points.length);
+  if (!points.length){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  points.forEach(p => {
+    const row = document.createElement("div"); row.className = "shortrow";
+    const name = document.createElement("div"); name.className = "name";
+    name.textContent = p.name;
+    if (p.district){
+      const small = document.createElement("small"); small.textContent = p.district;
+      name.appendChild(small);
+    }
+    const items = document.createElement("div"); items.className = "shortitems";
+    if (p.items){
+      const tag = document.createElement("span"); tag.className = "shortitem";
+      tag.style.cssText = "color:var(--good-text); border-color:var(--status-good)";
+      tag.textContent = p.items;
+      items.appendChild(tag);
+    }
+    if (p.note){
+      const noteEl = document.createElement("span");
+      noteEl.style.cssText = "font-size:.72rem; color:var(--text-secondary)";
+      noteEl.textContent = p.note;
+      items.appendChild(noteEl);
+    }
+    row.append(name, items);
+    box.appendChild(row);
+  });
 }
 
 /* ---------- KPI ---------- */
@@ -1033,10 +1101,13 @@ function renderAll(){
   }
   const shelterObj = currentShelter ? shelters[0] : null;
   document.getElementById("clearFilter").classList.toggle("hidden", !currentDistrict && !currentShelter);
+  // 支援物資の拠点（民間）: 地区フィルターは効かせ、避難所の絞り込み中は非表示にして焦点を保つ
+  const points = shelterObj ? [] : (DATA.supplyPoints || []).filter(p => !currentDistrict || p.district === currentDistrict);
   renderKPIs(shelters, DATA.supplies, shelterObj);
-  renderMap(shelters);
+  renderMap(shelters, points);
   renderShelters(shelters);
   renderShortages(shelters);
+  renderPoints(points);
   // 物資: 全体では市全体の調達状況、避難所の絞り込み中はその避難所の在庫状況
   renderSupplies(DATA.supplies, shelterObj);
   renderTrend();
