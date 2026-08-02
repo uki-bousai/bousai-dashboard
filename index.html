@@ -200,6 +200,8 @@ footer a{color:var(--text-secondary)}
 
 <div class="notice hidden" id="provisionalNotice" style="border-color:var(--status-critical)"><div><b>⚠ 現在は仮のデータです。</b>実際の避難所・物資の状況ではありません。避難や物資の判断には使わないでください。正式なデータでの運用開始に向けて準備中です。</div></div>
 
+<div class="notice hidden" id="staleNotice" style="border-color:var(--status-warning)"><div><b>⚠ 情報が古い可能性があります。</b>最終更新は<b id="staleAgo"></b>です。現地の状況と異なる場合があるため、市の公式情報もあわせて確認してください。</div></div>
+
 <div class="container">
 
   <a class="recruitbanner" href="recruit.html">📢 <span><b>協力者募集</b> ─ 各避難所の状況を入力してくれる方を探しています</span><span class="go">詳しく →</span></a>
@@ -561,9 +563,9 @@ function renderMap(shelters){
 
   if (!map){
     map = L.map("map", { scrollWheelZoom: false });
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
       maxZoom: 18,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'
     }).addTo(map);
   }
   if (markerLayer) markerLayer.remove();
@@ -1035,6 +1037,32 @@ function renderAll(){
   renderTrend();
 }
 
+/* ---------- 情報の鮮度表示 ---------- */
+// updatedAt（"2026-08-02 02:26 更新"・日本時間）からの経過時間を表示し、
+// 12時間以上更新がなければ「情報が古い可能性」の警告を出す
+const STALE_MINUTES = 12 * 60;
+function renderFreshness(){
+  const el = document.getElementById("updatedAt");
+  const warn = document.getElementById("staleNotice");
+  const m = (DATA.updatedAt || "").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m){
+    el.textContent = DATA.updatedAt || "";
+    warn.classList.add("hidden");
+    return;
+  }
+  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5]);   // JST → UTC
+  const mins = Math.max(0, Math.floor((Date.now() - t) / 60000));
+  const ago = mins < 1 ? "たった今"
+    : mins < 60 ? `${mins}分前`
+    : mins < 1440 ? `${Math.floor(mins / 60)}時間前`
+    : `${Math.floor(mins / 1440)}日前`;
+  el.textContent = `${DATA.updatedAt}（${ago}）`;
+  const stale = mins >= STALE_MINUTES;
+  warn.classList.toggle("hidden", !stale);
+  if (stale) document.getElementById("staleAgo").textContent = ago;
+}
+setInterval(renderFreshness, 60 * 1000);   // 表示中も1分ごとに経過時間を更新
+
 /* ---------- データ読み込み ---------- */
 async function loadData(){
   try {
@@ -1048,7 +1076,7 @@ async function loadData(){
     DATA = FALLBACK;
     document.getElementById("fetchNotice").classList.remove("hidden");
   }
-  document.getElementById("updatedAt").textContent = DATA.updatedAt || "";
+  renderFreshness();
   document.getElementById("sampleBadge").classList.toggle("hidden", !DATA.sample);
   document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
   rebuildFilter();
