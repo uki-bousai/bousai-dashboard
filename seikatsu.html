@@ -70,6 +70,8 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 @media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
 .empty{font-size:.78rem; color:var(--text-muted)}
+.trend-subhead{font-size:.78rem; font-weight:700; color:var(--text-secondary); margin:14px 0 2px}
+.trend-subhead:first-child{margin-top:8px}
 /* KPI */
 .filters{display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap}
 .filters label{font-size:.78rem; color:var(--text-secondary); font-weight:700}
@@ -416,7 +418,9 @@ function renderTrendCard(){
   const dates = TREND.dates;
   const sumAt = (obj, i) => Object.values(obj || {}).reduce((a, arr) => a + (arr[i] || 0), 0);
   const pick = (obj, key) => (obj && Array.isArray(obj[key])) ? dates.map((_, i) => obj[key][i] || 0) : null;
-  let people, hh, scope = "";
+  const totalPeople = dates.map((_, i) => sumAt(TREND.byDistrict, i));
+  const totalHh = TREND.hhByDistrict ? dates.map((_, i) => sumAt(TREND.hhByDistrict, i)) : null;
+  let people = null, hh = null, scope = "";
   if (currentShelter && pick(TREND.byShelter, currentShelter)){
     people = pick(TREND.byShelter, currentShelter);
     hh = pick(TREND.hhByShelter, currentShelter);
@@ -425,17 +429,29 @@ function renderTrendCard(){
     people = pick(TREND.byDistrict, currentDistrict);
     hh = pick(TREND.hhByDistrict, currentDistrict);
     scope = currentDistrict;
-  } else if (currentShelter || currentDistrict){
-    card.classList.add("hidden"); return;   // 絞り込み先の推移データがない
-  } else {
-    people = dates.map((_, i) => sumAt(TREND.byDistrict, i));
-    hh = TREND.hhByDistrict ? dates.map((_, i) => sumAt(TREND.hhByDistrict, i)) : null;
   }
   const desc = card.querySelector(".desc");
-  if (desc) desc.textContent = `市の公表（毎日 午前8時時点）に基づく日次の推移${scope ? `（${scope}）` : ""}`;
+  if (desc) desc.textContent = `市の公表（毎日 午前8時時点）に基づく日次の推移${scope ? `（${scope}と全体）` : ""}`;
   card.classList.remove("hidden");
 
-  const W = Math.max(320, Math.min(760, box.clientWidth || 600));
+  const subhead = t => {
+    const el = document.createElement("div");
+    el.className = "trend-subhead";
+    el.textContent = t;
+    return el;
+  };
+  if (scope){
+    // 絞り込み中は「対象の推移」と「全体（総計）の推移」を並べて表示
+    box.appendChild(subhead(scope));
+    box.appendChild(buildTrendSvg(dates, people, hh, box.clientWidth));
+    box.appendChild(subhead("全体（総計）"));
+    box.appendChild(buildTrendSvg(dates, totalPeople, totalHh, box.clientWidth));
+  } else {
+    box.appendChild(buildTrendSvg(dates, totalPeople, totalHh, box.clientWidth));
+  }
+}
+function buildTrendSvg(dates, people, hh, boxWidth){
+  const W = Math.max(320, Math.min(760, boxWidth || 600));
   const H = 220, padL = 48, padR = 60, padT = 26, padB = 30;
   const maxV = Math.max(1, ...people, ...(hh || [0]));
   const step = maxV > 4000 ? 1000 : maxV > 2000 ? 500 : maxV > 800 ? 200 : 100;
@@ -480,7 +496,7 @@ function renderTrendCard(){
   };
   drawSeries(people, "--accent");
   drawSeries(hh, "--water");
-  box.appendChild(svg);
+  return svg;
 }
 addEventListener("resize", () => { clearTimeout(window._trTimer); window._trTimer = setTimeout(renderTrendCard, 200); });
 
