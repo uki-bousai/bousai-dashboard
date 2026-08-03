@@ -1,9 +1,9 @@
 {
-  "name": "避難所・物資 状況ダッシュボード",
-  "short_name": "避難所情報",
-  "description": "避難所の受入状況と物資の調達状況を公開するページ。圏外でも最後に取得した情報を表示できます。",
+  "name": "宇城市 生活支援情報",
+  "short_name": "生活支援情報",
+  "description": "宇城市の避難者数・避難所の受入状況、給水・無料入浴などの生活支援情報。圏外でも最後に取得した情報を表示できます。",
   "lang": "ja",
-  "start_url": ".",
+  "start_url": "seikatsu.html",
   "scope": ".",
   "display": "standalone",
   "background_color": "#f9f9f7",
