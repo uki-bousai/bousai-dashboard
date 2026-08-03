@@ -53,6 +53,8 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 @media (max-width:640px){ #map{height:300px} }
 .maplegend{display:flex; gap:14px; font-size:.72rem; color:var(--text-secondary); margin-top:10px; flex-wrap:wrap}
 .maplegend .key{display:inline-flex; align-items:center; gap:6px}
+.maplegend .key.tap{cursor:pointer; border:1px solid var(--border); border-radius:99px; padding:4px 10px; user-select:none}
+.maplegend .key.tap.sel{border-color:var(--accent); color:var(--text-primary); font-weight:700; background:color-mix(in srgb, var(--accent) 10%, transparent)}
 .row{display:grid; grid-template-columns:12em 1fr; gap:12px; padding:8px 0; border-bottom:1px solid var(--grid); align-items:baseline}
 .row:last-child{border-bottom:none}
 .row .name{font-size:.8rem; font-weight:700; text-align:right; line-height:1.4}
@@ -204,6 +206,7 @@ const fmt = n => (n || 0).toLocaleString("ja-JP");
 
 /* ---------- フィルター（地区 → 避難所 の2段絞り込み） ---------- */
 let currentDistrict = "", currentShelter = "";
+let trendFocus = null;   // 拠点ごとグラフで数値表示する拠点（凡例タップで切替）
 const fShelters = () => SHELTERS
   .filter(s => !currentDistrict || s.district === currentDistrict)
   .filter(s => !currentShelter || s.name === currentShelter);
@@ -211,10 +214,10 @@ const fByDistrict = list => (list || []).filter(x => !currentDistrict || x.distr
 
 const sel = document.getElementById("districtSel");
 const shSel = document.getElementById("shelterSel");
-sel.addEventListener("change", () => { currentDistrict = sel.value; currentShelter = ""; rebuildFilter(); renderAll(); });
-shSel.addEventListener("change", () => { currentShelter = shSel.value; renderAll(); });
+sel.addEventListener("change", () => { currentDistrict = sel.value; currentShelter = ""; trendFocus = null; rebuildFilter(); renderAll(); });
+shSel.addEventListener("change", () => { currentShelter = shSel.value; trendFocus = null; renderAll(); });
 document.getElementById("clearFilter").addEventListener("click", () => {
-  currentDistrict = ""; currentShelter = "";
+  currentDistrict = ""; currentShelter = ""; trendFocus = null;
   rebuildFilter(); renderAll();
 });
 
@@ -255,6 +258,7 @@ function rebuildFilter(){
 function selectShelter(s){
   currentDistrict = s.district;
   currentShelter = s.name;
+  trendFocus = null;
   rebuildFilter();
   renderAll();
 }
@@ -435,6 +439,11 @@ function renderTrendCard(){
       const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = e.color;
       key.appendChild(dot);
       key.appendChild(document.createTextNode(e.label));
+      if (e.onClick){
+        key.classList.add("tap");
+        if (e.selected) key.classList.add("sel");
+        key.addEventListener("click", e.onClick);
+      }
       div.appendChild(key);
     });
     box.appendChild(div);
@@ -471,18 +480,23 @@ function renderTrendCard(){
     if (names.length > 1){
       // 拠点ごとの線＋町の合計（破線）。人数と世帯数は別グラフで表示
       if (baseLegend) baseLegend.classList.add("hidden");
-      setDesc(`（${currentDistrict}・拠点ごと。破線=町の合計）`);
+      const focus = names.includes(trendFocus) ? trendFocus : null;
+      setDesc(`（${currentDistrict}・拠点ごと。破線=町の合計）拠点名をタップすると数値を表示します`);
       const COLORS = ["#2a78d6", "#8a63c9", "#1f9d6c", "#d97a26", "#c8506e", "#5b6ee1", "#8a8f3d"];
       const color = i => COLORS[i % COLORS.length];
+      const toggle = n => () => { trendFocus = (trendFocus === n) ? null : n; renderTrendCard(); };
 
       box.appendChild(subhead("避難者数（拠点ごと）"));
       const pTotal = pick(TREND.byDistrict, currentDistrict);
       box.appendChild(buildTrendSvg(dates, [
-        ...names.map((n, i) => ({ data: pick(TREND.byShelter, n), color: color(i), showLabels: false })),
-        { data: pTotal, colorVar: "--accent", dashed: true },
+        ...names.map((n, i) => ({
+          data: pick(TREND.byShelter, n), color: color(i),
+          showLabels: focus === n, dim: !!focus && focus !== n, wide: focus === n, onClick: toggle(n),
+        })),
+        { data: pTotal, colorVar: "--accent", dashed: true, showLabels: !focus },
       ], box.clientWidth));
       addLegend([
-        ...names.map((n, i) => ({ color: color(i), label: `${n} ${fmt(last(pick(TREND.byShelter, n)))}人` })),
+        ...names.map((n, i) => ({ color: color(i), label: `${n} ${fmt(last(pick(TREND.byShelter, n)))}人`, selected: focus === n, onClick: toggle(n) })),
         { color: "var(--text-muted)", label: `町の合計（破線） ${fmt(last(pTotal))}人` },
       ]);
 
@@ -491,11 +505,14 @@ function renderTrendCard(){
       if (hhNames.length){
         box.appendChild(subhead("避難世帯数（拠点ごと）"));
         box.appendChild(buildTrendSvg(dates, [
-          ...hhNames.map((n, i) => ({ data: pick(TREND.hhByShelter, n), color: color(names.indexOf(n)), showLabels: false })),
-          ...(hhTotal ? [{ data: hhTotal, colorVar: "--water", dashed: true }] : []),
+          ...hhNames.map((n, i) => ({
+            data: pick(TREND.hhByShelter, n), color: color(names.indexOf(n)),
+            showLabels: focus === n, dim: !!focus && focus !== n, wide: focus === n, onClick: toggle(n),
+          })),
+          ...(hhTotal ? [{ data: hhTotal, colorVar: "--water", dashed: true, showLabels: !focus }] : []),
         ], box.clientWidth));
         addLegend([
-          ...hhNames.map(n => ({ color: color(names.indexOf(n)), label: `${n} ${fmt(last(pick(TREND.hhByShelter, n)))}世帯` })),
+          ...hhNames.map(n => ({ color: color(names.indexOf(n)), label: `${n} ${fmt(last(pick(TREND.hhByShelter, n)))}世帯`, selected: focus === n, onClick: toggle(n) })),
           ...(hhTotal ? [{ color: "var(--text-muted)", label: `町の合計（破線） ${fmt(last(hhTotal))}世帯` }] : []),
         ]);
       }
@@ -543,22 +560,28 @@ function buildTrendSvg(dates, series, boxWidth){
     t.textContent = dLabel;
     svg.appendChild(t);
   });
-  const drawSeries = ({ data, colorVar, color: rawColor, dashed, showLabels }) => {
+  const drawSeries = ({ data, colorVar, color: rawColor, dashed, showLabels, dim, wide, onClick }) => {
     const color = rawColor || cssVar(colorVar);
     if (dates.length > 1){
       const attrs = {
         points: data.map((v, i) => `${x(i)},${y(v)}`).join(" "),
-        fill: "none", stroke: color, "stroke-width": 2,
+        fill: "none", stroke: color, "stroke-width": wide ? 3.5 : 2,
         "stroke-linejoin": "round", "stroke-linecap": "round"
       };
       if (dashed){ attrs["stroke-dasharray"] = "6 5"; attrs["stroke-opacity"] = .75; }
-      svg.appendChild(mk("polyline", attrs));
+      if (dim) attrs["stroke-opacity"] = .25;
+      const line = mk("polyline", attrs);
+      if (onClick){ line.style.cursor = "pointer"; line.style.pointerEvents = "stroke"; line.addEventListener("click", onClick); }
+      svg.appendChild(line);
     }
     data.forEach((v, i) => {
-      svg.appendChild(mk("circle", {
+      const c = mk("circle", {
         cx: x(i), cy: y(v), r: dashed ? 3 : 4,
-        fill: dashed ? "var(--surface-1)" : color, stroke: dashed ? color : "var(--surface-1)", "stroke-width": 2
-      }));
+        fill: dashed ? "var(--surface-1)" : color, stroke: dashed ? color : "var(--surface-1)", "stroke-width": 2,
+        "fill-opacity": dim ? .3 : 1, "stroke-opacity": dim ? .3 : 1
+      });
+      if (onClick){ c.style.cursor = "pointer"; c.addEventListener("click", onClick); }
+      svg.appendChild(c);
       if (showLabels === false) return;   // 拠点ごと表示など、線が多いときは値を凡例側に出す
       // 破線（合計）のラベルは控えめな色。合計は拠点より上に来るため、どちらも点の上に置けば重ならない
       const t = mk("text", {
