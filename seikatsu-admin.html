@@ -555,11 +555,14 @@ function collect(){
   const water = [...$("waterBody").children].map(tr => tr._get()).filter(w => w.name);
   const toilets = [...$("toiletBody").children].map(tr => tr._get()).filter(t => t.name);
   const haves = (data.haves || []).filter(l => (l.items || []).length);
-  return {
+  const next = {
     provisional: $("provisionalChk").checked,
     updatedAt: jstStamp() + " 更新",
     water, toilets, haves
   };
+  // この画面が扱わないデータ（無料入浴など）は元の内容をそのまま引き継ぐ
+  Object.keys(data || {}).forEach(k => { if (!(k in next)) next[k] = data[k]; });
+  return next;
 }
 
 $("saveBtn").addEventListener("click", async () => {

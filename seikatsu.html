@@ -73,6 +73,10 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 @media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
 .empty{font-size:.78rem; color:var(--text-muted)}
+.gmap{display:inline-block; font-size:.72rem; font-weight:700; color:var(--accent);
+  text-decoration:none; white-space:nowrap; margin-left:10px;
+  border:1px solid var(--border); border-radius:99px; padding:3px 10px}
+.gmap:active{opacity:.7}
 .trend-subhead{font-size:.78rem; font-weight:700; color:var(--text-secondary); margin:14px 0 2px}
 .trend-subhead:first-child{margin-top:8px}
 /* KPI */
@@ -125,7 +129,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
 <header>
   <h1>宇城市 生活支援情報</h1>
-  <p class="sub">避難所の受入状況、給水車の場所と時間、仮設トイレ、避難所で受け取れる物資</p>
+  <p class="sub">避難所の受入状況、給水の場所と時間、無料入浴、仮設トイレ、避難所で受け取れる物資</p>
   <div class="updated" id="updatedAt"></div>
 </header>
 
@@ -176,6 +180,12 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
     <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。</p>
     <div id="waterList"><p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="dot" style="background:#d97a26"></span>無料入浴サービス（公衆浴場）</h2>
+    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。石鹸・シャンプー・タオル等と<b>本人確認書類</b>（運転免許証・マイナンバーカード等）を持参し、受付で氏名・住所・年齢を記入します。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。</p>
+    <div id="bathList"><p class="empty">施設情報は準備中です。</p></div>
   </section>
 
   <section class="card">
@@ -360,6 +370,37 @@ function rowEl(name, district, bodyHtmlBuilder){
   row.append(n, b);
   return row;
 }
+/* Googleマップで開くリンク。座標があれば座標で、なければ施設名＋住所で検索 */
+function gmapsLink(query){
+  const a = document.createElement("a");
+  a.className = "gmap";
+  a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query);
+  a.target = "_blank"; a.rel = "noopener";
+  a.textContent = "🗺 地図を開く";
+  return a;
+}
+const gmapsQuery = p => (typeof p.lat === "number" && typeof p.lng === "number")
+  ? `${p.lat},${p.lng}` : `${p.name} ${p.address || (p.district ? "宇城市" + p.district : "宇城市")}`;
+function renderBaths(){
+  const box = document.getElementById("bathList");
+  box.textContent = "";
+  const list = DATA.baths || [];
+  if (!list.length){ box.innerHTML = '<p class="empty">施設情報は準備中です。</p>'; return; }
+  list.forEach(bt => box.appendChild(rowEl(bt.name, bt.address, b => {
+    const t = document.createElement("b"); t.textContent = bt.hours || "";
+    b.appendChild(t);
+    if (bt.closed && bt.closed !== "なし") b.appendChild(document.createTextNode(" ／ 定休: " + bt.closed));
+    else if (bt.closed === "なし") b.appendChild(document.createTextNode(" ／ 定休なし"));
+    if (bt.tel){
+      const tel = document.createElement("a");
+      tel.href = "tel:" + bt.tel.replace(/-/g, "");
+      tel.textContent = "📞 " + bt.tel;
+      tel.className = "gmap";
+      b.appendChild(tel);
+    }
+    b.appendChild(gmapsLink(`${bt.name} ${bt.address || ""}`));
+  })));
+}
 function renderWater(){
   const box = document.getElementById("waterList");
   box.textContent = "";
@@ -374,6 +415,7 @@ function renderWater(){
     const t = document.createElement("b"); t.textContent = w.schedule || "";
     b.appendChild(t);
     if (w.note) b.appendChild(document.createTextNode(" ／ " + w.note));
+    b.appendChild(gmapsLink(gmapsQuery(w)));
   })));
 }
 function renderToilets(){
@@ -389,6 +431,7 @@ function renderToilets(){
   list.forEach(t => box.appendChild(rowEl(t.name, t.district, b => {
     if (t.count){ const c = document.createElement("b"); c.textContent = `${t.count}基`; b.appendChild(c); }
     if (t.note) b.appendChild(document.createTextNode((t.count ? " ／ " : "") + t.note));
+    b.appendChild(gmapsLink(gmapsQuery(t)));
   })));
 }
 function renderHaves(){
@@ -664,6 +707,10 @@ function renderMap(){
       if (p.note) r.appendChild(document.createTextNode(" " + p.note));
       div.appendChild(r);
     }
+    const gm = document.createElement("div"); gm.className = "popup-row";
+    gm.appendChild(gmapsLink(`${p.lat},${p.lng}`));
+    gm.firstChild.style.marginLeft = "0";
+    div.appendChild(gm);
     const marker = L.circleMarker([p.lat, p.lng], {
       radius: p.kind === "shelter" ? 9 : 8, color: cssVar("--surface-1"), weight: 2,
       fillColor, fillOpacity: 1
@@ -707,6 +754,7 @@ function renderAll(){
   renderShelters();
   renderTrendCard();
   renderWater();
+  renderBaths();
   renderToilets();
   renderHaves();
   renderMap();
