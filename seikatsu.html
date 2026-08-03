@@ -70,6 +70,30 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 @media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
 .empty{font-size:.78rem; color:var(--text-muted)}
+/* KPI */
+.kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px}
+@media (max-width:640px){ .kpis{grid-template-columns:repeat(3,1fr)} }
+.tile{background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:12px 14px}
+.tile .label{font-size:.68rem; font-weight:700; color:var(--text-muted)}
+.tile .value{font-size:1.5rem; font-weight:700; margin-top:2px}
+.tile .value small{font-size:.72rem; font-weight:400; color:var(--text-secondary); margin-left:2px}
+.tile .note{font-size:.68rem; color:var(--text-secondary); margin-top:2px}
+.tile .note .crit{color:var(--status-critical); font-weight:700}
+/* 受入状況の行 */
+.shrow{padding:8px 0; border-bottom:1px solid var(--grid)}
+.shrow:last-child{border-bottom:none}
+.shrow .top{display:flex; justify-content:space-between; gap:10px; align-items:baseline; font-size:.8rem}
+.shrow .top .nm{font-weight:700}
+.shrow .top .nm small{font-weight:400; color:var(--text-muted); margin-left:6px; font-size:.68rem}
+.shrow .top .val{white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text-secondary)}
+.shrow .top .val b{color:var(--text-primary)}
+.shrow .flag{font-size:.7rem; font-weight:700}
+.shrow .flag.crit{color:var(--status-critical)}
+.shrow .flag.warn{color:#b97a10}
+.track{height:8px; background:var(--grid); border-radius:99px; margin-top:6px; overflow:hidden}
+.track .fill{height:100%; border-radius:99px; background:var(--accent)}
+.track .fill.warn{background:var(--status-warning)}
+.track .fill.crit{background:var(--status-critical)}
 .popup-title{font-weight:700; font-size:.84rem; margin-bottom:2px}
 .popup-sub{font-size:.7rem; color:var(--text-muted); margin-bottom:6px}
 .popup-row{font-size:.76rem; color:var(--text-secondary)}
@@ -85,23 +109,33 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 <body>
 
 <header>
-  <h1>給水・トイレ・物資の情報</h1>
-  <p class="sub">宇城市 生活支援情報 ─ 給水車の場所と時間、仮設トイレ、避難所で受け取れる物資</p>
+  <h1>宇城市 生活支援情報</h1>
+  <p class="sub">避難所の受入状況、給水車の場所と時間、仮設トイレ、避難所で受け取れる物資</p>
   <div class="updated" id="updatedAt"></div>
-  <a class="backlink" href="index.html">← 避難所の受入状況・物資ダッシュボードはこちら</a>
 </header>
 
-<div class="notice hidden" id="provisionalNotice"><div><b>⚠ 現在は仮のデータです。</b>実際の給水・トイレ・物資の状況ではありません。正式なデータでの運用開始に向けて準備中です。</div></div>
+<div class="notice hidden" id="provisionalNotice"><div><b>⚠ 給水・トイレ・配布物資の情報は準備中の仮データです。</b>実際の状況ではありません。避難所の避難者数・受入可能数は市の公表資料に基づきます。</div></div>
 
 <div class="container">
+
+  <div class="kpis" id="kpis"></div>
 
   <section class="card hidden" id="mapCard">
     <h2>マップ</h2>
     <div id="map"></div>
     <div class="maplegend">
+      <span class="key"><span class="dot" style="background:var(--accent)"></span>避難所 受入可</span>
+      <span class="key"><span class="dot" style="background:var(--status-warning)"></span>⚠ 逼迫（90%以上）</span>
+      <span class="key"><span class="dot" style="background:var(--status-critical)"></span>⛔ 定員超過</span>
       <span class="key"><span class="dot" style="background:var(--water)"></span>給水</span>
       <span class="key"><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</span>
     </div>
+  </section>
+
+  <section class="card hidden" id="shelterCard">
+    <h2>避難所別 受入状況</h2>
+    <p class="desc" id="shelterDesc">避難者数と受入可能数。稼働率の高い順（避難者数・定員は市の公表資料に基づく）</p>
+    <div id="shelterList"></div>
   </section>
 
   <section class="card">
@@ -131,8 +165,76 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 <script>
 "use strict";
 let DATA = { water: [], toilets: [], haves: [] };
+let SHELTERS = [];   // data.json（避難所ダッシュボードのデータ）から読む
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = n => (n || 0).toLocaleString("ja-JP");
+
+/* ---------- 避難所の受入状況 ---------- */
+function shelterStatus(s){
+  if (!s.capacity) return { color: cssVar("--text-muted"), label: "データ入力待ち", cls: "" };
+  const r = s.occupants / s.capacity;
+  if (r > 1)    return { color: cssVar("--status-critical"), label: "⛔ 定員超過", cls: "crit" };
+  if (r >= 0.9) return { color: cssVar("--status-warning"),  label: "⚠ 逼迫",     cls: "warn" };
+  return { color: cssVar("--accent"), label: "受入可", cls: "" };
+}
+function renderKPIs(){
+  const box = document.getElementById("kpis");
+  box.textContent = "";
+  if (!SHELTERS.length){ return; }
+  const occ = SHELTERS.reduce((a,s) => a + (s.occupants || 0), 0);
+  const cap = SHELTERS.reduce((a,s) => a + (s.capacity || 0), 0);
+  const over = SHELTERS.filter(s => s.capacity && s.occupants > s.capacity).length;
+  const tile = (label, value, unit, note, crit) => {
+    const t = document.createElement("div"); t.className = "tile";
+    const l = document.createElement("div"); l.className = "label"; l.textContent = label;
+    const v = document.createElement("div"); v.className = "value"; v.textContent = value;
+    if (unit){ const u = document.createElement("small"); u.textContent = unit; v.appendChild(u); }
+    t.append(l, v);
+    if (note){
+      const n = document.createElement("div"); n.className = "note";
+      if (crit){ const c = document.createElement("span"); c.className = "crit"; c.textContent = note; n.appendChild(c); }
+      else n.textContent = note;
+      t.appendChild(n);
+    }
+    box.appendChild(t);
+  };
+  tile("現在の避難者数", fmt(occ), "人");
+  tile("受入可能数（合計）", fmt(cap), "人", cap ? `稼働率 ${Math.round(occ/cap*100)}%` : "");
+  tile("開設避難所", fmt(SHELTERS.length), "ヶ所", over > 0 ? `⛔ 定員超過 ${over}ヶ所` : "定員超過なし", over > 0);
+}
+function renderShelters(){
+  const card = document.getElementById("shelterCard");
+  const box = document.getElementById("shelterList");
+  box.textContent = "";
+  if (!SHELTERS.length){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  const sorted = [...SHELTERS].sort((a,b) =>
+    (b.capacity ? b.occupants/b.capacity : -1) - (a.capacity ? a.occupants/a.capacity : -1));
+  sorted.forEach(s => {
+    const st = shelterStatus(s);
+    const r = s.capacity ? s.occupants / s.capacity : 0;
+    const row = document.createElement("div"); row.className = "shrow";
+    const top = document.createElement("div"); top.className = "top";
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = s.name;
+    const sm = document.createElement("small"); sm.textContent = s.district; nm.appendChild(sm);
+    const val = document.createElement("span"); val.className = "val";
+    const b = document.createElement("b"); b.textContent = fmt(s.occupants);
+    val.appendChild(b);
+    val.appendChild(document.createTextNode(` / ${fmt(s.capacity)}人（${s.capacity ? Math.round(r*100) : "—"}%）`));
+    if (st.cls){
+      const f = document.createElement("span"); f.className = "flag " + st.cls; f.textContent = " " + st.label;
+      val.appendChild(f);
+    }
+    top.append(nm, val);
+    const track = document.createElement("div"); track.className = "track";
+    const fill = document.createElement("div"); fill.className = "fill" + (st.cls ? " " + st.cls : "");
+    fill.style.width = Math.min(r * 100, 100) + "%";
+    track.appendChild(fill);
+    row.append(top, track);
+    box.appendChild(row);
+  });
+}
 
 /* ---------- 鮮度表示 ---------- */
 function renderUpdated(){
@@ -200,6 +302,7 @@ function renderMap(){
   const card = document.getElementById("mapCard");
   if (typeof L === "undefined"){ card.classList.add("hidden"); return; }
   const pts = [
+    ...SHELTERS.filter(s => typeof s.lat === "number").map(s => ({...s, kind:"shelter"})),
     ...(DATA.water || []).filter(w => typeof w.lat === "number").map(w => ({...w, kind:"water"})),
     ...(DATA.toilets || []).filter(t => typeof t.lat === "number").map(t => ({...t, kind:"toilet"})),
   ];
@@ -218,17 +321,43 @@ function renderMap(){
     const div = document.createElement("div");
     const t = document.createElement("div"); t.className = "popup-title"; t.textContent = p.name;
     const s = document.createElement("div"); s.className = "popup-sub";
-    s.textContent = (p.district ? p.district + " ／ " : "") + (p.kind === "water" ? "給水" : "仮設トイレ");
+    s.textContent = (p.district ? p.district + " ／ " : "") +
+      (p.kind === "water" ? "給水" : p.kind === "toilet" ? "仮設トイレ" : "避難所");
     div.append(t, s);
-    const r = document.createElement("div"); r.className = "popup-row";
-    const b = document.createElement("b");
-    b.textContent = p.kind === "water" ? (p.schedule || "") : (p.count ? p.count + "基" : "");
-    r.appendChild(b);
-    if (p.note) r.appendChild(document.createTextNode(" " + p.note));
-    div.appendChild(r);
+    let fillColor;
+    if (p.kind === "shelter"){
+      const st = shelterStatus(p);
+      fillColor = st.color;
+      const addRow = (label, value) => {
+        const r = document.createElement("div"); r.className = "popup-row";
+        const b = document.createElement("b"); b.textContent = value;
+        r.appendChild(b);
+        r.appendChild(document.createTextNode(" " + label));
+        div.appendChild(r);
+      };
+      if (p.capacity){
+        addRow("避難者数", fmt(p.occupants) + "人");
+        addRow("受入可能数", fmt(p.capacity) + "人");
+        const rem = p.capacity - p.occupants;
+        addRow("受入余力", rem >= 0 ? `あと${fmt(rem)}人` : `${fmt(-rem)}人超過`);
+      }
+      const flag = document.createElement("div"); flag.className = "popup-row";
+      const fb = document.createElement("b"); fb.textContent = st.label;
+      if (st.cls === "crit") fb.style.color = cssVar("--status-critical");
+      flag.appendChild(fb);
+      div.appendChild(flag);
+    } else {
+      fillColor = cssVar(p.kind === "water" ? "--water" : "--toilet");
+      const r = document.createElement("div"); r.className = "popup-row";
+      const b = document.createElement("b");
+      b.textContent = p.kind === "water" ? (p.schedule || "") : (p.count ? p.count + "基" : "");
+      r.appendChild(b);
+      if (p.note) r.appendChild(document.createTextNode(" " + p.note));
+      div.appendChild(r);
+    }
     L.circleMarker([p.lat, p.lng], {
-      radius: 9, color: cssVar("--surface-1"), weight: 2,
-      fillColor: cssVar(p.kind === "water" ? "--water" : "--toilet"), fillOpacity: 1
+      radius: p.kind === "shelter" ? 9 : 8, color: cssVar("--surface-1"), weight: 2,
+      fillColor, fillOpacity: 1
     }).bindPopup(div, { maxWidth: 240 })
       .bindTooltip(p.name, { direction: "top", offset: [0, -8] })
       .addTo(layer);
@@ -243,8 +372,20 @@ async function loadData(){
     if (!res.ok) throw new Error("HTTP " + res.status);
     DATA = await res.json();
   } catch (e) { /* 前回の表示を維持 */ }
+  try {
+    // 避難所の受入状況（避難所ダッシュボードと同じデータ）
+    const res2 = await fetch("data.json?_=" + Date.now(), { cache: "no-store" });
+    if (res2.ok){
+      const d2 = await res2.json();
+      SHELTERS = d2.shelters || [];
+      const desc = document.getElementById("shelterDesc");
+      if (d2.updatedAt) desc.textContent = `避難者数と受入可能数（市の公表資料に基づく・${d2.updatedAt}）。稼働率の高い順`;
+    }
+  } catch (e) { /* 前回の表示を維持 */ }
   document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
   renderUpdated();
+  renderKPIs();
+  renderShelters();
   renderWater();
   renderToilets();
   renderHaves();
