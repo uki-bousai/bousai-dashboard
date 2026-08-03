@@ -138,6 +138,16 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
     <div id="shelterList"></div>
   </section>
 
+  <section class="card hidden" id="trendCard">
+    <h2>避難者数・世帯数の推移</h2>
+    <p class="desc">市の公表（毎日 午前8時時点）に基づく日次の推移</p>
+    <div id="trendChart"></div>
+    <div class="maplegend" style="margin-top:8px">
+      <span class="key"><span class="dot" style="background:var(--accent)"></span>避難者数</span>
+      <span class="key"><span class="dot" style="background:var(--water)"></span>避難世帯数</span>
+    </div>
+  </section>
+
   <section class="card">
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
     <p class="desc">給水車・給水所の場所と時間。容器（ポリタンク・ペットボトル）をお持ちください。</p>
@@ -166,6 +176,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 "use strict";
 let DATA = { water: [], toilets: [], haves: [] };
 let SHELTERS = [];   // data.json（避難所ダッシュボードのデータ）から読む
+let TREND = null;    // data.json の推移（避難者数・世帯数）
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = n => (n || 0).toLocaleString("ja-JP");
@@ -199,7 +210,8 @@ function renderKPIs(){
     }
     box.appendChild(t);
   };
-  tile("現在の避難者数", fmt(occ), "人");
+  const hh = SHELTERS.reduce((a,s) => a + (s.households || 0), 0);
+  tile("現在の避難者数", fmt(occ), "人", hh ? `${fmt(hh)}世帯` : "");
   tile("受入可能数（合計）", fmt(cap), "人", cap ? `稼働率 ${Math.round(occ/cap*100)}%` : "");
   tile("開設避難所", fmt(SHELTERS.length), "ヶ所", over > 0 ? `⛔ 定員超過 ${over}ヶ所` : "定員超過なし", over > 0);
 }
@@ -296,6 +308,67 @@ function renderHaves(){
   })));
 }
 
+/* ---------- 推移グラフ（避難者数・世帯数の2系列） ---------- */
+function renderTrendCard(){
+  const card = document.getElementById("trendCard");
+  const box = document.getElementById("trendChart");
+  box.textContent = "";
+  if (!TREND || !Array.isArray(TREND.dates) || TREND.dates.length < 1){ card.classList.add("hidden"); return; }
+  const dates = TREND.dates;
+  const sumAt = (obj, i) => Object.values(obj || {}).reduce((a, arr) => a + (arr[i] || 0), 0);
+  const people = dates.map((_, i) => sumAt(TREND.byDistrict, i));
+  const hh = TREND.hhByDistrict ? dates.map((_, i) => sumAt(TREND.hhByDistrict, i)) : null;
+  card.classList.remove("hidden");
+
+  const W = Math.max(320, Math.min(760, box.clientWidth || 600));
+  const H = 220, padL = 48, padR = 60, padT = 26, padB = 30;
+  const maxV = Math.max(1, ...people, ...(hh || [0]));
+  const step = maxV > 4000 ? 1000 : maxV > 2000 ? 500 : maxV > 800 ? 200 : 100;
+  const yMax = Math.ceil(maxV / step) * step;
+  const x = i => dates.length > 1 ? padL + i * (W - padL - padR) / (dates.length - 1) : W / 2;
+  const y = v => padT + (1 - v / yMax) * (H - padT - padB);
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs) => {
+    const el = document.createElementNS(NS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  };
+  const svg = mk("svg", { viewBox: `0 0 ${W} ${H}` });
+  svg.style.width = "100%"; svg.style.display = "block";
+  for (let v = 0; v <= yMax; v += step){
+    svg.appendChild(mk("line", { x1: padL, x2: W - padR, y1: y(v), y2: y(v), stroke: "var(--grid)", "stroke-width": 1 }));
+    const t = mk("text", { x: padL - 8, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--text-muted)" });
+    t.textContent = fmt(v);
+    svg.appendChild(t);
+  }
+  dates.forEach((dLabel, i) => {
+    const t = mk("text", { x: x(i), y: H - 8, "text-anchor": "middle", "font-size": 11, fill: "var(--text-muted)" });
+    t.textContent = dLabel;
+    svg.appendChild(t);
+  });
+  const drawSeries = (series, colorVar) => {
+    if (!series) return;
+    const color = cssVar(colorVar);
+    if (dates.length > 1){
+      svg.appendChild(mk("polyline", {
+        points: series.map((v, i) => `${x(i)},${y(v)}`).join(" "),
+        fill: "none", stroke: color, "stroke-width": 2,
+        "stroke-linejoin": "round", "stroke-linecap": "round"
+      }));
+    }
+    series.forEach((v, i) => {
+      svg.appendChild(mk("circle", { cx: x(i), cy: y(v), r: 4, fill: color, stroke: "var(--surface-1)", "stroke-width": 2 }));
+      const t = mk("text", { x: x(i), y: y(v) - 9, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "var(--text-primary)" });
+      t.textContent = fmt(v);
+      svg.appendChild(t);
+    });
+  };
+  drawSeries(people, "--accent");
+  drawSeries(hh, "--water");
+  box.appendChild(svg);
+}
+addEventListener("resize", () => { clearTimeout(window._trTimer); window._trTimer = setTimeout(renderTrendCard, 200); });
+
 /* ---------- 地図 ---------- */
 let map = null, layer = null;
 function renderMap(){
@@ -378,6 +451,7 @@ async function loadData(){
     if (res2.ok){
       const d2 = await res2.json();
       SHELTERS = d2.shelters || [];
+      TREND = d2.trend || null;
       const desc = document.getElementById("shelterDesc");
       if (d2.updatedAt) desc.textContent = `避難者数と受入可能数（市の公表資料に基づく・${d2.updatedAt}）。稼働率の高い順`;
     }
@@ -386,6 +460,7 @@ async function loadData(){
   renderUpdated();
   renderKPIs();
   renderShelters();
+  renderTrendCard();
   renderWater();
   renderToilets();
   renderHaves();
