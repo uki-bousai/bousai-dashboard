@@ -1,13 +1,13 @@
 {
   "provisional": true,
   "supplyPoints": [],
-  "updatedAt": "2026-08-03 10:08 更新",
+  "updatedAt": "2026-08-03 15:52 更新",
   "shelters": [
     {
       "name": "三角防災拠点センター",
       "district": "三角町",
       "capacity": 413,
-      "occupants": 26,
+      "occupants": 25,
       "lat": 32.616,
       "lng": 130.489,
       "stocks": {
@@ -27,7 +27,7 @@
       "name": "不知火防災拠点センター",
       "district": "不知火町",
       "capacity": 320,
-      "occupants": 335,
+      "occupants": 312,
       "lat": 32.64634,
       "lng": 130.66808,
       "stocks": {
@@ -47,7 +47,7 @@
       "name": "不知火小学校 ２Ｆ交流スペース",
       "district": "不知火町",
       "capacity": 55,
-      "occupants": 52,
+      "occupants": 47,
       "lat": 32.64461,
       "lng": 130.66183,
       "stocks": {
@@ -67,7 +67,7 @@
       "name": "松橋東防災拠点センター",
       "district": "松橋町",
       "capacity": 340,
-      "occupants": 539,
+      "occupants": 535,
       "lat": 32.6322,
       "lng": 130.7066,
       "stocks": {
@@ -87,7 +87,7 @@
       "name": "松橋西防災拠点センター",
       "district": "松橋町",
       "capacity": 279,
-      "occupants": 316,
+      "occupants": 475,
       "lat": 32.65166,
       "lng": 130.67907,
       "stocks": {
@@ -107,7 +107,7 @@
       "name": "ウイングまつばせ",
       "district": "松橋町",
       "capacity": 450,
-      "occupants": 507,
+      "occupants": 510,
       "lat": 32.648,
       "lng": 130.6832,
       "stocks": {
@@ -127,7 +127,7 @@
       "name": "松橋中学校 武道場",
       "district": "松橋町",
       "capacity": 100,
-      "occupants": 7,
+      "occupants": 2,
       "lat": 32.651,
       "lng": 130.6785,
       "stocks": {
@@ -147,7 +147,7 @@
       "name": "小川防災拠点センター",
       "district": "小川町",
       "capacity": 501,
-      "occupants": 1088,
+      "occupants": 1086,
       "lat": 32.59258,
       "lng": 130.7045,
       "stocks": {
@@ -167,7 +167,7 @@
       "name": "小野部田小学校 体育館",
       "district": "小川町",
       "capacity": 200,
-      "occupants": 136,
+      "occupants": 130,
       "lat": 32.60698,
       "lng": 130.71903,
       "stocks": {
@@ -187,7 +187,7 @@
       "name": "豊野防災拠点センター",
       "district": "豊野町",
       "capacity": 321,
-      "occupants": 103,
+      "occupants": 86,
       "lat": 32.6404,
       "lng": 130.7532,
       "stocks": {
@@ -207,7 +207,7 @@
       "name": "小川中学校 体育館",
       "district": "小川町",
       "capacity": 300,
-      "occupants": 31,
+      "occupants": 40,
       "lat": 32.58945,
       "lng": 130.71384,
       "stocks": {
@@ -305,143 +305,75 @@
   ],
   "trend": {
     "dates": [
-      "7/28",
-      "7/29",
-      "7/30",
-      "7/31",
-      "8/1",
-      "8/2"
+      "8/2",
+      "8/3"
     ],
     "byDistrict": {
       "三角町": [
-        60,
-        120,
-        150,
-        170,
-        180,
-        26
+        26,
+        25
       ],
       "不知火町": [
-        90,
-        160,
-        220,
-        250,
-        266,
-        387
+        387,
+        359
       ],
       "松橋町": [
-        480,
-        820,
-        1100,
-        1280,
-        1350,
-        1369
+        1369,
+        1522
       ],
       "小川町": [
-        150,
-        280,
-        380,
-        430,
-        460,
-        1255
+        1255,
+        1256
       ],
       "豊野町": [
-        30,
-        55,
-        70,
-        80,
-        85,
-        103
+        103,
+        86
       ]
     },
     "byShelter": {
       "三角防災拠点センター": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        26
+        26,
+        25
       ],
       "不知火防災拠点センター": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        335
+        335,
+        312
       ],
       "不知火小学校 ２Ｆ交流スペース": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        52
+        52,
+        47
       ],
       "松橋東防災拠点センター": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        539
+        539,
+        535
       ],
       "松橋西防災拠点センター": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        316
+        316,
+        475
       ],
       "ウイングまつばせ": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        507
-      ],
-      "小川防災拠点センター": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        1088
-      ],
-      "小野部田小学校 体育館": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        136
-      ],
-      "豊野防災拠点センター": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        103
-      ],
-      "小川中学校 体育館": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        31
+        507,
+        510
       ],
       "松橋中学校 武道場": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        7
+        7,
+        2
+      ],
+      "小川防災拠点センター": [
+        1088,
+        1086
+      ],
+      "小野部田小学校 体育館": [
+        136,
+        130
+      ],
+      "小川中学校 体育館": [
+        31,
+        40
+      ],
+      "豊野防災拠点センター": [
+        103,
+        86
       ]
     }
   }
