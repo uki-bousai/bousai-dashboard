@@ -1,0 +1,176 @@
+{
+  "provisional": true,
+  "updatedAt": "2026-08-03 14:31 更新",
+  "water": [
+    {
+      "name": "松橋支所 駐車場",
+      "district": "松橋町",
+      "schedule": "給水車 9:00〜17:00",
+      "note": "容器を持参してください",
+      "lat": 32.65346,
+      "lng": 130.68027
+    },
+    {
+      "name": "不知火支所前",
+      "district": "不知火町",
+      "schedule": "給水車 10:00〜16:00",
+      "note": "",
+      "lat": 32.64784,
+      "lng": 130.66708
+    },
+    {
+      "name": "小川総合支所",
+      "district": "小川町",
+      "schedule": "8:30〜18:00",
+      "note": "混雑時は整理券を配布",
+      "lat": 32.59138,
+      "lng": 130.7061
+    },
+    {
+      "name": "三角センター前",
+      "district": "三角町",
+      "schedule": "9:00〜12:00（午前のみ）",
+      "note": "",
+      "lat": 32.617,
+      "lng": 130.49
+    },
+    {
+      "name": "豊野コミュニティセンター",
+      "district": "豊野町",
+      "schedule": "13:00〜17:00",
+      "note": "",
+      "lat": 32.6415,
+      "lng": 130.7519
+    }
+  ],
+  "toilets": [
+    {
+      "name": "小川防災拠点センター 駐車場",
+      "district": "小川町",
+      "count": 10,
+      "note": "うち洋式2基",
+      "lat": 32.59338,
+      "lng": 130.7037
+    },
+    {
+      "name": "ウイングまつばせ 正面入口横",
+      "district": "松橋町",
+      "count": 8,
+      "note": "",
+      "lat": 32.6487,
+      "lng": 130.6841
+    },
+    {
+      "name": "松橋東防災拠点センター",
+      "district": "松橋町",
+      "count": 6,
+      "note": "",
+      "lat": 32.6315,
+      "lng": 130.7073
+    },
+    {
+      "name": "不知火防災拠点センター",
+      "district": "不知火町",
+      "count": 4,
+      "note": "",
+      "lat": 32.64694,
+      "lng": 130.66888
+    }
+  ],
+  "lacks": [
+    {
+      "shelter": "小川防災拠点センター",
+      "district": "小川町",
+      "items": [
+        {
+          "name": "飲料水",
+          "urgent": true
+        },
+        {
+          "name": "段ボールベッド",
+          "urgent": true
+        },
+        {
+          "name": "ミルク",
+          "urgent": false
+        },
+        {
+          "name": "おむつ",
+          "urgent": false
+        }
+      ],
+      "at": "2026-08-03 19:30"
+    },
+    {
+      "shelter": "松橋東防災拠点センター",
+      "district": "松橋町",
+      "items": [
+        {
+          "name": "飲料水",
+          "urgent": true
+        },
+        {
+          "name": "毛布",
+          "urgent": false
+        }
+      ],
+      "at": "2026-08-03 19:00"
+    },
+    {
+      "shelter": "ウイングまつばせ",
+      "district": "松橋町",
+      "items": [
+        {
+          "name": "飲料水",
+          "urgent": false
+        },
+        {
+          "name": "段ボールベッド",
+          "urgent": false
+        }
+      ],
+      "at": "2026-08-03 20:10"
+    },
+    {
+      "shelter": "不知火防災拠点センター",
+      "district": "不知火町",
+      "items": [
+        {
+          "name": "飲料水",
+          "urgent": true
+        },
+        {
+          "name": "経口補水液",
+          "urgent": false
+        }
+      ],
+      "at": "2026-08-03 17:50"
+    },
+    {
+      "shelter": "不知火小学校 ２Ｆ交流スペース",
+      "district": "不知火町",
+      "items": [
+        {
+          "name": "ミルク",
+          "urgent": true
+        },
+        {
+          "name": "おむつ",
+          "urgent": false
+        }
+      ],
+      "at": "2026-08-03 18:20"
+    },
+    {
+      "shelter": "小野部田小学校 体育館",
+      "district": "小川町",
+      "items": [
+        {
+          "name": "飲料水",
+          "urgent": false
+        }
+      ],
+      "at": "2026-08-03 17:00"
+    }
+  ]
+}

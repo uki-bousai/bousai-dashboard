@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v1";
+const VERSION = "v2";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
@@ -14,6 +14,7 @@ const APP_ASSETS = [
   "./",
   "index.html",
   "recruit.html",
+  "seikatsu.html",
   "manifest.json",
   "icons/icon-192.png",
   "icons/icon-512.png",
@@ -39,15 +40,15 @@ self.addEventListener("activate", e => {
   })());
 });
 
-// data.json: ネット優先（常に最新を取りに行き、成功したら控えを保存。圏外なら控えを返す）
-async function networkFirstData(req){
+// データ: ネット優先（常に最新を取りに行き、成功したら控えを保存。圏外なら控えを返す）
+async function networkFirstData(req, cacheKey){
   const cache = await caches.open(APP_CACHE);
   try {
     const res = await fetch(req);
-    if (res.ok) cache.put("data.json", res.clone());
+    if (res.ok) cache.put(cacheKey, res.clone());
     return res;
   } catch (err) {
-    const hit = await cache.match("data.json");
+    const hit = await cache.match(cacheKey);
     if (hit) return hit;
     throw err;
   }
@@ -85,7 +86,11 @@ self.addEventListener("fetch", e => {
 
   // データ本体（クエリ付きで取得されるためパスで判定）
   if (url.origin === location.origin && url.pathname.endsWith("/data.json")){
-    e.respondWith(networkFirstData(req));
+    e.respondWith(networkFirstData(req, "data.json"));
+    return;
+  }
+  if (url.origin === location.origin && url.pathname.endsWith("/seikatsu.json")){
+    e.respondWith(networkFirstData(req, "seikatsu.json"));
     return;
   }
   // 地図タイル
@@ -96,7 +101,8 @@ self.addEventListener("fetch", e => {
   // ページ遷移（オフライン時はキャッシュ済みのページを返す）
   if (req.mode === "navigate"){
     const page = url.pathname.endsWith("/recruit.html") ? "recruit.html"
-      : url.pathname.endsWith("/admin.html") ? null   // 管理画面は常に最新を使う
+      : url.pathname.endsWith("/seikatsu.html") ? "seikatsu.html"
+      : (url.pathname.endsWith("/admin.html") || url.pathname.endsWith("/seikatsu-admin.html")) ? null   // 入力画面は常に最新を使う
       : "index.html";
     if (page){ e.respondWith(staleWhileRevalidate(req, page)); return; }
     return;

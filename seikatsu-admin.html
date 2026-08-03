@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>生活支援情報の入力 ─ 給水・トイレ・不足報告</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --border:rgba(11,11,11,.10);
+  --accent:#2a78d6;
+  --status-warning:#fab219; --status-critical:#d03b3b;
+  --good-text:#006300;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --border:rgba(255,255,255,.10);
+    --accent:#3987e5; --good-text:#0ca30c;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  background:var(--page); color:var(--text-primary); line-height:1.5; padding:0 0 90px}
+header{padding:20px 20px 0; max-width:1080px; margin:0 auto; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+header h1{font-size:1.15rem; font-weight:700}
+header .sub{font-size:.76rem; color:var(--text-secondary)}
+header a{color:var(--text-secondary)}
+.container{max-width:1080px; margin:0 auto; padding:0 20px}
+.card{background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:14px 16px 16px; margin-top:14px}
+.card h2{font-size:.9rem; font-weight:700; margin-bottom:4px}
+.card .desc{font-size:.74rem; color:var(--text-secondary); margin-bottom:10px; line-height:1.7}
+label{font-size:.76rem; font-weight:700; color:var(--text-secondary)}
+.tablewrap{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:.8rem}
+thead th{background:var(--surface-1); color:var(--text-muted); font-size:.68rem; font-weight:700; text-align:left;
+  padding:6px 8px; border-bottom:1px solid var(--grid); white-space:nowrap}
+thead th.num{text-align:right}
+tbody td{padding:2px 3px; border-bottom:1px solid var(--grid)}
+td input{font:inherit; font-size:.8rem; color:var(--text-primary); background:transparent;
+  border:1px solid transparent; border-radius:7px; padding:6px 8px; width:100%}
+td input:hover{border-color:var(--border)}
+td input:focus{outline:2px solid var(--accent); outline-offset:-1px; background:var(--surface-1)}
+td input[type="number"]{text-align:right}
+td.geo{width:7em}
+td.geo input{text-align:right}
+td.act{width:auto; text-align:center; white-space:nowrap}
+button{font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; border:1px solid var(--border);
+  border-radius:8px; padding:8px 14px; background:var(--surface-1); color:var(--text-primary)}
+button:hover{background:var(--page)}
+button.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+button.primary:hover{opacity:.9}
+button.small{font-size:.72rem; padding:4px 10px}
+button.del{border:none; background:none; color:var(--text-muted); font-size:1rem; padding:4px 8px}
+button.del:hover{color:var(--status-critical)}
+button:disabled{opacity:.45; cursor:not-allowed}
+.addrow{margin-top:10px}
+.tokenrow{display:flex; gap:10px; align-items:end; flex-wrap:wrap}
+.tokenrow .grow{flex:1; min-width:240px}
+.tokenrow input{font:inherit; font-size:.82rem; color:var(--text-primary); width:100%;
+  background:var(--page); border:1px solid var(--border); border-radius:8px; padding:7px 10px}
+.check{display:flex; align-items:center; gap:6px; font-size:.74rem; color:var(--text-secondary); margin-top:8px}
+.notice{background:var(--page); border:1px solid var(--border); border-radius:8px;
+  padding:8px 12px; font-size:.72rem; color:var(--text-secondary); margin-top:10px; line-height:1.7}
+.savebar{position:fixed; bottom:0; left:0; right:0; z-index:40; background:var(--surface-1);
+  border-top:1px solid var(--border); padding:12px 20px}
+.savebar .inner{max-width:1080px; margin:0 auto; display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+#status{font-size:.76rem; color:var(--text-secondary); flex:1; min-width:200px}
+#status.ok{color:var(--good-text); font-weight:700}
+#status.err{color:var(--status-critical); font-weight:700}
+#dirtyMark{display:none; font-size:.72rem; font-weight:700; color:var(--status-warning)}
+#dirtyMark.show{display:inline}
+#loginOverlay{position:fixed; inset:0; z-index:60; background:var(--page); display:none;
+  align-items:center; justify-content:center; padding:20px}
+#loginOverlay.show{display:flex}
+#loginOverlay .loginbox{width:100%; max-width:400px}
+#loginOverlay input{font:inherit; font-size:.9rem; color:var(--text-primary); width:100%;
+  background:var(--page); border:1px solid var(--border); border-radius:8px; padding:9px 12px; margin:2px 0 10px}
+#loginErr{display:none; color:var(--status-critical); font-size:.76rem; font-weight:700; margin-top:4px}
+#loginErr.show{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>生活支援情報の入力</h1>
+  <span class="sub">給水・仮設トイレ・不足報告 ─ 保存すると<a href="seikatsu.html">公開ページ</a>に反映（1〜2分）</span>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>避難所の不足報告</h2>
+    <p class="desc">避難所ごとに「いま足りない物資」を報告します。在庫を数える必要はありません。品目を<b>タップするたびに 不足 → ⚠急ぎ → 解除</b> と切り替わります。解消したらタップして消してください。</p>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px">
+      <label for="lackShelterSel">避難所</label>
+      <select id="lackShelterSel" style="font:inherit; font-size:.82rem; color:var(--text-primary); background:var(--page); border:1px solid var(--border); border-radius:8px; padding:7px 10px"></select>
+      <span id="lackInfo" style="font-size:.74rem; color:var(--text-secondary)"></span>
+    </div>
+    <div id="lackChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px"></div>
+    <div class="tokenrow">
+      <div class="grow">
+        <label for="lackFree">その他の不足（自由記述・「、」区切り）</label>
+        <input type="text" id="lackFree" placeholder="例: ブルーシート、ラジオ">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>給水情報</h2>
+    <p class="desc">給水車・給水所の場所と時間。<b>時間や場所が変わったら必ず更新</b>してください。座標は「📍検索」（名称から検索）か「🗺地図」（タップで指定）で入力できます。</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>場所</th><th>地区</th><th>時間・頻度</th><th>メモ</th><th class="num">緯度</th><th class="num">経度</th><th></th><th></th></tr></thead>
+        <tbody id="waterBody"></tbody>
+      </table>
+    </div>
+    <button class="small addrow" id="addWater">＋ 給水場所を追加</button>
+  </div>
+
+  <div class="card">
+    <h2>仮設トイレ</h2>
+    <p class="desc">仮設トイレの設置場所と基数。撤去されたら行を削除してください。</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>場所</th><th>地区</th><th class="num">基数</th><th>メモ</th><th class="num">緯度</th><th class="num">経度</th><th></th><th></th></tr></thead>
+        <tbody id="toiletBody"></tbody>
+      </table>
+    </div>
+    <button class="small addrow" id="addToilet">＋ 設置場所を追加</button>
+  </div>
+
+  <div class="card">
+    <h2>ログイン・公開設定</h2>
+    <div class="tokenrow">
+      <div class="grow">
+        <label for="adminName">名前</label>
+        <input type="text" id="adminName" autocomplete="username">
+      </div>
+      <div class="grow">
+        <label for="adminPass">合言葉</label>
+        <input type="password" id="adminPass" autocomplete="current-password">
+      </div>
+      <button id="loadBtn">最新データを読み込み直す</button>
+    </div>
+    <div class="check">
+      <input type="checkbox" id="saveAuth" checked>
+      <label for="saveAuth" style="font-weight:400">この端末に合言葉を保存する（共用端末では外してください）</label>
+    </div>
+    <div class="check">
+      <input type="checkbox" id="provisionalChk">
+      <label for="provisionalChk" style="font-weight:400">公開ページに「⚠ 仮のデータです」の注意を表示する（正式運用を始めるときに外して保存）</label>
+    </div>
+    <div class="notice">避難所ダッシュボードと同じ名前・合言葉が使えます。入力方法は <a href="https://github.com/uki-bousai/bousai-dashboard/blob/main/MANUAL.md">運用マニュアル</a> を参照。</div>
+  </div>
+
+</div>
+
+<div class="savebar">
+  <div class="inner">
+    <span id="status">公開データを読み込み中…</span>
+    <span id="dirtyMark">● 未保存の変更があります</span>
+    <button class="primary" id="saveBtn" disabled>保存して公開</button>
+  </div>
+</div>
+
+<div id="loginOverlay">
+  <div class="loginbox card">
+    <h2>ログイン</h2>
+    <p class="desc">管理責任者から受け取った名前と合言葉を入力してください（避難所ダッシュボードと共通）。</p>
+    <label for="loginName">名前</label>
+    <input type="text" id="loginName" autocomplete="username">
+    <label for="loginPass">合言葉</label>
+    <input type="password" id="loginPass" autocomplete="current-password">
+    <div class="check" style="margin-top:0">
+      <input type="checkbox" id="loginSave" checked>
+      <label for="loginSave" style="font-weight:400">この端末に保存する</label>
+    </div>
+    <div id="loginErr"></div>
+    <div style="display:flex; gap:12px; margin-top:16px; align-items:center">
+      <button class="primary" id="loginBtn">ログイン</button>
+      <button id="loginSkip" style="border:none; background:none; color:var(--text-muted); font-size:.74rem; font-weight:400">閲覧のみで開く</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   設定（避難所ダッシュボードの admin.html と同じ中継サーバーを使用）
+   ============================================================ */
+const WORKER_URL = "https://bousai-relay.a-sawada813.workers.dev";
+const DATA_PATH = "seikatsu.json";
+const AREA_NAME = "熊本県";
+const AREA_CITY = "宇城市";
+const AREA_BOX  = { minLat: 32.0, maxLat: 33.3, minLng: 129.9, maxLng: 131.4 };
+
+let data = null;        // seikatsu.json の内容
+let shelters = [];      // data.json から読む避難所一覧（名前・地区）
+let dirty = false;
+let currentLack = null; // 選択中の避難所の不足報告 {shelter, district, items, at}
+
+const $ = id => document.getElementById(id);
+const status = $("status");
+function setStatus(msg, cls){ status.textContent = msg; status.className = cls || ""; }
+function markDirty(){ dirty = true; $("dirtyMark").classList.add("show"); }
+function clearDirty(){ dirty = false; $("dirtyMark").classList.remove("show"); }
+function jstStamp(){
+  const p = new Intl.DateTimeFormat("ja-JP", {timeZone:"Asia/Tokyo",
+    year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", hour12:false})
+    .formatToParts(new Date()).reduce((a,x) => (a[x.type]=x.value, a), {});
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
+}
+
+/* ---------- 認証（避難所ダッシュボードと同じ保存キーを共用） ---------- */
+function currentAuth(){ return { name: $("adminName").value.trim(), password: $("adminPass").value }; }
+function persistAuth(){
+  const a = currentAuth();
+  if ($("saveAuth").checked && a.name && a.password) localStorage.setItem("bousai_auth", JSON.stringify(a));
+  else localStorage.removeItem("bousai_auth");
+}
+try {
+  const a = JSON.parse(localStorage.getItem("bousai_auth") || "null");
+  if (a){ $("adminName").value = a.name || ""; $("adminPass").value = a.password || ""; }
+} catch (e) {}
+$("saveAuth").addEventListener("change", persistAuth);
+
+async function workerPost(path, payload){
+  const res = await fetch(WORKER_URL.replace(/\/+$/, "") + path, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) {}
+  return { res, body };
+}
+
+/* ---------- 不足報告 ---------- */
+const LACK_ITEMS = ["飲料水","食料","経口補水液","ミルク","離乳食","おむつ","生理用品","毛布","段ボールベッド","簡易トイレ","トイレットペーパー","衛生用品","衣類","カセットコンロ","乾電池"];
+
+function lackOf(shelterName){
+  let e = (data.lacks || []).find(l => l.shelter === shelterName);
+  if (!e){
+    const sh = shelters.find(s => s.name === shelterName);
+    e = { shelter: shelterName, district: sh ? sh.district : "", items: [], at: "" };
+    data.lacks = data.lacks || [];
+    data.lacks.push(e);
+  }
+  return e;
+}
+function renderLackSelect(){
+  const sel = $("lackShelterSel");
+  const prev = sel.value;
+  sel.textContent = "";
+  shelters.forEach(s => {
+    const o = document.createElement("option");
+    o.value = s.name; o.textContent = s.name;
+    sel.appendChild(o);
+  });
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  renderLackChips();
+}
+$("lackShelterSel").addEventListener("change", renderLackChips);
+
+function renderLackChips(){
+  const box = $("lackChips");
+  box.textContent = "";
+  const name = $("lackShelterSel").value;
+  if (!name){ $("lackInfo").textContent = ""; return; }
+  currentLack = lackOf(name);
+  $("lackInfo").textContent = currentLack.at ? `最終報告: ${currentLack.at}` : "まだ報告はありません";
+  const stateOf = n => { const f = currentLack.items.find(x => x.name === n); return f ? (f.urgent ? 2 : 1) : 0; };
+  LACK_ITEMS.forEach(n => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "small";
+    const st = stateOf(n);
+    b.textContent = st === 2 ? "⚠急 " + n : st === 1 ? "✓ " + n : n;
+    if (st === 2) b.style.cssText = "background:var(--status-critical); border-color:var(--status-critical); color:#fff";
+    else if (st === 1) b.style.cssText = "background:rgba(250,178,25,.25); border-color:var(--status-warning)";
+    b.addEventListener("click", () => {
+      const cur = stateOf(n);
+      currentLack.items = currentLack.items.filter(x => x.name !== n);
+      if (cur === 0) currentLack.items.push({ name: n, urgent: false });
+      else if (cur === 1) currentLack.items.push({ name: n, urgent: true });
+      currentLack.at = jstStamp();
+      markDirty();
+      renderLackChips();
+    });
+    box.appendChild(b);
+  });
+  $("lackFree").value = currentLack.items.filter(x => !LACK_ITEMS.includes(x.name)).map(x => x.name).join("、");
+}
+$("lackFree").addEventListener("change", () => {
+  if (!currentLack) return;
+  const names = $("lackFree").value.split(/[、,・\/]+/).map(t => t.trim()).filter(Boolean);
+  currentLack.items = currentLack.items.filter(x => LACK_ITEMS.includes(x.name))
+    .concat(names.map(n => ({ name: n, urgent: false })));
+  currentLack.at = jstStamp();
+  markDirty();
+});
+
+/* ---------- 給水・トイレの行 ---------- */
+function inputCell(value, opts){
+  const td = document.createElement("td");
+  if (opts && opts.num) td.className = "num";
+  const inp = document.createElement("input");
+  if (opts && opts.num){ inp.type = "number"; inp.min = "0"; }
+  else inp.type = "text";
+  if (opts && opts.placeholder) inp.placeholder = opts.placeholder;
+  inp.value = value ?? "";
+  inp.addEventListener("input", markDirty);
+  td.appendChild(inp);
+  return { td, inp };
+}
+function delCell(tr, label){
+  const td = document.createElement("td"); td.className = "act";
+  const btn = document.createElement("button"); btn.className = "del"; btn.type = "button"; btn.textContent = "✕";
+  btn.addEventListener("click", () => {
+    if (confirm(label + "を削除しますか？")){ tr.remove(); markDirty(); }
+  });
+  td.appendChild(btn);
+  return td;
+}
+function geoCell(nameInp, latInp, lngInp, label){
+  const td = document.createElement("td"); td.className = "act"; td.style.whiteSpace = "nowrap";
+  const g = document.createElement("button"); g.className = "small"; g.type = "button"; g.textContent = "📍検索";
+  g.addEventListener("click", () => geocodePlace(nameInp.value.trim(), latInp, lngInp));
+  const m = document.createElement("button"); m.className = "small"; m.type = "button"; m.textContent = "🗺地図";
+  m.style.marginLeft = "4px";
+  m.addEventListener("click", () => showMapPicker(nameInp.value.trim() || label, latInp, lngInp));
+  td.append(g, m);
+  return td;
+}
+function waterRow(w){
+  const tr = document.createElement("tr");
+  const name = inputCell(w.name, {placeholder:"例: ○○支所 駐車場"});
+  const district = inputCell(w.district, {placeholder:"地区名"});
+  const sched = inputCell(w.schedule, {placeholder:"例: 給水車 9:00〜17:00"});
+  const note = inputCell(w.note, {placeholder:"例: 容器持参"});
+  const lat = inputCell(w.lat ?? "", {}); const lng = inputCell(w.lng ?? "", {});
+  lat.td.className = lng.td.className = "geo";
+  tr.append(name.td, district.td, sched.td, note.td, lat.td, lng.td, geoCell(name.inp, lat.inp, lng.inp, "給水場所"), delCell(tr, "給水場所"));
+  tr._get = () => {
+    const la = parseFloat(lat.inp.value), ln = parseFloat(lng.inp.value);
+    const o = { name: name.inp.value.trim(), district: district.inp.value.trim(),
+      schedule: sched.inp.value.trim(), note: note.inp.value.trim() };
+    if (Number.isFinite(la) && Number.isFinite(ln)){ o.lat = la; o.lng = ln; }
+    return o;
+  };
+  return tr;
+}
+function toiletRow(t){
+  const tr = document.createElement("tr");
+  const name = inputCell(t.name, {placeholder:"例: ○○センター 駐車場"});
+  const district = inputCell(t.district, {placeholder:"地区名"});
+  const count = inputCell(t.count ?? "", {num:true});
+  const note = inputCell(t.note, {placeholder:"例: うち洋式2基"});
+  const lat = inputCell(t.lat ?? "", {}); const lng = inputCell(t.lng ?? "", {});
+  lat.td.className = lng.td.className = "geo";
+  tr.append(name.td, district.td, count.td, note.td, lat.td, lng.td, geoCell(name.inp, lat.inp, lng.inp, "仮設トイレ"), delCell(tr, "設置場所"));
+  tr._get = () => {
+    const la = parseFloat(lat.inp.value), ln = parseFloat(lng.inp.value);
+    const o = { name: name.inp.value.trim(), district: district.inp.value.trim(),
+      count: Math.max(0, Math.round(Number(count.inp.value) || 0)), note: note.inp.value.trim() };
+    if (Number.isFinite(la) && Number.isFinite(ln)){ o.lat = la; o.lng = ln; }
+    return o;
+  };
+  return tr;
+}
+$("addWater").addEventListener("click", () => { $("waterBody").appendChild(waterRow({})); markDirty(); });
+$("addToilet").addEventListener("click", () => { $("toiletBody").appendChild(toiletRow({})); markDirty(); });
+
+/* ---------- 座標検索（避難所ダッシュボードと同じ仕組み） ---------- */
+const inArea = c => c.lat >= AREA_BOX.minLat && c.lat <= AREA_BOX.maxLat &&
+                    c.lng >= AREA_BOX.minLng && c.lng <= AREA_BOX.maxLng;
+function baseFacilityName(name){
+  let s = name.replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  s = s.split(/[\s　]+/)[0].replace(/[（(].*$/, "");
+  s = s.replace(/(体育館|講堂|武道場|運動場|グラウンド|多目的ホール|ホール|集会所|研修室|会議室|和室|交流スペース|駐車場|\d+[FＦ階]|別館|新館)$/, "");
+  return s.trim();
+}
+async function searchGSI(q){
+  const res = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q));
+  if (!res.ok) return [];
+  const json = await res.json();
+  return (Array.isArray(json) ? json : []).slice(0, 5).map(x => ({
+    label: x.properties.title, source: "国土地理院",
+    lat: x.geometry.coordinates[1], lng: x.geometry.coordinates[0]
+  }));
+}
+async function searchOSM(q){
+  const viewbox = `${AREA_BOX.minLng},${AREA_BOX.maxLat},${AREA_BOX.maxLng},${AREA_BOX.minLat}`;
+  const res = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=ja&countrycodes=jp" +
+    `&viewbox=${viewbox}&bounded=1&q=` + encodeURIComponent(q));
+  if (!res.ok) return [];
+  const json = await res.json();
+  return (Array.isArray(json) ? json : []).map(x => ({
+    label: x.display_name, source: "OpenStreetMap", lat: parseFloat(x.lat), lng: parseFloat(x.lon)
+  }));
+}
+async function geocodePlace(name, latInp, lngInp){
+  if (!name){ setStatus("先に場所の名前を入力してから「📍検索」を押してください", "err"); return; }
+  setStatus(`「${name}」の場所を検索中…（${AREA_NAME}内）`);
+  const base = baseFacilityName(name);
+  const queries = [...new Set([name, base, `${AREA_CITY} ${base}`].filter(Boolean))];
+  const found = [], seen = new Set();
+  for (const q of queries){
+    const results = await Promise.allSettled([searchGSI(q), searchOSM(q)]);
+    results.forEach(r => {
+      if (r.status !== "fulfilled") return;
+      r.value.forEach(c => {
+        if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng) || !inArea(c)) return;
+        const key = c.lat.toFixed(3) + "," + c.lng.toFixed(3);
+        if (!seen.has(key)){ seen.add(key); found.push(c); }
+      });
+    });
+    if (found.length >= 5) break;
+  }
+  if (!found.length){
+    setStatus(`${AREA_NAME}内で場所が見つかりませんでした。「🗺地図」でタップして指定してください`, "err");
+    return;
+  }
+  setStatus("候補が見つかりました。正しい場所を選んでください");
+  showGeoChooser(name, found.slice(0, 6), c => {
+    latInp.value = c.lat.toFixed(6);
+    lngInp.value = c.lng.toFixed(6);
+    markDirty();
+    setStatus(`「${name}」の座標を入力しました。保存を忘れずに`, "ok");
+  });
+}
+function showGeoChooser(name, candidates, onPick){
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px";
+  const box = document.createElement("div");
+  box.className = "card";
+  box.style.cssText = "width:100%; max-width:480px; max-height:80vh; overflow-y:auto";
+  const h = document.createElement("h2"); h.textContent = `「${name}」の場所の候補`;
+  box.appendChild(h);
+  candidates.forEach(c => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; font-weight:400; line-height:1.5";
+    const t = document.createElement("div"); t.style.fontWeight = "700"; t.textContent = c.label;
+    const s = document.createElement("div");
+    s.style.cssText = "font-size:.72rem; color:var(--text-secondary)";
+    s.textContent = `${c.source} ／ 緯度 ${c.lat.toFixed(5)}, 経度 ${c.lng.toFixed(5)}`;
+    b.append(t, s);
+    b.addEventListener("click", () => { overlay.remove(); onPick(c); });
+    box.appendChild(b);
+  });
+  const cancel = document.createElement("button");
+  cancel.type = "button"; cancel.textContent = "キャンセル"; cancel.style.cssText = "margin-top:12px";
+  cancel.addEventListener("click", () => overlay.remove());
+  box.appendChild(cancel);
+  overlay.appendChild(box);
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+function showMapPicker(name, latInp, lngInp){
+  if (typeof L === "undefined"){
+    setStatus("地図を読み込めませんでした。通信環境を確認して再読み込みしてください", "err");
+    return;
+  }
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:14px";
+  const box = document.createElement("div");
+  box.className = "card";
+  box.style.cssText = "width:100%; max-width:640px";
+  const h = document.createElement("h2"); h.textContent = `「${name}」の場所を地図でタップ`;
+  const mapDiv = document.createElement("div");
+  mapDiv.style.cssText = "height:min(55vh,420px); border-radius:10px; overflow:hidden; border:1px solid var(--border); margin-top:8px";
+  const coords = document.createElement("div"); coords.className = "notice"; coords.textContent = "まだ場所が選ばれていません";
+  const btnRow = document.createElement("div");
+  btnRow.style.cssText = "display:flex; gap:10px; margin-top:12px; align-items:center";
+  const okBtn = document.createElement("button"); okBtn.className = "primary"; okBtn.type = "button";
+  okBtn.textContent = "この場所に決定"; okBtn.disabled = true;
+  const cancel = document.createElement("button"); cancel.type = "button"; cancel.textContent = "キャンセル";
+  btnRow.append(okBtn, cancel);
+  box.append(h, mapDiv, coords, btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  const map = L.map(mapDiv);
+  L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
+    maxZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'
+  }).addTo(map);
+  const curLat = parseFloat(latInp.value), curLng = parseFloat(lngInp.value);
+  let marker = null, picked = null;
+  const setPick = ll => {
+    picked = ll;
+    if (!marker) marker = L.marker(ll).addTo(map); else marker.setLatLng(ll);
+    coords.textContent = `選択中: 緯度 ${ll.lat.toFixed(6)}, 経度 ${ll.lng.toFixed(6)}`;
+    okBtn.disabled = false;
+  };
+  if (Number.isFinite(curLat) && Number.isFinite(curLng)){
+    map.setView([curLat, curLng], 16); setPick({ lat: curLat, lng: curLng });
+  } else {
+    map.setView([(AREA_BOX.minLat + AREA_BOX.maxLat) / 2, (AREA_BOX.minLng + AREA_BOX.maxLng) / 2], 10);
+  }
+  map.on("click", e => setPick(e.latlng));
+  setTimeout(() => map.invalidateSize(), 100);
+  const close = () => { map.remove(); overlay.remove(); };
+  okBtn.addEventListener("click", () => {
+    latInp.value = picked.lat.toFixed(6);
+    lngInp.value = picked.lng.toFixed(6);
+    markDirty(); close();
+    setStatus(`「${name}」の座標を地図から入力しました。保存を忘れずに`, "ok");
+  });
+  cancel.addEventListener("click", close);
+}
+
+/* ---------- 読み込み・保存 ---------- */
+function renderForms(){
+  $("provisionalChk").checked = data.provisional === true;
+  const wb = $("waterBody"); wb.textContent = "";
+  (data.water || []).forEach(w => wb.appendChild(waterRow(w)));
+  const tb = $("toiletBody"); tb.textContent = "";
+  (data.toilets || []).forEach(t => tb.appendChild(toiletRow(t)));
+  renderLackSelect();
+}
+$("provisionalChk").addEventListener("change", markDirty);
+
+async function loadFromPublic(){
+  setStatus("公開データを読み込み中…");
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch("seikatsu.json?_=" + Date.now(), { cache: "no-store" }),
+      fetch("data.json?_=" + Date.now(), { cache: "no-store" }),
+    ]);
+    if (!r1.ok) throw new Error("seikatsu.json HTTP " + r1.status);
+    data = await r1.json();
+    if (r2.ok){
+      const d2 = await r2.json();
+      shelters = (d2.shelters || []).map(s => ({ name: s.name, district: s.district }));
+    }
+    renderForms();
+    clearDirty();
+    $("saveBtn").disabled = false;
+    setStatus(`現在の公開データを表示中（${data.updatedAt || "更新日時なし"}）。編集して保存できます`, "ok");
+  } catch (e) {
+    setStatus("公開データを取得できませんでした（" + e.message + "）。再読み込みしてください", "err");
+  }
+}
+$("loadBtn").addEventListener("click", async () => {
+  if (dirty && !confirm("未保存の変更があります。破棄して最新データを読み込みますか？")) return;
+  await loadFromPublic();
+});
+
+function collect(){
+  const water = [...$("waterBody").children].map(tr => tr._get()).filter(w => w.name);
+  const toilets = [...$("toiletBody").children].map(tr => tr._get()).filter(t => t.name);
+  const lacks = (data.lacks || []).filter(l => (l.items || []).length);
+  return {
+    provisional: $("provisionalChk").checked,
+    updatedAt: jstStamp() + " 更新",
+    water, toilets, lacks
+  };
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  const a = currentAuth();
+  if (!a.name || !a.password){
+    setStatus("名前と合言葉を入力してください（下の「ログイン・公開設定」欄）", "err");
+    return;
+  }
+  persistAuth();
+  const next = collect();
+  if (!confirm("入力内容を保存して公開ページに反映します。よろしいですか？")) return;
+  $("saveBtn").disabled = true;
+  setStatus("保存中…");
+  try {
+    const { res, body } = await workerPost("/save", { ...a, path: DATA_PATH, data: next });
+    if (res.status === 401) throw new Error("名前または合言葉が違います。管理責任者に確認してください");
+    if (!res.ok) throw new Error((body && body.error) || "保存に失敗しました（HTTP " + res.status + "）");
+    data = next;
+    renderForms();
+    clearDirty();
+    setStatus(`保存しました（${next.updatedAt}）。公開ページには1〜2分で反映されます`, "ok");
+  } catch (e) {
+    setStatus(e.message, "err");
+  } finally {
+    $("saveBtn").disabled = false;
+  }
+});
+
+/* ---------- ログイン ---------- */
+function showLoginErr(msg){ const el = $("loginErr"); el.textContent = msg; el.classList.add("show"); }
+function closeLogin(){ $("loginOverlay").classList.remove("show"); }
+async function initLogin(){
+  const a = currentAuth();
+  if (a.name && a.password){
+    try {
+      const { res } = await workerPost("/auth", a);
+      if (res.ok) return;
+    } catch (e) {}
+  }
+  $("loginName").value = a.name || "";
+  $("loginOverlay").classList.add("show");
+}
+$("loginBtn").addEventListener("click", async () => {
+  const a = { name: $("loginName").value.trim(), password: $("loginPass").value };
+  if (!a.name || !a.password){ showLoginErr("名前と合言葉を入力してください"); return; }
+  $("loginBtn").disabled = true;
+  $("loginErr").classList.remove("show");
+  try {
+    const { res, body } = await workerPost("/auth", a);
+    if (res.ok){
+      $("adminName").value = a.name;
+      $("adminPass").value = a.password;
+      $("saveAuth").checked = $("loginSave").checked;
+      persistAuth();
+      closeLogin();
+    } else {
+      showLoginErr((body && body.error) || "ログインできませんでした（HTTP " + res.status + "）");
+    }
+  } catch (e) {
+    showLoginErr("中継サーバーに接続できませんでした。通信環境を確認してください");
+  } finally {
+    $("loginBtn").disabled = false;
+  }
+});
+$("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("loginSkip").addEventListener("click", closeLogin);
+
+addEventListener("beforeunload", e => { if (dirty){ e.preventDefault(); e.returnValue = ""; } });
+
+initLogin();
+loadFromPublic();
+</script>
+</body>
+</html>

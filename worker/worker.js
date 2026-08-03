@@ -17,12 +17,13 @@
 const OWNER  = "uki-bousai";
 const REPO   = "bousai-dashboard";
 const BRANCH = "main";
-const PATH   = "data.json";
+// 保存を許可するファイル（先頭が既定値。リクエストの path で切り替え可能）
+const PATHS  = ["data.json", "seikatsu.json"];
 const ALLOWED_ORIGINS = [
   "https://uki-bousai.github.io",
 ];
 
-const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(PATH)}`;
+const apiFor = p => `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(p)}`;
 
 function corsHeaders(origin){
   const allow = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
@@ -64,14 +65,14 @@ function ghHeaders(env){
   };
 }
 
-async function latestSha(env){
-  const res = await fetch(`${API}?ref=${BRANCH}`, { headers: ghHeaders(env) });
+async function latestSha(env, filePath){
+  const res = await fetch(`${apiFor(filePath)}?ref=${BRANCH}`, { headers: ghHeaders(env) });
   if (!res.ok) throw new Error("GitHubからの読み込みに失敗しました（HTTP " + res.status + "）。GITHUB_TOKEN の権限・有効期限を確認してください");
   return (await res.json()).sha;
 }
 
-function putFile(env, body, message, sha){
-  return fetch(API, {
+function putFile(env, filePath, body, message, sha){
+  return fetch(apiFor(filePath), {
     method: "PUT",
     headers: { ...ghHeaders(env), "Content-Type": "application/json" },
     body: JSON.stringify({ message, content: b64encode(body), branch: BRANCH, sha }),
@@ -103,16 +104,20 @@ export default {
 
     // データ保存（GitHubへコミット）
     if (path === "/save"){
+      const filePath = PATHS.includes(body.path) ? body.path : PATHS[0];
       const data = body.data;
-      if (!data || typeof data !== "object" || !Array.isArray(data.shelters) || !Array.isArray(data.supplies))
-        return json({ error: "データの形式が不正です" }, 400, cors);
+      const valid = filePath === "seikatsu.json"
+        ? (data && typeof data === "object" && Array.isArray(data.water) && Array.isArray(data.toilets) && Array.isArray(data.lacks))
+        : (data && typeof data === "object" && Array.isArray(data.shelters) && Array.isArray(data.supplies));
+      if (!valid) return json({ error: "データの形式が不正です" }, 400, cors);
       const text = JSON.stringify(data, null, 2) + "\n";
       if (text.length > 1000000) return json({ error: "データが大きすぎます" }, 400, cors);
-      const message = `状況更新 ${data.updatedAt || ""}（更新者: ${body.name}）`;
+      const prefix = filePath === "seikatsu.json" ? "生活情報更新" : "状況更新";
+      const message = `${prefix} ${data.updatedAt || ""}（更新者: ${body.name}）`;
       try {
-        let res = await putFile(env, text, message, await latestSha(env));
+        let res = await putFile(env, filePath, text, message, await latestSha(env, filePath));
         if (res.status === 409 || res.status === 422)
-          res = await putFile(env, text, message, await latestSha(env));   // 競合時は1回だけ再試行
+          res = await putFile(env, filePath, text, message, await latestSha(env, filePath));   // 競合時は1回だけ再試行
         if (!res.ok) return json({ error: "GitHubへの保存に失敗しました（HTTP " + res.status + "）" }, 502, cors);
         return json({ ok: true }, 200, cors);
       } catch (e) {
