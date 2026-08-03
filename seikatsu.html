@@ -42,7 +42,7 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 .notice{max-width:860px; margin:12px auto 0; padding:0 20px}
 .notice > div{background:var(--surface-1); border:1px solid var(--status-warning); border-radius:10px;
   padding:10px 14px; font-size:.76rem; color:var(--text-secondary); line-height:1.7}
-.hidden{display:none}
+.hidden{display:none !important}
 .backlink{display:inline-block; font-size:.78rem; margin-top:8px; color:var(--accent)}
 .card{background:var(--surface-1); border:1px solid var(--border); border-radius:12px;
   padding:14px 16px 16px; margin-top:14px}
@@ -70,6 +70,8 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 @media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
 .empty{font-size:.78rem; color:var(--text-muted)}
+.trend-subhead{font-size:.78rem; font-weight:700; color:var(--text-secondary); margin:14px 0 2px}
+.trend-subhead:first-child{margin-top:8px}
 /* KPI */
 .filters{display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap}
 .filters label{font-size:.78rem; color:var(--text-secondary); font-weight:700}
@@ -416,36 +418,101 @@ function renderTrendCard(){
   const dates = TREND.dates;
   const sumAt = (obj, i) => Object.values(obj || {}).reduce((a, arr) => a + (arr[i] || 0), 0);
   const pick = (obj, key) => (obj && Array.isArray(obj[key])) ? dates.map((_, i) => obj[key][i] || 0) : null;
-  // 系列の組み立て: 絞り込みなし=市全体 / 地区=その町 / 避難所=その拠点(実線)+町の合計(破線)
-  const series = [];
-  let descScope = "";
+  const desc = card.querySelector(".desc");
+  const baseLegend = card.querySelector(".maplegend");
+  const setDesc = t => { if (desc) desc.textContent = `市の公表（毎日 午前8時時点）に基づく日次の推移${t}`; };
+  const subhead = t => {
+    const el = document.createElement("div");
+    el.className = "trend-subhead"; el.textContent = t;
+    return el;
+  };
+  const addLegend = entries => {
+    const div = document.createElement("div");
+    div.className = "maplegend"; div.style.marginTop = "4px";
+    entries.forEach(e => {
+      const key = document.createElement("span"); key.className = "key";
+      const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = e.color;
+      key.appendChild(dot);
+      key.appendChild(document.createTextNode(e.label));
+      div.appendChild(key);
+    });
+    box.appendChild(div);
+  };
+  const last = arr => arr[arr.length - 1] || 0;
+  card.classList.remove("hidden");
+  if (baseLegend) baseLegend.classList.remove("hidden");
+
+  // 系列の組み立て: 絞り込みなし=市全体 / 地区=拠点ごと+町の合計 / 避難所=その拠点(実線)+町の合計(破線)
   if (currentShelter && pick(TREND.byShelter, currentShelter)){
     const shObj = SHELTERS.find(s => s.name === currentShelter);
     const district = (shObj && shObj.district) || currentDistrict;
-    series.push({ data: pick(TREND.byShelter, currentShelter), colorVar: "--accent" });
-    series.push({ data: pick(TREND.hhByShelter, currentShelter), colorVar: "--water" });
+    const series = [
+      { data: pick(TREND.byShelter, currentShelter), colorVar: "--accent" },
+      { data: pick(TREND.hhByShelter, currentShelter), colorVar: "--water" },
+    ];
     let dPeople = district ? pick(TREND.byDistrict, district) : null;
     // 町にこの拠点しかない場合は合計＝拠点なので破線は出さない
     if (dPeople && JSON.stringify(dPeople) === JSON.stringify(series[0].data)) dPeople = null;
     if (dPeople){
       series.push({ data: dPeople, colorVar: "--accent", dashed: true });
       series.push({ data: district ? pick(TREND.hhByDistrict, district) : null, colorVar: "--water", dashed: true });
-      descScope = `（実線=${currentShelter}、破線=${district}の合計）`;
+      setDesc(`（実線=${currentShelter}、破線=${district}の合計）`);
     } else {
-      descScope = `（${currentShelter}）`;
+      setDesc(`（${currentShelter}）`);
     }
-  } else if (currentDistrict && pick(TREND.byDistrict, currentDistrict)){
-    series.push({ data: pick(TREND.byDistrict, currentDistrict), colorVar: "--accent" });
-    series.push({ data: pick(TREND.hhByDistrict, currentDistrict), colorVar: "--water" });
-    descScope = `（${currentDistrict}の合計）`;
-  } else {
-    series.push({ data: dates.map((_, i) => sumAt(TREND.byDistrict, i)), colorVar: "--accent" });
-    series.push({ data: TREND.hhByDistrict ? dates.map((_, i) => sumAt(TREND.hhByDistrict, i)) : null, colorVar: "--water" });
+    box.appendChild(buildTrendSvg(dates, series, box.clientWidth));
+    return;
   }
-  const desc = card.querySelector(".desc");
-  if (desc) desc.textContent = `市の公表（毎日 午前8時時点）に基づく日次の推移${descScope}`;
-  card.classList.remove("hidden");
-  box.appendChild(buildTrendSvg(dates, series, box.clientWidth));
+
+  if (currentDistrict && pick(TREND.byDistrict, currentDistrict)){
+    const names = SHELTERS.filter(s => s.district === currentDistrict)
+      .map(s => s.name).filter(n => pick(TREND.byShelter, n));
+    if (names.length > 1){
+      // 拠点ごとの線＋町の合計（破線）。人数と世帯数は別グラフで表示
+      if (baseLegend) baseLegend.classList.add("hidden");
+      setDesc(`（${currentDistrict}・拠点ごと。破線=町の合計）`);
+      const COLORS = ["#2a78d6", "#8a63c9", "#1f9d6c", "#d97a26", "#c8506e", "#5b6ee1", "#8a8f3d"];
+      const color = i => COLORS[i % COLORS.length];
+
+      box.appendChild(subhead("避難者数（拠点ごと）"));
+      const pTotal = pick(TREND.byDistrict, currentDistrict);
+      box.appendChild(buildTrendSvg(dates, [
+        ...names.map((n, i) => ({ data: pick(TREND.byShelter, n), color: color(i), showLabels: false })),
+        { data: pTotal, colorVar: "--accent", dashed: true },
+      ], box.clientWidth));
+      addLegend([
+        ...names.map((n, i) => ({ color: color(i), label: `${n} ${fmt(last(pick(TREND.byShelter, n)))}人` })),
+        { color: "var(--text-muted)", label: `町の合計（破線） ${fmt(last(pTotal))}人` },
+      ]);
+
+      const hhNames = names.filter(n => pick(TREND.hhByShelter, n));
+      const hhTotal = pick(TREND.hhByDistrict, currentDistrict);
+      if (hhNames.length){
+        box.appendChild(subhead("避難世帯数（拠点ごと）"));
+        box.appendChild(buildTrendSvg(dates, [
+          ...hhNames.map((n, i) => ({ data: pick(TREND.hhByShelter, n), color: color(names.indexOf(n)), showLabels: false })),
+          ...(hhTotal ? [{ data: hhTotal, colorVar: "--water", dashed: true }] : []),
+        ], box.clientWidth));
+        addLegend([
+          ...hhNames.map(n => ({ color: color(names.indexOf(n)), label: `${n} ${fmt(last(pick(TREND.hhByShelter, n)))}世帯` })),
+          ...(hhTotal ? [{ color: "var(--text-muted)", label: `町の合計（破線） ${fmt(last(hhTotal))}世帯` }] : []),
+        ]);
+      }
+    } else {
+      setDesc(`（${currentDistrict}の合計）`);
+      box.appendChild(buildTrendSvg(dates, [
+        { data: pick(TREND.byDistrict, currentDistrict), colorVar: "--accent" },
+        { data: pick(TREND.hhByDistrict, currentDistrict), colorVar: "--water" },
+      ], box.clientWidth));
+    }
+    return;
+  }
+
+  setDesc("");
+  box.appendChild(buildTrendSvg(dates, [
+    { data: dates.map((_, i) => sumAt(TREND.byDistrict, i)), colorVar: "--accent" },
+    { data: TREND.hhByDistrict ? dates.map((_, i) => sumAt(TREND.hhByDistrict, i)) : null, colorVar: "--water" },
+  ], box.clientWidth));
 }
 function buildTrendSvg(dates, series, boxWidth){
   const drawn = series.filter(s => Array.isArray(s.data));
@@ -475,8 +542,8 @@ function buildTrendSvg(dates, series, boxWidth){
     t.textContent = dLabel;
     svg.appendChild(t);
   });
-  const drawSeries = ({ data, colorVar, dashed }) => {
-    const color = cssVar(colorVar);
+  const drawSeries = ({ data, colorVar, color: rawColor, dashed, showLabels }) => {
+    const color = rawColor || cssVar(colorVar);
     if (dates.length > 1){
       const attrs = {
         points: data.map((v, i) => `${x(i)},${y(v)}`).join(" "),
@@ -491,6 +558,7 @@ function buildTrendSvg(dates, series, boxWidth){
         cx: x(i), cy: y(v), r: dashed ? 3 : 4,
         fill: dashed ? "var(--surface-1)" : color, stroke: dashed ? color : "var(--surface-1)", "stroke-width": 2
       }));
+      if (showLabels === false) return;   // 拠点ごと表示など、線が多いときは値を凡例側に出す
       // 破線（合計）のラベルは控えめな色。合計は拠点より上に来るため、どちらも点の上に置けば重ならない
       const t = mk("text", {
         x: x(i), y: y(v) - 9, "text-anchor": "middle", "font-size": 11,
