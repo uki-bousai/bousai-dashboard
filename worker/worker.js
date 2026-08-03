@@ -107,7 +107,7 @@ export default {
       const filePath = PATHS.includes(body.path) ? body.path : PATHS[0];
       const data = body.data;
       const valid = filePath === "seikatsu.json"
-        ? (data && typeof data === "object" && Array.isArray(data.water) && Array.isArray(data.toilets) && Array.isArray(data.lacks))
+        ? (data && typeof data === "object" && Array.isArray(data.water) && Array.isArray(data.toilets) && Array.isArray(data.haves))
         : (data && typeof data === "object" && Array.isArray(data.shelters) && Array.isArray(data.supplies));
       if (!valid) return json({ error: "データの形式が不正です" }, 400, cors);
       const text = JSON.stringify(data, null, 2) + "\n";

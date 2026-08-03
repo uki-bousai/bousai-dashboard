@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>生活支援情報の入力 ─ 給水・トイレ・不足報告</title>
+<title>生活支援情報の入力 ─ 給水・トイレ・配布物資</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <style>
@@ -91,24 +91,24 @@ button:disabled{opacity:.45; cursor:not-allowed}
 
 <header>
   <h1>生活支援情報の入力</h1>
-  <span class="sub">給水・仮設トイレ・不足報告 ─ 保存すると<a href="seikatsu.html">公開ページ</a>に反映（1〜2分）</span>
+  <span class="sub">給水・仮設トイレ・配布物資 ─ 保存すると<a href="seikatsu.html">公開ページ</a>に反映（1〜2分）</span>
 </header>
 
 <div class="container">
 
   <div class="card">
-    <h2>避難所の不足報告</h2>
-    <p class="desc">避難所ごとに「いま足りない物資」を報告します。在庫を数える必要はありません。品目を<b>タップするたびに 不足 → ⚠急ぎ → 解除</b> と切り替わります。解消したらタップして消してください。</p>
+    <h2>避難所で受け取れる物資</h2>
+    <p class="desc">避難所ごとに「いま受け取れる（配布できる）物資」を報告します。在庫を数える必要はありません。品目を<b>タップするたびに あり → ⚠残りわずか → 解除</b> と切り替わります。配布が終わったらタップして消してください。</p>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px">
-      <label for="lackShelterSel">避難所</label>
-      <select id="lackShelterSel" style="font:inherit; font-size:.82rem; color:var(--text-primary); background:var(--page); border:1px solid var(--border); border-radius:8px; padding:7px 10px"></select>
-      <span id="lackInfo" style="font-size:.74rem; color:var(--text-secondary)"></span>
+      <label for="haveShelterSel">避難所</label>
+      <select id="haveShelterSel" style="font:inherit; font-size:.82rem; color:var(--text-primary); background:var(--page); border:1px solid var(--border); border-radius:8px; padding:7px 10px"></select>
+      <span id="haveInfo" style="font-size:.74rem; color:var(--text-secondary)"></span>
     </div>
-    <div id="lackChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px"></div>
+    <div id="haveChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px"></div>
     <div class="tokenrow">
       <div class="grow">
-        <label for="lackFree">その他の不足（自由記述・「、」区切り）</label>
-        <input type="text" id="lackFree" placeholder="例: ブルーシート、ラジオ">
+        <label for="haveFree">その他の配布物（自由記述・「、」区切り）</label>
+        <input type="text" id="haveFree" placeholder="例: ブルーシート、ラジオ">
       </div>
     </div>
   </div>
@@ -205,7 +205,7 @@ const AREA_BOX  = { minLat: 32.0, maxLat: 33.3, minLng: 129.9, maxLng: 131.4 };
 let data = null;        // seikatsu.json の内容
 let shelters = [];      // data.json から読む避難所一覧（名前・地区）
 let dirty = false;
-let currentLack = null; // 選択中の避難所の不足報告 {shelter, district, items, at}
+let currentHave = null; // 選択中の避難所の配布報告 {shelter, district, items, at}
 
 const $ = id => document.getElementById(id);
 const status = $("status");
@@ -242,20 +242,20 @@ async function workerPost(path, payload){
 }
 
 /* ---------- 不足報告 ---------- */
-const LACK_ITEMS = ["飲料水","食料","経口補水液","ミルク","離乳食","おむつ","生理用品","毛布","段ボールベッド","簡易トイレ","トイレットペーパー","衛生用品","衣類","カセットコンロ","乾電池"];
+const HAVE_ITEMS = ["飲料水","食料","経口補水液","ミルク","離乳食","おむつ","生理用品","毛布","段ボールベッド","簡易トイレ","トイレットペーパー","衛生用品","衣類","カセットコンロ","乾電池"];
 
-function lackOf(shelterName){
-  let e = (data.lacks || []).find(l => l.shelter === shelterName);
+function haveOf(shelterName){
+  let e = (data.haves || []).find(l => l.shelter === shelterName);
   if (!e){
     const sh = shelters.find(s => s.name === shelterName);
     e = { shelter: shelterName, district: sh ? sh.district : "", items: [], at: "" };
-    data.lacks = data.lacks || [];
-    data.lacks.push(e);
+    data.haves = data.haves || [];
+    data.haves.push(e);
   }
   return e;
 }
-function renderLackSelect(){
-  const sel = $("lackShelterSel");
+function renderHaveSelect(){
+  const sel = $("haveShelterSel");
   const prev = sel.value;
   sel.textContent = "";
   shelters.forEach(s => {
@@ -264,44 +264,44 @@ function renderLackSelect(){
     sel.appendChild(o);
   });
   if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
-  renderLackChips();
+  renderHaveChips();
 }
-$("lackShelterSel").addEventListener("change", renderLackChips);
+$("haveShelterSel").addEventListener("change", renderHaveChips);
 
-function renderLackChips(){
-  const box = $("lackChips");
+function renderHaveChips(){
+  const box = $("haveChips");
   box.textContent = "";
-  const name = $("lackShelterSel").value;
-  if (!name){ $("lackInfo").textContent = ""; return; }
-  currentLack = lackOf(name);
-  $("lackInfo").textContent = currentLack.at ? `最終報告: ${currentLack.at}` : "まだ報告はありません";
-  const stateOf = n => { const f = currentLack.items.find(x => x.name === n); return f ? (f.urgent ? 2 : 1) : 0; };
-  LACK_ITEMS.forEach(n => {
+  const name = $("haveShelterSel").value;
+  if (!name){ $("haveInfo").textContent = ""; return; }
+  currentHave = haveOf(name);
+  $("haveInfo").textContent = currentHave.at ? `最終報告: ${currentHave.at}` : "まだ報告はありません";
+  const stateOf = n => { const f = currentHave.items.find(x => x.name === n); return f ? (f.low ? 2 : 1) : 0; };
+  HAVE_ITEMS.forEach(n => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "small";
     const st = stateOf(n);
-    b.textContent = st === 2 ? "⚠急 " + n : st === 1 ? "✓ " + n : n;
-    if (st === 2) b.style.cssText = "background:var(--status-critical); border-color:var(--status-critical); color:#fff";
-    else if (st === 1) b.style.cssText = "background:rgba(250,178,25,.25); border-color:var(--status-warning)";
+    b.textContent = st === 2 ? "⚠残少 " + n : st === 1 ? "✓ " + n : n;
+    if (st === 2) b.style.cssText = "background:rgba(250,178,25,.25); border-color:var(--status-warning)";
+    else if (st === 1) b.style.cssText = "background:rgba(12,163,12,.18); border-color:#0ca30c";
     b.addEventListener("click", () => {
       const cur = stateOf(n);
-      currentLack.items = currentLack.items.filter(x => x.name !== n);
-      if (cur === 0) currentLack.items.push({ name: n, urgent: false });
-      else if (cur === 1) currentLack.items.push({ name: n, urgent: true });
-      currentLack.at = jstStamp();
+      currentHave.items = currentHave.items.filter(x => x.name !== n);
+      if (cur === 0) currentHave.items.push({ name: n, low: false });
+      else if (cur === 1) currentHave.items.push({ name: n, low: true });
+      currentHave.at = jstStamp();
       markDirty();
-      renderLackChips();
+      renderHaveChips();
     });
     box.appendChild(b);
   });
-  $("lackFree").value = currentLack.items.filter(x => !LACK_ITEMS.includes(x.name)).map(x => x.name).join("、");
+  $("haveFree").value = currentHave.items.filter(x => !HAVE_ITEMS.includes(x.name)).map(x => x.name).join("、");
 }
-$("lackFree").addEventListener("change", () => {
-  if (!currentLack) return;
-  const names = $("lackFree").value.split(/[、,・\/]+/).map(t => t.trim()).filter(Boolean);
-  currentLack.items = currentLack.items.filter(x => LACK_ITEMS.includes(x.name))
-    .concat(names.map(n => ({ name: n, urgent: false })));
-  currentLack.at = jstStamp();
+$("haveFree").addEventListener("change", () => {
+  if (!currentHave) return;
+  const names = $("haveFree").value.split(/[、,・\/]+/).map(t => t.trim()).filter(Boolean);
+  currentHave.items = currentHave.items.filter(x => HAVE_ITEMS.includes(x.name))
+    .concat(names.map(n => ({ name: n, low: false })));
+  currentHave.at = jstStamp();
   markDirty();
 });
 
@@ -521,7 +521,7 @@ function renderForms(){
   (data.water || []).forEach(w => wb.appendChild(waterRow(w)));
   const tb = $("toiletBody"); tb.textContent = "";
   (data.toilets || []).forEach(t => tb.appendChild(toiletRow(t)));
-  renderLackSelect();
+  renderHaveSelect();
 }
 $("provisionalChk").addEventListener("change", markDirty);
 
@@ -554,11 +554,11 @@ $("loadBtn").addEventListener("click", async () => {
 function collect(){
   const water = [...$("waterBody").children].map(tr => tr._get()).filter(w => w.name);
   const toilets = [...$("toiletBody").children].map(tr => tr._get()).filter(t => t.name);
-  const lacks = (data.lacks || []).filter(l => (l.items || []).length);
+  const haves = (data.haves || []).filter(l => (l.items || []).length);
   return {
     provisional: $("provisionalChk").checked,
     updatedAt: jstStamp() + " 更新",
-    water, toilets, lacks
+    water, toilets, haves
   };
 }
 
