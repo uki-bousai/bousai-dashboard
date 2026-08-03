@@ -114,7 +114,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
   <div class="updated" id="updatedAt"></div>
 </header>
 
-<div class="notice hidden" id="provisionalNotice"><div><b>⚠ 給水・トイレ・配布物資の情報は準備中の仮データです。</b>実際の状況ではありません。避難所の避難者数・受入可能数は市の公表資料に基づきます。</div></div>
+<div class="notice hidden" id="provisionalNotice"><div><b>ℹ 給水・仮設トイレ・配布物資の情報は、現在集めています。</b>確認でき次第、順次このページに掲載します。避難所の避難者数・受入可能数は市の公表資料に基づきます。</div></div>
 
 <div class="container">
 
@@ -151,19 +151,19 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
   <section class="card">
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
     <p class="desc">給水車・給水所の場所と時間。容器（ポリタンク・ペットボトル）をお持ちください。</p>
-    <div id="waterList"><p class="empty">給水情報はまだ登録されていません。</p></div>
+    <div id="waterList"><p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
   <section class="card">
     <h2><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</h2>
     <p class="desc">仮設トイレの設置場所と基数。</p>
-    <div id="toiletList"><p class="empty">設置情報はまだ登録されていません。</p></div>
+    <div id="toiletList"><p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
   <section class="card">
     <h2>避難所で受け取れる物資</h2>
     <p class="desc">各避難所からの報告に基づく「いま受け取れる物資」。<span class="tag low" style="margin:0 2px">⚠残りわずか</span>の表示があるものは早めになくなる可能性があります。数量・配布方法は各避難所の案内に従ってください。</p>
-    <div id="haveList"><p class="empty">配布情報はまだ登録されていません。</p></div>
+    <div id="haveList"><p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p></div>
   </section>
 
 </div>
@@ -274,7 +274,7 @@ function renderWater(){
   const box = document.getElementById("waterList");
   box.textContent = "";
   const list = DATA.water || [];
-  if (!list.length){ box.innerHTML = '<p class="empty">給水情報はまだ登録されていません。</p>'; return; }
+  if (!list.length){ box.innerHTML = '<p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p>'; return; }
   list.forEach(w => box.appendChild(rowEl(w.name, w.district, b => {
     const t = document.createElement("b"); t.textContent = w.schedule || "";
     b.appendChild(t);
@@ -285,7 +285,7 @@ function renderToilets(){
   const box = document.getElementById("toiletList");
   box.textContent = "";
   const list = DATA.toilets || [];
-  if (!list.length){ box.innerHTML = '<p class="empty">設置情報はまだ登録されていません。</p>'; return; }
+  if (!list.length){ box.innerHTML = '<p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p>'; return; }
   list.forEach(t => box.appendChild(rowEl(t.name, t.district, b => {
     if (t.count){ const c = document.createElement("b"); c.textContent = `${t.count}基`; b.appendChild(c); }
     if (t.note) b.appendChild(document.createTextNode((t.count ? " ／ " : "") + t.note));
@@ -295,7 +295,7 @@ function renderHaves(){
   const box = document.getElementById("haveList");
   box.textContent = "";
   const list = (DATA.haves || []).filter(l => (l.items || []).length);
-  if (!list.length){ box.innerHTML = '<p class="empty">配布情報はまだ登録されていません。</p>'; return; }
+  if (!list.length){ box.innerHTML = '<p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p>'; return; }
   const sorted = [...list].sort((a,b) => b.items.length - a.items.length);
   sorted.forEach(l => box.appendChild(rowEl(l.shelter, l.district, b => {
     [...l.items].sort((x,y) => (x.low?1:0)-(y.low?1:0)).forEach(it => {
