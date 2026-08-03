@@ -400,8 +400,8 @@ function gmapsLink(query){
   a.textContent = "🗺 地図を開く";
   return a;
 }
-const gmapsQuery = p => (typeof p.lat === "number" && typeof p.lng === "number")
-  ? `${p.lat},${p.lng}` : `${p.name} ${p.address || (p.district ? "宇城市" + p.district : "宇城市")}`;
+/* 名称で検索するとGoogleマップ側の施設ページ（営業時間・経路など）が開く。座標だとただのピンになるため名称を優先 */
+const gmapsQuery = p => `${p.name} ${p.address || (p.district ? "宇城市" + p.district : "宇城市")}`;
 function renderBaths(){
   const box = document.getElementById("bathList");
   box.textContent = "";
@@ -729,7 +729,7 @@ function renderMap(){
       div.appendChild(r);
     }
     const gm = document.createElement("div"); gm.className = "popup-row";
-    gm.appendChild(gmapsLink(`${p.lat},${p.lng}`));
+    gm.appendChild(gmapsLink(gmapsQuery(p)));
     gm.firstChild.style.marginLeft = "0";
     div.appendChild(gm);
     const marker = L.circleMarker([p.lat, p.lng], {
