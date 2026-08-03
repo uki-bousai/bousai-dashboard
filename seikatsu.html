@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="給水車・給水所、仮設トイレ、避難所で不足している物資の情報を公開するページ。">
+<meta name="theme-color" content="#2a78d6">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>給水・トイレ・物資の情報 ─ 宇城市 生活支援情報</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --border:rgba(11,11,11,.10);
+  --accent:#2a78d6;
+  --status-warning:#fab219; --status-critical:#d03b3b; --status-good:#0ca30c;
+  --good-text:#006300; --water:#1690b8; --toilet:#8a63c9;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --border:rgba(255,255,255,.10);
+    --accent:#3987e5; --good-text:#0ca30c; --water:#2fb1da; --toilet:#a888e0;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  background:var(--page); color:var(--text-primary); line-height:1.6; padding-bottom:40px;
+}
+header{padding:20px 20px 0; max-width:860px; margin:0 auto}
+header h1{font-size:1.15rem; font-weight:700}
+header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
+.updated{font-size:.72rem; color:var(--text-muted); margin-top:4px}
+.container{max-width:860px; margin:0 auto; padding:0 20px}
+.notice{max-width:860px; margin:12px auto 0; padding:0 20px}
+.notice > div{background:var(--surface-1); border:1px solid var(--status-warning); border-radius:10px;
+  padding:10px 14px; font-size:.76rem; color:var(--text-secondary); line-height:1.7}
+.hidden{display:none}
+.backlink{display:inline-block; font-size:.78rem; margin-top:8px; color:var(--accent)}
+.card{background:var(--surface-1); border:1px solid var(--border); border-radius:12px;
+  padding:14px 16px 16px; margin-top:14px}
+.card h2{font-size:.95rem; font-weight:700; margin-bottom:2px; display:flex; align-items:center; gap:8px}
+.card .desc{font-size:.74rem; color:var(--text-secondary); margin-bottom:10px}
+.dot{width:11px; height:11px; border-radius:50%; display:inline-block; border:2px solid var(--surface-1); box-shadow:0 0 0 1px var(--border)}
+#map{height:340px; border-radius:10px; border:1px solid var(--border)}
+@media (max-width:640px){ #map{height:300px} }
+.maplegend{display:flex; gap:14px; font-size:.72rem; color:var(--text-secondary); margin-top:10px; flex-wrap:wrap}
+.maplegend .key{display:inline-flex; align-items:center; gap:6px}
+.row{display:grid; grid-template-columns:12em 1fr; gap:12px; padding:8px 0; border-bottom:1px solid var(--grid); align-items:baseline}
+.row:last-child{border-bottom:none}
+.row .name{font-size:.8rem; font-weight:700; text-align:right; line-height:1.4}
+.row .name small{display:block; font-size:.66rem; color:var(--text-muted); font-weight:400}
+.row .body{font-size:.78rem; color:var(--text-secondary); line-height:1.7}
+.row .body b{color:var(--text-primary)}
+@media (max-width:640px){
+  .row{grid-template-columns:1fr; gap:2px}
+  .row .name{text-align:left}
+  .row .name small{display:inline; margin-left:6px}
+}
+.tag{display:inline-block; font-size:.72rem; font-weight:700; border-radius:99px;
+  padding:1px 10px; margin:2px 4px 2px 0; color:var(--status-critical); border:1px solid var(--status-critical)}
+.tag.urgent{background:var(--status-critical); color:#fff}
+.at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
+.empty{font-size:.78rem; color:var(--text-muted)}
+.popup-title{font-weight:700; font-size:.84rem; margin-bottom:2px}
+.popup-sub{font-size:.7rem; color:var(--text-muted); margin-bottom:6px}
+.popup-row{font-size:.76rem; color:var(--text-secondary)}
+.popup-row b{color:var(--text-primary); font-weight:600}
+.leaflet-popup-content{margin:12px 14px; line-height:1.5}
+@media (prefers-color-scheme: dark){
+  #map .leaflet-tile{filter:brightness(.75) contrast(1.05)}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface-1); color:var(--text-primary)}
+}
+footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; color:var(--text-muted); line-height:1.8}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>給水・トイレ・物資の情報</h1>
+  <p class="sub">宇城市 生活支援情報 ─ 給水車の場所と時間、仮設トイレ、避難所で足りない物資</p>
+  <div class="updated" id="updatedAt"></div>
+  <a class="backlink" href="index.html">← 避難所の受入状況・物資ダッシュボードはこちら</a>
+</header>
+
+<div class="notice hidden" id="provisionalNotice"><div><b>⚠ 現在は仮のデータです。</b>実際の給水・トイレ・物資の状況ではありません。正式なデータでの運用開始に向けて準備中です。</div></div>
+
+<div class="container">
+
+  <section class="card hidden" id="mapCard">
+    <h2>マップ</h2>
+    <div id="map"></div>
+    <div class="maplegend">
+      <span class="key"><span class="dot" style="background:var(--water)"></span>給水</span>
+      <span class="key"><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
+    <p class="desc">給水車・給水所の場所と時間。容器（ポリタンク・ペットボトル）をお持ちください。</p>
+    <div id="waterList"><p class="empty">給水情報はまだ登録されていません。</p></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</h2>
+    <p class="desc">仮設トイレの設置場所と基数。</p>
+    <div id="toiletList"><p class="empty">設置情報はまだ登録されていません。</p></div>
+  </section>
+
+  <section class="card">
+    <h2>避難所で足りない物資</h2>
+    <p class="desc">各避難所からの報告に基づく「いま足りない物資」。<span class="tag urgent" style="margin:0 2px">急</span>は特に急いでいるものです。物資を届けられる方・支援団体の方は参考にしてください。</p>
+    <div id="lackList"><p class="empty">現在、不足の報告はありません。</p></div>
+  </section>
+
+</div>
+
+<footer>
+  <p>このページのデータは災害対策本部・協力者が入力しています。状況は変わることがあります。給水時間などは現地の案内が優先です。</p>
+</footer>
+
+<script>
+"use strict";
+let DATA = { water: [], toilets: [], lacks: [] };
+
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- 鮮度表示 ---------- */
+function renderUpdated(){
+  const el = document.getElementById("updatedAt");
+  const m = (DATA.updatedAt || "").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m){ el.textContent = DATA.updatedAt || ""; return; }
+  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5]);
+  const mins = Math.max(0, Math.floor((Date.now() - t) / 60000));
+  const ago = mins < 1 ? "たった今" : mins < 60 ? `${mins}分前` : mins < 1440 ? `${Math.floor(mins/60)}時間前` : `${Math.floor(mins/1440)}日前`;
+  el.textContent = `${DATA.updatedAt}（${ago}）`;
+}
+setInterval(renderUpdated, 60 * 1000);
+
+/* ---------- 一覧 ---------- */
+function rowEl(name, district, bodyHtmlBuilder){
+  const row = document.createElement("div"); row.className = "row";
+  const n = document.createElement("div"); n.className = "name"; n.textContent = name;
+  if (district){ const s = document.createElement("small"); s.textContent = district; n.appendChild(s); }
+  const b = document.createElement("div"); b.className = "body";
+  bodyHtmlBuilder(b);
+  row.append(n, b);
+  return row;
+}
+function renderWater(){
+  const box = document.getElementById("waterList");
+  box.textContent = "";
+  const list = DATA.water || [];
+  if (!list.length){ box.innerHTML = '<p class="empty">給水情報はまだ登録されていません。</p>'; return; }
+  list.forEach(w => box.appendChild(rowEl(w.name, w.district, b => {
+    const t = document.createElement("b"); t.textContent = w.schedule || "";
+    b.appendChild(t);
+    if (w.note) b.appendChild(document.createTextNode(" ／ " + w.note));
+  })));
+}
+function renderToilets(){
+  const box = document.getElementById("toiletList");
+  box.textContent = "";
+  const list = DATA.toilets || [];
+  if (!list.length){ box.innerHTML = '<p class="empty">設置情報はまだ登録されていません。</p>'; return; }
+  list.forEach(t => box.appendChild(rowEl(t.name, t.district, b => {
+    if (t.count){ const c = document.createElement("b"); c.textContent = `${t.count}基`; b.appendChild(c); }
+    if (t.note) b.appendChild(document.createTextNode((t.count ? " ／ " : "") + t.note));
+  })));
+}
+function renderLacks(){
+  const box = document.getElementById("lackList");
+  box.textContent = "";
+  const list = (DATA.lacks || []).filter(l => (l.items || []).length);
+  if (!list.length){ box.innerHTML = '<p class="empty">現在、不足の報告はありません。</p>'; return; }
+  const sorted = [...list].sort((a,b) =>
+    (b.items.filter(i => i.urgent).length - a.items.filter(i => i.urgent).length) || (b.items.length - a.items.length));
+  sorted.forEach(l => box.appendChild(rowEl(l.shelter, l.district, b => {
+    [...l.items].sort((x,y) => (y.urgent?1:0)-(x.urgent?1:0)).forEach(it => {
+      const tag = document.createElement("span");
+      tag.className = "tag" + (it.urgent ? " urgent" : "");
+      tag.textContent = (it.urgent ? "急 " : "") + it.name;
+      b.appendChild(tag);
+    });
+    if (l.at){ const at = document.createElement("span"); at.className = "at"; at.textContent = l.at + " 報告"; b.appendChild(at); }
+  })));
+}
+
+/* ---------- 地図 ---------- */
+let map = null, layer = null;
+function renderMap(){
+  const card = document.getElementById("mapCard");
+  if (typeof L === "undefined"){ card.classList.add("hidden"); return; }
+  const pts = [
+    ...(DATA.water || []).filter(w => typeof w.lat === "number").map(w => ({...w, kind:"water"})),
+    ...(DATA.toilets || []).filter(t => typeof t.lat === "number").map(t => ({...t, kind:"toilet"})),
+  ];
+  if (!pts.length){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  if (!map){
+    map = L.map("map", { scrollWheelZoom: false });
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'
+    }).addTo(map);
+  }
+  if (layer) layer.remove();
+  layer = L.layerGroup().addTo(map);
+  pts.forEach(p => {
+    const div = document.createElement("div");
+    const t = document.createElement("div"); t.className = "popup-title"; t.textContent = p.name;
+    const s = document.createElement("div"); s.className = "popup-sub";
+    s.textContent = (p.district ? p.district + " ／ " : "") + (p.kind === "water" ? "給水" : "仮設トイレ");
+    div.append(t, s);
+    const r = document.createElement("div"); r.className = "popup-row";
+    const b = document.createElement("b");
+    b.textContent = p.kind === "water" ? (p.schedule || "") : (p.count ? p.count + "基" : "");
+    r.appendChild(b);
+    if (p.note) r.appendChild(document.createTextNode(" " + p.note));
+    div.appendChild(r);
+    L.circleMarker([p.lat, p.lng], {
+      radius: 9, color: cssVar("--surface-1"), weight: 2,
+      fillColor: cssVar(p.kind === "water" ? "--water" : "--toilet"), fillOpacity: 1
+    }).bindPopup(div, { maxWidth: 240 })
+      .bindTooltip(p.name, { direction: "top", offset: [0, -8] })
+      .addTo(layer);
+  });
+  map.fitBounds(L.latLngBounds(pts.map(p => [p.lat, p.lng])).pad(0.2), { maxZoom: 16 });
+}
+
+/* ---------- 読み込み ---------- */
+async function loadData(){
+  try {
+    const res = await fetch("seikatsu.json?_=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    DATA = await res.json();
+  } catch (e) { /* 前回の表示を維持 */ }
+  document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
+  renderUpdated();
+  renderWater();
+  renderToilets();
+  renderLacks();
+  renderMap();
+}
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+addEventListener("load", () => renderMap());
+if ("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(() => {}); }
+</script>
+</body>
+</html>
