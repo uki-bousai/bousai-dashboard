@@ -71,6 +71,15 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
 .empty{font-size:.78rem; color:var(--text-muted)}
 /* KPI */
+.filters{display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap}
+.filters label{font-size:.78rem; color:var(--text-secondary); font-weight:700}
+.filters select{
+  font:inherit; font-size:.82rem; color:var(--text-primary);
+  background:var(--surface-1); border:1px solid var(--border); border-radius:8px; padding:6px 10px;
+}
+.clearbtn{font:inherit; font-size:.72rem; font-weight:700; color:var(--text-secondary);
+  background:none; border:1px solid var(--border); border-radius:8px; padding:5px 10px; cursor:pointer}
+.clearbtn:hover{background:var(--surface-1)}
 .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px}
 @media (max-width:640px){ .kpis{grid-template-columns:repeat(3,1fr)} }
 .tile{background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:12px 14px}
@@ -118,10 +127,19 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
 <div class="container">
 
+  <div class="filters">
+    <label for="districtSel">地区</label>
+    <select id="districtSel"><option value="">すべての地区</option></select>
+    <label for="shelterSel">避難所</label>
+    <select id="shelterSel"><option value="">すべての避難所</option></select>
+    <button class="clearbtn hidden" id="clearFilter" type="button">✕ 絞り込みを解除</button>
+  </div>
+
   <div class="kpis" id="kpis"></div>
 
   <section class="card hidden" id="mapCard">
     <h2>マップ</h2>
+    <p class="desc">避難所のマーカーをタップすると、ページ全体がその避難所のデータに絞り込まれます</p>
     <div id="map"></div>
     <div class="maplegend">
       <span class="key"><span class="dot" style="background:var(--accent)"></span>避難所 受入可</span>
@@ -181,6 +199,63 @@ let TREND = null;    // data.json の推移（避難者数・世帯数）
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = n => (n || 0).toLocaleString("ja-JP");
 
+/* ---------- フィルター（地区 → 避難所 の2段絞り込み） ---------- */
+let currentDistrict = "", currentShelter = "";
+const fShelters = () => SHELTERS
+  .filter(s => !currentDistrict || s.district === currentDistrict)
+  .filter(s => !currentShelter || s.name === currentShelter);
+const fByDistrict = list => (list || []).filter(x => !currentDistrict || x.district === currentDistrict);
+
+const sel = document.getElementById("districtSel");
+const shSel = document.getElementById("shelterSel");
+sel.addEventListener("change", () => { currentDistrict = sel.value; currentShelter = ""; rebuildFilter(); renderAll(); });
+shSel.addEventListener("change", () => { currentShelter = shSel.value; renderAll(); });
+document.getElementById("clearFilter").addEventListener("click", () => {
+  currentDistrict = ""; currentShelter = "";
+  rebuildFilter(); renderAll();
+});
+
+function rebuildFilter(){
+  const districts = [...new Set(SHELTERS.map(s => s.district))];
+  const prev = currentDistrict;
+  sel.textContent = "";
+  const all = document.createElement("option");
+  all.value = ""; all.textContent = "すべての地区";
+  sel.appendChild(all);
+  districts.forEach(d => {
+    const o = document.createElement("option");
+    o.value = d; o.textContent = d;
+    sel.appendChild(o);
+  });
+  currentDistrict = districts.includes(prev) ? prev : "";
+  sel.value = currentDistrict;
+
+  // 避難所プルダウンは選択中の地区内の避難所だけを出す
+  const names = SHELTERS
+    .filter(s => !currentDistrict || s.district === currentDistrict)
+    .map(s => s.name);
+  const prevSh = currentShelter;
+  shSel.textContent = "";
+  const allSh = document.createElement("option");
+  allSh.value = ""; allSh.textContent = "すべての避難所";
+  shSel.appendChild(allSh);
+  names.forEach(n => {
+    const o = document.createElement("option");
+    o.value = n; o.textContent = n;
+    shSel.appendChild(o);
+  });
+  currentShelter = names.includes(prevSh) ? prevSh : "";
+  shSel.value = currentShelter;
+}
+
+/* 地図のマーカーから避難所を選択 */
+function selectShelter(s){
+  currentDistrict = s.district;
+  currentShelter = s.name;
+  rebuildFilter();
+  renderAll();
+}
+
 /* ---------- 避難所の受入状況 ---------- */
 function shelterStatus(s){
   if (!s.capacity) return { color: cssVar("--text-muted"), label: "データ入力待ち", cls: "" };
@@ -192,10 +267,11 @@ function shelterStatus(s){
 function renderKPIs(){
   const box = document.getElementById("kpis");
   box.textContent = "";
-  if (!SHELTERS.length){ return; }
-  const occ = SHELTERS.reduce((a,s) => a + (s.occupants || 0), 0);
-  const cap = SHELTERS.reduce((a,s) => a + (s.capacity || 0), 0);
-  const over = SHELTERS.filter(s => s.capacity && s.occupants > s.capacity).length;
+  const shelters = fShelters();
+  if (!shelters.length){ return; }
+  const occ = shelters.reduce((a,s) => a + (s.occupants || 0), 0);
+  const cap = shelters.reduce((a,s) => a + (s.capacity || 0), 0);
+  const over = shelters.filter(s => s.capacity && s.occupants > s.capacity).length;
   const tile = (label, value, unit, note, crit) => {
     const t = document.createElement("div"); t.className = "tile";
     const l = document.createElement("div"); l.className = "label"; l.textContent = label;
@@ -210,18 +286,24 @@ function renderKPIs(){
     }
     box.appendChild(t);
   };
-  const hh = SHELTERS.reduce((a,s) => a + (s.households || 0), 0);
+  const hh = shelters.reduce((a,s) => a + (s.households || 0), 0);
   tile("現在の避難者数", fmt(occ), "人", hh ? `${fmt(hh)}世帯` : "");
-  tile("受入可能数（合計）", fmt(cap), "人", cap ? `稼働率 ${Math.round(occ/cap*100)}%` : "");
-  tile("開設避難所", fmt(SHELTERS.length), "ヶ所", over > 0 ? `⛔ 定員超過 ${over}ヶ所` : "定員超過なし", over > 0);
+  tile(currentShelter ? "受入可能数" : "受入可能数（合計）", fmt(cap), "人", cap ? `稼働率 ${Math.round(occ/cap*100)}%` : "");
+  if (currentShelter && shelters.length === 1 && shelters[0].capacity){
+    const rem = shelters[0].capacity - shelters[0].occupants;
+    tile("受入余力", rem >= 0 ? fmt(rem) : fmt(-rem), "人", rem >= 0 ? "受入可" : "⛔ 定員超過", rem < 0);
+  } else {
+    tile("開設避難所", fmt(shelters.length), "ヶ所", over > 0 ? `⛔ 定員超過 ${over}ヶ所` : "定員超過なし", over > 0);
+  }
 }
 function renderShelters(){
   const card = document.getElementById("shelterCard");
   const box = document.getElementById("shelterList");
   box.textContent = "";
-  if (!SHELTERS.length){ card.classList.add("hidden"); return; }
+  const shelters = fShelters();
+  if (!shelters.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
-  const sorted = [...SHELTERS].sort((a,b) =>
+  const sorted = [...shelters].sort((a,b) =>
     (b.capacity ? b.occupants/b.capacity : -1) - (a.capacity ? a.occupants/a.capacity : -1));
   sorted.forEach(s => {
     const st = shelterStatus(s);
@@ -273,8 +355,13 @@ function rowEl(name, district, bodyHtmlBuilder){
 function renderWater(){
   const box = document.getElementById("waterList");
   box.textContent = "";
-  const list = DATA.water || [];
-  if (!list.length){ box.innerHTML = '<p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p>'; return; }
+  const list = fByDistrict(DATA.water);
+  if (!list.length){
+    box.innerHTML = (DATA.water || []).length
+      ? '<p class="empty">この地区の給水情報はまだありません。</p>'
+      : '<p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p>';
+    return;
+  }
   list.forEach(w => box.appendChild(rowEl(w.name, w.district, b => {
     const t = document.createElement("b"); t.textContent = w.schedule || "";
     b.appendChild(t);
@@ -284,8 +371,13 @@ function renderWater(){
 function renderToilets(){
   const box = document.getElementById("toiletList");
   box.textContent = "";
-  const list = DATA.toilets || [];
-  if (!list.length){ box.innerHTML = '<p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p>'; return; }
+  const list = fByDistrict(DATA.toilets);
+  if (!list.length){
+    box.innerHTML = (DATA.toilets || []).length
+      ? '<p class="empty">この地区の設置情報はまだありません。</p>'
+      : '<p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p>';
+    return;
+  }
   list.forEach(t => box.appendChild(rowEl(t.name, t.district, b => {
     if (t.count){ const c = document.createElement("b"); c.textContent = `${t.count}基`; b.appendChild(c); }
     if (t.note) b.appendChild(document.createTextNode((t.count ? " ／ " : "") + t.note));
@@ -294,8 +386,15 @@ function renderToilets(){
 function renderHaves(){
   const box = document.getElementById("haveList");
   box.textContent = "";
-  const list = (DATA.haves || []).filter(l => (l.items || []).length);
-  if (!list.length){ box.innerHTML = '<p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p>'; return; }
+  const list = (DATA.haves || []).filter(l => (l.items || []).length)
+    .filter(l => !currentDistrict || l.district === currentDistrict)
+    .filter(l => !currentShelter || l.shelter === currentShelter);
+  if (!list.length){
+    box.innerHTML = (DATA.haves || []).some(l => (l.items || []).length)
+      ? '<p class="empty">この絞り込みでの配布情報はまだありません。</p>'
+      : '<p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p>';
+    return;
+  }
   const sorted = [...list].sort((a,b) => b.items.length - a.items.length);
   sorted.forEach(l => box.appendChild(rowEl(l.shelter, l.district, b => {
     [...l.items].sort((x,y) => (x.low?1:0)-(y.low?1:0)).forEach(it => {
@@ -316,8 +415,24 @@ function renderTrendCard(){
   if (!TREND || !Array.isArray(TREND.dates) || TREND.dates.length < 1){ card.classList.add("hidden"); return; }
   const dates = TREND.dates;
   const sumAt = (obj, i) => Object.values(obj || {}).reduce((a, arr) => a + (arr[i] || 0), 0);
-  const people = dates.map((_, i) => sumAt(TREND.byDistrict, i));
-  const hh = TREND.hhByDistrict ? dates.map((_, i) => sumAt(TREND.hhByDistrict, i)) : null;
+  const pick = (obj, key) => (obj && Array.isArray(obj[key])) ? dates.map((_, i) => obj[key][i] || 0) : null;
+  let people, hh, scope = "";
+  if (currentShelter && pick(TREND.byShelter, currentShelter)){
+    people = pick(TREND.byShelter, currentShelter);
+    hh = pick(TREND.hhByShelter, currentShelter);
+    scope = currentShelter;
+  } else if (currentDistrict && pick(TREND.byDistrict, currentDistrict)){
+    people = pick(TREND.byDistrict, currentDistrict);
+    hh = pick(TREND.hhByDistrict, currentDistrict);
+    scope = currentDistrict;
+  } else if (currentShelter || currentDistrict){
+    card.classList.add("hidden"); return;   // 絞り込み先の推移データがない
+  } else {
+    people = dates.map((_, i) => sumAt(TREND.byDistrict, i));
+    hh = TREND.hhByDistrict ? dates.map((_, i) => sumAt(TREND.hhByDistrict, i)) : null;
+  }
+  const desc = card.querySelector(".desc");
+  if (desc) desc.textContent = `市の公表（毎日 午前8時時点）に基づく日次の推移${scope ? `（${scope}）` : ""}`;
   card.classList.remove("hidden");
 
   const W = Math.max(320, Math.min(760, box.clientWidth || 600));
@@ -375,9 +490,9 @@ function renderMap(){
   const card = document.getElementById("mapCard");
   if (typeof L === "undefined"){ card.classList.add("hidden"); return; }
   const pts = [
-    ...SHELTERS.filter(s => typeof s.lat === "number").map(s => ({...s, kind:"shelter"})),
-    ...(DATA.water || []).filter(w => typeof w.lat === "number").map(w => ({...w, kind:"water"})),
-    ...(DATA.toilets || []).filter(t => typeof t.lat === "number").map(t => ({...t, kind:"toilet"})),
+    ...fShelters().filter(s => typeof s.lat === "number").map(s => ({...s, kind:"shelter"})),
+    ...fByDistrict(DATA.water).filter(w => typeof w.lat === "number").map(w => ({...w, kind:"water"})),
+    ...fByDistrict(DATA.toilets).filter(t => typeof t.lat === "number").map(t => ({...t, kind:"toilet"})),
   ];
   if (!pts.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
@@ -428,12 +543,15 @@ function renderMap(){
       if (p.note) r.appendChild(document.createTextNode(" " + p.note));
       div.appendChild(r);
     }
-    L.circleMarker([p.lat, p.lng], {
+    const marker = L.circleMarker([p.lat, p.lng], {
       radius: p.kind === "shelter" ? 9 : 8, color: cssVar("--surface-1"), weight: 2,
       fillColor, fillOpacity: 1
     }).bindPopup(div, { maxWidth: 240 })
       .bindTooltip(p.name, { direction: "top", offset: [0, -8] })
       .addTo(layer);
+    if (p.kind === "shelter" && !currentShelter){
+      marker.on("click", () => selectShelter(p));
+    }
   });
   map.fitBounds(L.latLngBounds(pts.map(p => [p.lat, p.lng])).pad(0.2), { maxZoom: 16 });
 }
@@ -457,6 +575,12 @@ async function loadData(){
     }
   } catch (e) { /* 前回の表示を維持 */ }
   document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
+  rebuildFilter();
+  renderAll();
+}
+
+function renderAll(){
+  document.getElementById("clearFilter").classList.toggle("hidden", !currentDistrict && !currentShelter);
   renderUpdated();
   renderKPIs();
   renderShelters();
