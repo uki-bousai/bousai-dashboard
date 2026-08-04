@@ -1,6 +1,6 @@
 {
   "provisional": true,
-  "updatedAt": "2026-08-04 08:50 更新",
+  "updatedAt": "2026-08-04 11:35 更新",
   "water": [
     {
       "name": "不知火防災拠点センター",
@@ -70,7 +70,31 @@
     }
   ],
   "toilets": [],
-  "haves": [],
+  "haves": [
+    {
+      "shelter": "小川中学校 体育館",
+      "district": "小川町",
+      "items": [
+        {
+          "name": "毛布",
+          "low": false
+        },
+        {
+          "name": "飲料水",
+          "low": false
+        },
+        {
+          "name": "非常食",
+          "low": false
+        },
+        {
+          "name": "段ボールベッド",
+          "low": false
+        }
+      ],
+      "at": "2026-08-04 11:13"
+    }
+  ],
   "baths": [
     {
       "name": "あしはらの湯",
