@@ -223,7 +223,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
       <span class="key"><span class="dot" style="background:var(--status-critical)"></span>⛔ 定員超過</span>
       <span class="key"><span class="dot" style="background:var(--water)"></span>給水</span>
       <span class="key"><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</span>
-      <span class="key"><span class="dot" style="background:#d97a26"></span>無料入浴（市外）</span>
+      <span class="key"><span class="dot" style="background:#d97a26"></span>無料入浴・シャワー</span>
       <button class="clearbtn hidden" id="zoomBaths" type="button">♨️ 入浴施設まで表示</button>
       <button class="clearbtn hidden" id="zoomLocal" type="button">🏫 宇城市に戻す</button>
     </div>
@@ -270,7 +270,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
   </section>
 
   <section class="card" id="secBath">
-    <h2><span class="dot" style="background:#d97a26"></span>無料入浴サービス（公衆浴場）</h2>
+    <h2><span class="dot" style="background:#d97a26"></span>無料の入浴・シャワー</h2>
     <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月4日時点）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
     <div class="bring">
       <div class="bring-title">🎒 持っていくもの</div>
@@ -875,7 +875,7 @@ function renderMap(){
     const s = document.createElement("div"); s.className = "popup-sub";
     s.textContent = (p.district || p.area ? (p.district || p.area) + " ／ " : "") +
       (p.kind === "water" ? "給水" : p.kind === "toilet" ? "仮設トイレ"
-        : p.kind === "bath" ? "無料入浴" : "避難所");
+        : p.kind === "bath" ? "無料の入浴・シャワー" : "避難所");
     div.append(t, s);
     let fillColor;
     if (p.kind === "shelter"){
@@ -906,6 +906,11 @@ function renderMap(){
       }
     } else if (p.kind === "bath"){
       fillColor = "#d97a26";
+      if ((p.services || []).length){
+        const sv = document.createElement("div"); sv.className = "popup-row";
+        sv.textContent = p.services.map(serviceLabel).join("・");
+        div.appendChild(sv);
+      }
       const r = document.createElement("div"); r.className = "popup-row";
       const b = document.createElement("b"); b.textContent = p.hours || "";
       r.appendChild(b);
