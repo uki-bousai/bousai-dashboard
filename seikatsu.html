@@ -82,6 +82,8 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 @media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
 .empty{font-size:.78rem; color:var(--text-muted)}
+.report{margin-top:6px; font-size:.76rem; line-height:1.75; color:#15794f;
+  background:#eaf7f0; border:1px solid #b6e0c9; border-radius:8px; padding:6px 10px}
 .acbadge{display:inline-block; font-size:.64rem; font-weight:700; color:#1a7fae;
   border:1px solid #8fc9e2; border-radius:99px; padding:1px 7px; margin-left:6px; white-space:nowrap}
 .gmap{display:inline-block; font-size:.72rem; font-weight:700; color:var(--accent);
@@ -221,7 +223,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
   <section class="card">
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
-    <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。</p>
+    <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<br>混み具合や現地の運用は場所ごとに違います。<b>必要な分だけ</b>受け取り、次の方に残してください。</p>
     <div id="waterList"><p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
@@ -511,6 +513,11 @@ function renderWater(){
     b.appendChild(t);
     if (w.note) b.appendChild(document.createTextNode(" ／ " + w.note));
     b.appendChild(gmapsLink(gmapsQuery(w)));
+    if (w.report){
+      const r = document.createElement("div"); r.className = "report";
+      r.textContent = "🙋 現地の様子: " + w.report + (w.reportAt ? `（${w.reportAt} 市民からの報告）` : "");
+      b.appendChild(r);
+    }
   })));
 }
 function renderToilets(){
