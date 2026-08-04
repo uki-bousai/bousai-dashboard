@@ -126,6 +126,9 @@ html{scroll-behavior:smooth}
 .bring-title{font-size:.78rem; font-weight:700; margin-bottom:4px}
 .bring ul{list-style:none; margin:0; padding:0}
 .bring li{font-size:.82rem; line-height:1.9}
+.areahead{font-size:.74rem; font-weight:700; color:var(--text-secondary);
+  background:var(--page); border-radius:6px; padding:4px 10px; margin:12px 0 2px}
+.areahead:first-child{margin-top:2px}
 .trend-subhead{font-size:.78rem; font-weight:700; color:var(--text-secondary); margin:14px 0 2px}
 .trend-subhead:first-child{margin-top:8px}
 /* KPI */
@@ -263,7 +266,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
   <section class="card" id="secBath">
     <h2><span class="dot" style="background:#d97a26"></span>無料入浴サービス（公衆浴場）</h2>
-    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付で氏名・住所・年齢を記入します。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 0 0">🆕 施設の発表</span> が付いているものは、市の一覧にはない<b>施設が独自に発表した支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
+    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
     <div class="bring">
       <div class="bring-title">🎒 持っていくもの</div>
       <ul>
@@ -472,7 +475,15 @@ function renderBaths(){
   box.textContent = "";
   const list = DATA.baths || [];
   if (!list.length){ box.innerHTML = '<p class="empty">施設情報は準備中です。</p>'; return; }
-  list.forEach(bt => box.appendChild(rowEl(bt.name, bt.address, b => {
+  let lastArea = null;
+  list.forEach(bt => {
+    if (bt.area && bt.area !== lastArea){
+      lastArea = bt.area;
+      const h = document.createElement("div"); h.className = "areahead";
+      h.textContent = bt.area;
+      box.appendChild(h);
+    }
+    box.appendChild(rowEl(bt.name, bt.address, b => {
     if (bt.via || bt.source === "施設の発表"){
       if (bt.via){
         const v = document.createElement("span"); v.className = "srcbadge via";
@@ -508,7 +519,8 @@ function renderBaths(){
       r.textContent = "🙋 " + bt.report + (bt.reportAt ? `（${bt.reportAt} 市民からの報告）` : "");
       b.appendChild(r);
     }
-  })));
+    }));
+  });
 }
 function renderHotel(){
   const card = document.getElementById("hotelCard");
