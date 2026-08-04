@@ -852,9 +852,12 @@ function renderMap(){
     ...fByDistrict(DATA.water).filter(w => typeof w.lat === "number").map(w => ({...w, kind:"water"})),
     ...fByDistrict(DATA.toilets).filter(t => typeof t.lat === "number").map(t => ({...t, kind:"toilet"})),
   ];
-  // 入浴施設は市外にあるため、絞り込みの影響を受けず常に表示する
+  // 入浴施設は市外にもあるため、絞り込みの影響を受けず常に表示する。
+  // ただし宇城市内のものは初期表示の範囲に含める（市内で入れる場所が一番大事なので）。
   const bathPts = (DATA.baths || []).filter(b => typeof b.lat === "number").map(b => ({...b, kind:"bath"}));
+  const inCity = b => (b.area || "").startsWith("宇城市");
   const pts = [...local, ...bathPts];
+  const localFit = [...local, ...bathPts.filter(inCity)];
   if (!pts.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
   if (!map){
@@ -938,12 +941,12 @@ function renderMap(){
     }
   });
   const fitLocal = () => map.fitBounds(
-    L.latLngBounds((local.length ? local : pts).map(p => [p.lat, p.lng])).pad(0.2), { maxZoom: 16 });
+    L.latLngBounds((localFit.length ? localFit : pts).map(p => [p.lat, p.lng])).pad(0.2), { maxZoom: 16 });
   fitLocal();
   const zb = document.getElementById("zoomBaths");
   const zl = document.getElementById("zoomLocal");
   if (zb && zl){
-    zb.classList.toggle("hidden", !bathPts.length);
+    zb.classList.toggle("hidden", !bathPts.some(b => !inCity(b)));
     zb.onclick = () => {
       map.fitBounds(L.latLngBounds(pts.map(p => [p.lat, p.lng])).pad(0.1));
       zb.classList.add("hidden"); zl.classList.remove("hidden");
