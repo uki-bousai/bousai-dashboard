@@ -84,6 +84,8 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 .empty{font-size:.78rem; color:var(--text-muted)}
 .report{margin-top:6px; font-size:.76rem; line-height:1.75; color:#15794f;
   background:#eaf7f0; border:1px solid #b6e0c9; border-radius:8px; padding:6px 10px}
+.srcbadge{display:inline-block; font-size:.66rem; font-weight:700; color:#b8571f;
+  background:#fdf0e3; border:1px solid #f0c99b; border-radius:99px; padding:2px 9px; margin-bottom:4px}
 .acbadge{display:inline-block; font-size:.64rem; font-weight:700; color:#1a7fae;
   border:1px solid #8fc9e2; border-radius:99px; padding:1px 7px; margin-left:6px; white-space:nowrap}
 .gmap{display:inline-block; font-size:.72rem; font-weight:700; color:var(--accent);
@@ -229,7 +231,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
   <section class="card">
     <h2><span class="dot" style="background:#d97a26"></span>無料入浴サービス（公衆浴場）</h2>
-    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付で氏名・住所・年齢を記入します。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。</p>
+    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付で氏名・住所・年齢を記入します。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 0 0">🆕 施設の発表</span> が付いているものは、市の一覧にはない<b>施設が独自に発表した支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
     <div class="bring">
       <div class="bring-title">🎒 持っていくもの</div>
       <ul>
@@ -439,6 +441,12 @@ function renderBaths(){
   const list = DATA.baths || [];
   if (!list.length){ box.innerHTML = '<p class="empty">施設情報は準備中です。</p>'; return; }
   list.forEach(bt => box.appendChild(rowEl(bt.name, bt.address, b => {
+    if (bt.source === "施設の発表"){
+      const s = document.createElement("span"); s.className = "srcbadge";
+      s.textContent = "🆕 施設の発表" + (bt.announcedAt ? `（${bt.announcedAt}）` : "");
+      b.appendChild(s);
+      b.appendChild(document.createElement("br"));
+    }
     const t = document.createElement("b"); t.textContent = bt.hours || "";
     b.appendChild(t);
     if (bt.closed && bt.closed !== "なし") b.appendChild(document.createTextNode(" ／ 定休: " + bt.closed));
@@ -451,6 +459,11 @@ function renderBaths(){
       b.appendChild(tel);
     }
     b.appendChild(gmapsLink(`${bt.name} ${bt.address || ""}`));
+    if (bt.note){
+      const n = document.createElement("div"); n.className = "report";
+      n.textContent = bt.note;
+      b.appendChild(n);
+    }
   })));
 }
 function renderHotel(){
