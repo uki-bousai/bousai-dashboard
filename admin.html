@@ -503,7 +503,9 @@ function setChip(chip, ratio, kind){
 function shelterRow(s){
   const tr = document.createElement("tr");
   tr._stocks = { ...(s.stocks || {}) };   // この避難所の品目別在庫（避難所在庫タブで編集）
-  tr._households = s.households;          // 世帯数（市公表値。この画面では編集せずそのまま引き継ぐ）
+  // この画面で編集しない項目（世帯数・エアコン有無など）は元の値をそのまま引き継ぐ
+  tr._extra = { ...s };
+  ["name", "district", "capacity", "occupants", "lat", "lng", "stocks"].forEach(k => delete tr._extra[k]);
   const name = inputCell(s.name, {placeholder:"避難所名"});
   const district = inputCell(s.district, {placeholder:"地区名"});
   const cap = inputCell(s.capacity, {num:true});
@@ -544,8 +546,7 @@ function shelterRow(s){
       occupants: Math.max(0, Math.round(Number(occ.inp.value) || 0))
     };
     if (Number.isFinite(latV) && Number.isFinite(lngV)){ o.lat = latV; o.lng = lngV; }
-    if (tr._households != null) o.households = tr._households;
-    return o;
+    return { ...tr._extra, ...o };
   };
   return tr;
 }
