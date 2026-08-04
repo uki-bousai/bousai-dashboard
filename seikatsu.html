@@ -872,5 +872,9 @@ setInterval(loadData, 5 * 60 * 1000);
 addEventListener("load", () => renderMap());
 if ("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(() => {}); }
 </script>
+
+<!-- Cloudflare Web Analytics（Cookieを使わず、個人を追跡しないアクセス集計） -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "97e6eecc19084842b2c00f7a98e40197"}'></script>
+<!-- End Cloudflare Web Analytics -->
 </body>
 </html>
