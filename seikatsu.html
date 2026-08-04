@@ -297,6 +297,14 @@ function selectShelter(s){
   renderAll();
 }
 
+/* ---------- 避難所の設備（確認できたものだけバッジ表示） ---------- */
+const FACILITY_ICONS = {
+  "エアコン": "❄", "仮設トイレ": "🚻", "洋式トイレ": "🚻", "授乳室": "🍼",
+  "キッズスペース": "🧸", "バリアフリー": "♿", "充電スペース": "🔌", "Wi-Fi": "📶",
+  "シャワー": "🚿", "段ボールベッド": "🛏", "ペット可": "🐾", "車中泊可": "🚗", "炊き出し": "🍚"
+};
+const facilityLabel = f => (FACILITY_ICONS[f] || "") + f;
+
 /* ---------- 避難所の受入状況 ---------- */
 function shelterStatus(s){
   if (!s.capacity) return { color: cssVar("--text-muted"), label: "データ入力待ち", cls: "" };
@@ -353,10 +361,10 @@ function renderShelters(){
     const top = document.createElement("div"); top.className = "top";
     const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = s.name;
     const sm = document.createElement("small"); sm.textContent = s.district; nm.appendChild(sm);
-    if (s.aircon === true){
-      const ac = document.createElement("span"); ac.className = "acbadge"; ac.textContent = "❄エアコン";
-      nm.appendChild(ac);
-    }
+    (s.facilities || []).forEach(f => {
+      const b = document.createElement("span"); b.className = "acbadge"; b.textContent = facilityLabel(f);
+      nm.appendChild(b);
+    });
     const val = document.createElement("span"); val.className = "val";
     const b = document.createElement("b"); b.textContent = fmt(s.occupants);
     val.appendChild(b);
@@ -725,9 +733,9 @@ function renderMap(){
       if (st.cls === "crit") fb.style.color = cssVar("--status-critical");
       flag.appendChild(fb);
       div.appendChild(flag);
-      if (p.aircon === true){
+      if ((p.facilities || []).length){
         const acr = document.createElement("div"); acr.className = "popup-row";
-        acr.textContent = "❄ エアコンあり";
+        acr.textContent = "設備: " + p.facilities.map(facilityLabel).join("・");
         div.appendChild(acr);
       }
     } else {

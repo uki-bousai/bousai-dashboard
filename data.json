@@ -233,7 +233,10 @@
         "段ボールベッド": 85
       },
       "households": 26,
-      "aircon": true
+      "facilities": [
+        "エアコン",
+        "段ボールベッド"
+      ]
     }
   ],
   "supplies": [
