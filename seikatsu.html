@@ -484,17 +484,16 @@ function renderHotel(){
     const a = document.createElement("a"); a.className = "hbtn"; a.href = h.formUrl;
     a.target = "_blank"; a.rel = "noopener"; a.textContent = "📝 申込フォームを開く";
     box.appendChild(a);
+  } else if (h.pageUrl){
+    const a = document.createElement("a"); a.className = "hbtn"; a.href = h.pageUrl;
+    a.target = "_blank"; a.rel = "noopener"; a.textContent = "📝 申込はこちら（市の案内ページ）";
+    box.appendChild(a);
   }
   if (h.tel){
     const a = document.createElement("a"); a.className = "hbtn line2";
     a.href = "tel:" + h.tel.replace(/-/g, "");
     a.textContent = "📞 " + (h.dept ? "市に相談する " : "") + h.tel;
     box.appendChild(a);
-  }
-  if (!h.formUrl){
-    const p = document.createElement("p"); p.className = "empty"; p.style.marginTop = "10px";
-    p.textContent = "申込フォームは市ホームページ（「宿泊施設提供事業」で検索）から。電話でも相談できます。";
-    box.appendChild(p);
   }
 }
 function renderWater(){
