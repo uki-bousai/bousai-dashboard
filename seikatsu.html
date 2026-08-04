@@ -221,6 +221,9 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
       <span class="key"><span class="dot" style="background:var(--status-critical)"></span>⛔ 定員超過</span>
       <span class="key"><span class="dot" style="background:var(--water)"></span>給水</span>
       <span class="key"><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</span>
+      <span class="key"><span class="dot" style="background:#d97a26"></span>無料入浴（市外）</span>
+      <button class="clearbtn hidden" id="zoomBaths" type="button">♨️ 入浴施設まで表示</button>
+      <button class="clearbtn hidden" id="zoomLocal" type="button">🏫 宇城市に戻す</button>
     </div>
   </section>
 
@@ -824,11 +827,15 @@ let map = null, layer = null;
 function renderMap(){
   const card = document.getElementById("mapCard");
   if (typeof L === "undefined"){ card.classList.add("hidden"); return; }
-  const pts = [
+  // 宇城市内の地点（初期表示の範囲はこれだけで決める）
+  const local = [
     ...fShelters().filter(s => typeof s.lat === "number").map(s => ({...s, kind:"shelter"})),
     ...fByDistrict(DATA.water).filter(w => typeof w.lat === "number").map(w => ({...w, kind:"water"})),
     ...fByDistrict(DATA.toilets).filter(t => typeof t.lat === "number").map(t => ({...t, kind:"toilet"})),
   ];
+  // 入浴施設は市外にあるため、絞り込みの影響を受けず常に表示する
+  const bathPts = (DATA.baths || []).filter(b => typeof b.lat === "number").map(b => ({...b, kind:"bath"}));
+  const pts = [...local, ...bathPts];
   if (!pts.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
   if (!map){
@@ -844,8 +851,9 @@ function renderMap(){
     const div = document.createElement("div");
     const t = document.createElement("div"); t.className = "popup-title"; t.textContent = p.name;
     const s = document.createElement("div"); s.className = "popup-sub";
-    s.textContent = (p.district ? p.district + " ／ " : "") +
-      (p.kind === "water" ? "給水" : p.kind === "toilet" ? "仮設トイレ" : "避難所");
+    s.textContent = (p.district || p.area ? (p.district || p.area) + " ／ " : "") +
+      (p.kind === "water" ? "給水" : p.kind === "toilet" ? "仮設トイレ"
+        : p.kind === "bath" ? "無料入浴" : "避難所");
     div.append(t, s);
     let fillColor;
     if (p.kind === "shelter"){
@@ -874,6 +882,19 @@ function renderMap(){
         acr.textContent = "設備: " + p.facilities.map(facilityLabel).join("・");
         div.appendChild(acr);
       }
+    } else if (p.kind === "bath"){
+      fillColor = "#d97a26";
+      const r = document.createElement("div"); r.className = "popup-row";
+      const b = document.createElement("b"); b.textContent = p.hours || "";
+      r.appendChild(b);
+      if (p.closed && p.closed !== "なし") r.appendChild(document.createTextNode(" ／ 定休: " + p.closed));
+      div.appendChild(r);
+      if (p.tel){
+        const tr = document.createElement("div"); tr.className = "popup-row";
+        const a = document.createElement("a"); a.href = "tel:" + p.tel.replace(/-/g, "");
+        a.textContent = "📞 " + p.tel; a.style.color = cssVar("--accent");
+        tr.appendChild(a); div.appendChild(tr);
+      }
     } else {
       fillColor = cssVar(p.kind === "water" ? "--water" : "--toilet");
       const r = document.createElement("div"); r.className = "popup-row";
@@ -897,7 +918,20 @@ function renderMap(){
       marker.on("click", () => selectShelter(p));
     }
   });
-  map.fitBounds(L.latLngBounds(pts.map(p => [p.lat, p.lng])).pad(0.2), { maxZoom: 16 });
+  const fitLocal = () => map.fitBounds(
+    L.latLngBounds((local.length ? local : pts).map(p => [p.lat, p.lng])).pad(0.2), { maxZoom: 16 });
+  fitLocal();
+  const zb = document.getElementById("zoomBaths");
+  const zl = document.getElementById("zoomLocal");
+  if (zb && zl){
+    zb.classList.toggle("hidden", !bathPts.length);
+    zb.onclick = () => {
+      map.fitBounds(L.latLngBounds(pts.map(p => [p.lat, p.lng])).pad(0.1));
+      zb.classList.add("hidden"); zl.classList.remove("hidden");
+    };
+    zl.onclick = () => { fitLocal(); zl.classList.add("hidden"); zb.classList.remove("hidden"); };
+    zl.classList.add("hidden");
+  }
 }
 
 /* ---------- 読み込み ---------- */
