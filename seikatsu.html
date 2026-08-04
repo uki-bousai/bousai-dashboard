@@ -48,6 +48,23 @@ header h1{font-size:1.15rem; font-weight:700}
 header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 .updated{font-size:.72rem; color:var(--text-muted); margin-top:4px}
 .container{max-width:860px; margin:0 auto; padding:0 20px}
+
+/* ページ内の目次（スクロールしても上に残る） */
+.secnav{position:sticky; top:0; z-index:600; margin-top:12px;
+  background:var(--page); border-bottom:1px solid var(--border)}
+@supports (backdrop-filter:blur(8px)){
+  .secnav{background:color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter:blur(8px)}
+}
+.secnav-in{max-width:860px; margin:0 auto; padding:8px 20px;
+  display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+.secnav-in::-webkit-scrollbar{display:none}
+.secnav a{flex:none; font-size:.76rem; font-weight:700; color:var(--text-secondary);
+  text-decoration:none; background:var(--surface-1); border:1px solid var(--border);
+  border-radius:99px; padding:6px 12px; white-space:nowrap}
+.secnav a:active{background:var(--accent); color:#fff; border-color:var(--accent)}
+section[id], div[id^="sec"]{scroll-margin-top:56px}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
 .notice{max-width:860px; margin:12px auto 0; padding:0 20px}
 .notice > div{background:var(--surface-1); border:1px solid var(--status-warning); border-radius:10px;
   padding:10px 14px; font-size:.76rem; color:var(--text-secondary); line-height:1.7}
@@ -86,7 +103,9 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
   background:#eaf7f0; border:1px solid #b6e0c9; border-radius:8px; padding:6px 10px}
 .report.cite{color:#1a5f8a; background:#eaf3fa; border-color:#b6d4e8}
 .srcbadge{display:inline-block; font-size:.66rem; font-weight:700; color:#b8571f;
-  background:#fdf0e3; border:1px solid #f0c99b; border-radius:99px; padding:2px 9px; margin-bottom:4px}
+  background:#fdf0e3; border:1px solid #f0c99b; border-radius:99px; padding:2px 9px;
+  margin:0 5px 4px 0}
+.srcbadge.via{color:#1a5f8a; background:#eaf3fa; border-color:#b6d4e8}
 .acbadge{display:inline-block; font-size:.64rem; font-weight:700; color:#1a7fae;
   border:1px solid #8fc9e2; border-radius:99px; padding:1px 7px; margin-left:6px; white-space:nowrap}
 .gmap{display:inline-block; font-size:.72rem; font-weight:700; color:var(--accent);
@@ -163,6 +182,18 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
   <div class="updated" id="updatedAt"></div>
 </header>
 
+<nav class="secnav" aria-label="ページ内の目次">
+  <div class="secnav-in">
+    <a href="#shelterCard">🏫 避難所</a>
+    <a href="#mapCard">🗺 マップ</a>
+    <a href="#secHaves">📦 物資</a>
+    <a href="#hotelCard">🏨 ホテル</a>
+    <a href="#secToilet">🚻 トイレ</a>
+    <a href="#secWater">💧 給水</a>
+    <a href="#secBath">♨️ 入浴</a>
+  </div>
+</nav>
+
 <div class="notice hidden" id="provisionalNotice"><div><b>ℹ 仮設トイレ・配布物資の情報は、現在集めています。</b>確認でき次第、順次このページに掲載します。避難所の避難者数・受入可能数と給水情報は市の公表資料に基づきます。</div></div>
 
 <div class="container">
@@ -206,7 +237,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" id="secHaves">
     <h2>避難所で受け取れる物資</h2>
     <p class="desc">各避難所からの報告に基づく「いま受け取れる物資」。<span class="tag low" style="margin:0 2px">⚠残りわずか</span>の表示があるものは早めになくなる可能性があります。数量・配布方法は各避難所の案内に従ってください。</p>
     <div id="haveList"><p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p></div>
@@ -218,19 +249,19 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
     <div id="hotelBody"></div>
   </section>
 
-  <section class="card">
+  <section class="card" id="secToilet">
     <h2><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</h2>
     <p class="desc">仮設トイレの設置場所と基数。</p>
     <div id="toiletList"><p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
-  <section class="card">
+  <section class="card" id="secWater">
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
     <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<br>混み具合や現地の運用は場所ごとに違います。<b>必要な分だけ</b>受け取り、次の方に残してください。</p>
     <div id="waterList"><p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
-  <section class="card">
+  <section class="card" id="secBath">
     <h2><span class="dot" style="background:#d97a26"></span>無料入浴サービス（公衆浴場）</h2>
     <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付で氏名・住所・年齢を記入します。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 0 0">🆕 施設の発表</span> が付いているものは、市の一覧にはない<b>施設が独自に発表した支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
     <div class="bring">
@@ -442,10 +473,17 @@ function renderBaths(){
   const list = DATA.baths || [];
   if (!list.length){ box.innerHTML = '<p class="empty">施設情報は準備中です。</p>'; return; }
   list.forEach(bt => box.appendChild(rowEl(bt.name, bt.address, b => {
-    if (bt.source === "施設の発表"){
-      const s = document.createElement("span"); s.className = "srcbadge";
-      s.textContent = "🆕 施設の発表" + (bt.announcedAt ? `（${bt.announcedAt}）` : "");
-      b.appendChild(s);
+    if (bt.via || bt.source === "施設の発表"){
+      if (bt.via){
+        const v = document.createElement("span"); v.className = "srcbadge via";
+        v.textContent = "🙋 " + bt.via;
+        b.appendChild(v);
+      }
+      if (bt.source === "施設の発表"){
+        const s = document.createElement("span"); s.className = "srcbadge";
+        s.textContent = "🆕 施設の発表" + (bt.announcedAt ? `（${bt.announcedAt}）` : "");
+        b.appendChild(s);
+      }
       b.appendChild(document.createElement("br"));
     }
     const t = document.createElement("b"); t.textContent = bt.hours || "";
