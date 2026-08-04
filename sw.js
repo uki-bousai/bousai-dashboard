@@ -99,11 +99,13 @@ self.addEventListener("fetch", e => {
     return;
   }
   // ページ遷移（オフライン時はキャッシュ済みのページを返す）
+  // 一覧にないパス（管理用ページなど）は素通しする。取り違えて別ページを返さないため。
   if (req.mode === "navigate"){
-    const page = url.pathname.endsWith("/recruit.html") ? "recruit.html"
-      : url.pathname.endsWith("/seikatsu.html") ? "seikatsu.html"
-      : (url.pathname.endsWith("/admin.html") || url.pathname.endsWith("/seikatsu-admin.html")) ? null   // 入力画面は常に最新を使う
-      : "index.html";
+    const p = url.pathname;
+    const page = p.endsWith("/recruit.html") ? "recruit.html"
+      : p.endsWith("/seikatsu.html") ? "seikatsu.html"
+      : (p.endsWith("/") || p.endsWith("/index.html")) ? "index.html"
+      : null;
     if (page){ e.respondWith(staleWhileRevalidate(req, page)); return; }
     return;
   }
