@@ -90,6 +90,15 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 .gmap:active{opacity:.7}
 .bring{background:var(--page); border:1px solid var(--border); border-radius:10px;
   padding:10px 14px; margin:4px 0 12px}
+.hstep{display:flex; gap:10px; font-size:.84rem; line-height:1.85; padding:9px 0;
+  border-bottom:1px solid var(--border)}
+.hstep:last-child{border-bottom:0}
+.hcost{background:var(--page); border:1px solid var(--border); border-radius:10px;
+  padding:10px 14px; margin:2px 0 12px; font-size:.84rem; line-height:1.9}
+.hcost b{color:var(--status-good, #1f9d6c)}
+.hbtn{display:inline-block; font-size:.86rem; font-weight:700; color:#fff; background:var(--accent);
+  text-decoration:none; border-radius:10px; padding:10px 18px; margin:12px 8px 0 0}
+.hbtn.line2{background:var(--surface-1); color:var(--accent); border:1.5px solid var(--accent)}
 .bring-title{font-size:.78rem; font-weight:700; margin-bottom:4px}
 .bring ul{list-style:none; margin:0; padding:0}
 .bring li{font-size:.82rem; line-height:1.9}
@@ -196,6 +205,12 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
     <h2>避難所で受け取れる物資</h2>
     <p class="desc">各避難所からの報告に基づく「いま受け取れる物資」。<span class="tag low" style="margin:0 2px">⚠残りわずか</span>の表示があるものは早めになくなる可能性があります。数量・配布方法は各避難所の案内に従ってください。</p>
     <div id="haveList"><p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p></div>
+  </section>
+
+  <section class="card hidden" id="hotelCard">
+    <h2><span class="dot" style="background:#c8506e"></span>ホテル・旅館に避難できます（宿泊費は公費負担）</h2>
+    <p class="desc" id="hotelDesc"></p>
+    <div id="hotelBody"></div>
   </section>
 
   <section class="card">
@@ -435,6 +450,52 @@ function renderBaths(){
     }
     b.appendChild(gmapsLink(`${bt.name} ${bt.address || ""}`));
   })));
+}
+function renderHotel(){
+  const card = document.getElementById("hotelCard");
+  const box = document.getElementById("hotelBody");
+  const h = DATA.hotel;
+  box.textContent = "";
+  if (!h){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  document.getElementById("hotelDesc").textContent =
+    `避難所での生活が長引く中、${h.target || ""}が利用できます。避難先は${h.dest || "国・県が確保するホテル等"}。（${h.source || ""}）`;
+
+  const cost = document.createElement("div"); cost.className = "hcost";
+  const cb = document.createElement("b"); cb.textContent = "💰 " + (h.cost || "");
+  cost.appendChild(cb);
+  box.appendChild(cost);
+
+  (h.steps || []).forEach(s => {
+    const el = document.createElement("div"); el.className = "hstep"; el.textContent = s;
+    box.appendChild(el);
+  });
+
+  if (h.notes && h.notes.length){
+    const nb = document.createElement("div"); nb.className = "bring";
+    const t = document.createElement("div"); t.className = "bring-title"; t.textContent = "⚠ 知っておいてください";
+    const ul = document.createElement("ul");
+    h.notes.forEach(n => { const li = document.createElement("li"); li.textContent = "・" + n; ul.appendChild(li); });
+    nb.append(t, ul);
+    box.appendChild(nb);
+  }
+
+  if (h.formUrl){
+    const a = document.createElement("a"); a.className = "hbtn"; a.href = h.formUrl;
+    a.target = "_blank"; a.rel = "noopener"; a.textContent = "📝 申込フォームを開く";
+    box.appendChild(a);
+  }
+  if (h.tel){
+    const a = document.createElement("a"); a.className = "hbtn line2";
+    a.href = "tel:" + h.tel.replace(/-/g, "");
+    a.textContent = "📞 " + (h.dept ? "市に相談する " : "") + h.tel;
+    box.appendChild(a);
+  }
+  if (!h.formUrl){
+    const p = document.createElement("p"); p.className = "empty"; p.style.marginTop = "10px";
+    p.textContent = "申込フォームは市ホームページ（「宿泊施設提供事業」で検索）から。電話でも相談できます。";
+    box.appendChild(p);
+  }
 }
 function renderWater(){
   const box = document.getElementById("waterList");
@@ -793,6 +854,7 @@ function renderAll(){
   renderKPIs();
   renderShelters();
   renderTrendCard();
+  renderHotel();
   renderWater();
   renderBaths();
   renderToilets();
