@@ -82,6 +82,8 @@ header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 @media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
 .empty{font-size:.78rem; color:var(--text-muted)}
+.acbadge{display:inline-block; font-size:.64rem; font-weight:700; color:#1a7fae;
+  border:1px solid #8fc9e2; border-radius:99px; padding:1px 7px; margin-left:6px; white-space:nowrap}
 .gmap{display:inline-block; font-size:.72rem; font-weight:700; color:var(--accent);
   text-decoration:none; white-space:nowrap; margin-left:10px;
   border:1px solid var(--border); border-radius:99px; padding:3px 10px}
@@ -351,6 +353,10 @@ function renderShelters(){
     const top = document.createElement("div"); top.className = "top";
     const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = s.name;
     const sm = document.createElement("small"); sm.textContent = s.district; nm.appendChild(sm);
+    if (s.aircon === true){
+      const ac = document.createElement("span"); ac.className = "acbadge"; ac.textContent = "❄エアコン";
+      nm.appendChild(ac);
+    }
     const val = document.createElement("span"); val.className = "val";
     const b = document.createElement("b"); b.textContent = fmt(s.occupants);
     val.appendChild(b);
@@ -719,6 +725,11 @@ function renderMap(){
       if (st.cls === "crit") fb.style.color = cssVar("--status-critical");
       flag.appendChild(fb);
       div.appendChild(flag);
+      if (p.aircon === true){
+        const acr = document.createElement("div"); acr.className = "popup-row";
+        acr.textContent = "❄ エアコンあり";
+        div.appendChild(acr);
+      }
     } else {
       fillColor = cssVar(p.kind === "water" ? "--water" : "--toilet");
       const r = document.createElement("div"); r.className = "popup-row";

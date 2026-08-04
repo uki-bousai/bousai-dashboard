@@ -232,7 +232,8 @@
         "毛布": 802,
         "段ボールベッド": 85
       },
-      "households": 26
+      "households": 26,
+      "aircon": true
     }
   ],
   "supplies": [
