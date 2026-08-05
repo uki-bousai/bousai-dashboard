@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>座標取得（管理用）</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{ --page:#f5f6f7; --card:#fff; --border:#dfe3e6; --text:#1c2024; --sub:#6b7280; --accent:#1a5f8a; }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--page); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;}
+  .wrap{max-width:640px; margin:0 auto; padding:14px 14px 40px}
+  h1{font-size:1.05rem; margin:6px 0 4px}
+  .lead{font-size:.82rem; color:var(--sub); line-height:1.65; margin:0 0 12px}
+  #map{height:52vh; min-height:300px; border-radius:12px; border:1px solid var(--border); background:#e8eef2}
+  .targets{margin:12px 0 0}
+  .t{background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:11px 13px; margin-bottom:9px; cursor:pointer; -webkit-tap-highlight-color:transparent}
+  .t.on{border-color:var(--accent); box-shadow:0 0 0 2px rgba(26,95,138,.15)}
+  .t .nm{font-weight:700; font-size:.9rem}
+  .t .ad{font-size:.76rem; color:var(--sub); margin-top:2px}
+  .t .co{font-size:.78rem; margin-top:6px; font-variant-numeric:tabular-nums}
+  .t .co.ok{color:#15794f; font-weight:700}
+  .t .co.ng{color:#b8571f}
+  .t .who{font-size:.72rem; color:var(--sub); margin-top:4px}
+  .bar{display:flex; gap:8px; margin:12px 0}
+  button{flex:1; padding:12px; border-radius:10px; border:1px solid var(--border);
+    background:#fff; font-size:.88rem; font-weight:700; color:var(--text)}
+  button.p{background:var(--accent); border-color:var(--accent); color:#fff}
+  textarea{width:100%; height:190px; font-size:.72rem; font-family:ui-monospace,Menlo,monospace;
+    border:1px solid var(--border); border-radius:10px; padding:10px; background:#fff}
+  .hint{font-size:.76rem; color:var(--sub); line-height:1.6; margin:8px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>給水所 3ヶ所の座標取得</h1>
+  <p class="lead">
+    下のカードを1つ選んでから、<b>地図をタップ</b>すると、その場所にピンが移動します。<br>
+    ピンは<b>ドラッグでも動かせます</b>。3ヶ所すべて置けたら「コピー」を押して、そのまま送ってください。
+  </p>
+
+  <div id="map"></div>
+
+  <div class="targets" id="targets"></div>
+
+  <div class="bar">
+    <button id="btnAuto">住所から自動検索</button>
+    <button id="btnCopy" class="p">コピー</button>
+  </div>
+
+  <textarea id="out" readonly></textarea>
+  <p class="hint">※ このページは座標を取るための一時的な管理用ページです。作業が終わったら削除します。</p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+
+/* 地図に出ていない給水所。ピンを置いた座標を seikatsu.json に反映する */
+const TARGETS = [
+  { id:"shiyakusho", label:"宇城市役所",
+    query:"熊本県宇城市松橋町大野85",
+    applies:["宇城市役所"],
+    fallback:[32.6440, 130.6690] },
+  { id:"tobase", label:"戸馳地区生涯学習センター（旧戸馳小学校）",
+    query:"熊本県宇城市三角町戸馳",
+    applies:["戸馳地区生涯学習センター（旧戸馳小学校）"],
+    fallback:[32.6000, 130.4900] },
+  { id:"otao", label:"大田尾公民館",
+    query:"熊本県宇城市三角町大田尾",
+    applies:["大田尾公民館"],
+    fallback:[32.6100, 130.5100] },
+];
+
+const state = {};   // id -> {lat,lng,src}
+let current = TARGETS[0].id;
+
+const map = L.map("map", { zoomControl:true }).setView([32.60, 130.50], 11);
+L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
+  attribution:"地理院タイル", maxZoom:18
+}).addTo(map);
+
+const markers = {};
+
+/* 自動検索が外れると3つが同じ場所に重なるので、番号で見分けられるようにする */
+function numIcon(n, on){
+  return L.divIcon({
+    className:"", iconSize:[30,30], iconAnchor:[15,15],
+    html:`<div style="width:30px;height:30px;border-radius:50%;display:flex;
+      align-items:center;justify-content:center;font-weight:700;font-size:15px;
+      color:#fff;background:${on ? "#c0392b" : "#1a5f8a"};
+      border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${n}</div>`
+  });
+}
+
+function markerFor(t){
+  if (markers[t.id]) return markers[t.id];
+  const n = TARGETS.indexOf(t) + 1;
+  const m = L.marker(t.fallback, { draggable:true, icon:numIcon(n, false) }).addTo(map);
+  m._num = n;
+  m.bindTooltip(t.label, { permanent:false });
+  m.on("dragend", () => {
+    const p = m.getLatLng();
+    setPos(t.id, p.lat, p.lng, "手動");
+  });
+  m.on("click", () => select(t.id));
+  markers[t.id] = m;
+  return m;
+}
+
+function round(v){ return Math.round(v * 1e5) / 1e5; }
+
+function setPos(id, lat, lng, src){
+  state[id] = { lat:round(lat), lng:round(lng), src };
+  const t = TARGETS.find(x => x.id === id);
+  markerFor(t).setLatLng([state[id].lat, state[id].lng]);
+  render();
+}
+
+function select(id){
+  current = id;
+  render();
+  const s = state[id];
+  if (s) map.panTo([s.lat, s.lng]);
+}
+
+function render(){
+  const box = document.getElementById("targets");
+  box.textContent = "";
+  TARGETS.forEach(t => {
+    const d = document.createElement("div");
+    d.className = "t" + (t.id === current ? " on" : "");
+    d.onclick = () => select(t.id);
+
+    const nm = document.createElement("div"); nm.className = "nm";
+    nm.textContent = (t.id === current ? "▶ " : "") + (TARGETS.indexOf(t) + 1) + ". " + t.label;
+    d.appendChild(nm);
+    const mk = markerFor(t);
+    mk.setIcon(numIcon(TARGETS.indexOf(t) + 1, t.id === current));
+    mk.setZIndexOffset(t.id === current ? 1000 : 0);   // 重なっても選択中のピンを掴めるように
+
+    const ad = document.createElement("div"); ad.className = "ad";
+    ad.textContent = t.query;
+    d.appendChild(ad);
+
+    const co = document.createElement("div");
+    const s = state[t.id];
+    co.className = "co " + (s ? "ok" : "ng");
+    co.textContent = s ? `${s.lat}, ${s.lng}　(${s.src})` : "未設定 — 地図をタップしてください";
+    d.appendChild(co);
+
+    if (t.applies.length > 1){
+      const w = document.createElement("div"); w.className = "who";
+      w.textContent = "この1つで " + t.applies.length + "隻ぶんに反映します";
+      d.appendChild(w);
+    }
+    box.appendChild(d);
+  });
+  renderOut();
+}
+
+function renderOut(){
+  const rows = [];
+  TARGETS.forEach(t => {
+    const s = state[t.id];
+    if (!s) return;
+    t.applies.forEach(name => rows.push({ name, lat:s.lat, lng:s.lng }));
+  });
+  document.getElementById("out").value =
+    rows.length ? JSON.stringify(rows, null, 1) : "（まだ座標がありません）";
+}
+
+map.on("click", e => setPos(current, e.latlng.lat, e.latlng.lng, "手動"));
+
+/* 国土地理院の住所検索。失敗しても手動で置けるので致命的ではない */
+async function geocode(q){
+  const url = "https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("http " + res.status);
+  const j = await res.json();
+  if (!j.length) throw new Error("no result");
+  const c = j[0].geometry.coordinates;   // [lng, lat]
+  return { lat:c[1], lng:c[0] };
+}
+
+document.getElementById("btnAuto").onclick = async () => {
+  const b = document.getElementById("btnAuto");
+  b.disabled = true; b.textContent = "検索中…";
+  for (const t of TARGETS){
+    try {
+      const p = await geocode(t.query);
+      setPos(t.id, p.lat, p.lng, "住所検索");
+    } catch (err){
+      setPos(t.id, t.fallback[0], t.fallback[1], "おおよそ・要調整");
+    }
+  }
+  const all = TARGETS.map(t => state[t.id]).filter(Boolean);
+  if (all.length) map.fitBounds(L.latLngBounds(all.map(s => [s.lat, s.lng])).pad(0.3), { maxZoom:14 });
+  b.disabled = false; b.textContent = "住所から自動検索";
+};
+
+document.getElementById("btnCopy").onclick = async () => {
+  const ta = document.getElementById("out");
+  const b = document.getElementById("btnCopy");
+  try {
+    await navigator.clipboard.writeText(ta.value);
+    b.textContent = "コピーしました";
+  } catch (err){
+    ta.removeAttribute("readonly"); ta.select();
+    document.execCommand("copy");
+    ta.setAttribute("readonly", "");
+    b.textContent = "コピーしました";
+  }
+  setTimeout(() => { b.textContent = "コピー"; }, 1800);
+};
+
+TARGETS.forEach(markerFor);
+render();
+document.getElementById("btnAuto").click();
+</script>
+</body>
+</html>
