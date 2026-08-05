@@ -1,6 +1,6 @@
 {
   "provisional": true,
-  "updatedAt": "2026-08-06 08:30 更新",
+  "updatedAt": "2026-08-06 08:40 更新",
   "water": [
     {
       "name": "三角東港 巡視船「いわみ」（海上保安部）",
@@ -126,6 +126,26 @@
     }
   ],
   "haves": [
+    {
+      "shelter": "小川防災拠点センター",
+      "district": "小川町",
+      "items": [
+        {
+          "name": "飲料水",
+          "low": false
+        },
+        {
+          "name": "アクエリアス",
+          "low": false
+        },
+        {
+          "name": "冷却パッド",
+          "low": false
+        }
+      ],
+      "note": "8月5日の午後に配られていた内容です",
+      "at": "2026-08-05"
+    },
     {
       "shelter": "小川中学校 体育館",
       "district": "小川町",
