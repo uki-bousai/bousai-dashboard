@@ -32,22 +32,43 @@
   textarea{width:100%; height:190px; font-size:.72rem; font-family:ui-monospace,Menlo,monospace;
     border:1px solid var(--border); border-radius:10px; padding:10px; background:#fff}
   .hint{font-size:.76rem; color:var(--sub); line-height:1.6; margin:8px 0 0}
+  /* 検索 */
+  .search{display:flex; gap:8px; margin:12px 0 0}
+  .search input{flex:1; min-width:0; padding:12px; border-radius:10px; border:1px solid var(--border);
+    background:#fff; font-size:1rem; color:var(--text)}
+  .search button{flex:none; width:92px}
+  .hits{margin:8px 0 0; border:1px solid var(--border); border-radius:10px; background:#fff; overflow:hidden}
+  .hits:empty{display:none}
+  .hit{padding:10px 13px; border-bottom:1px solid var(--border); cursor:pointer;
+    -webkit-tap-highlight-color:transparent}
+  .hit:last-child{border-bottom:0}
+  .hit:active{background:#eef4f8}
+  .hit .h1{font-size:.86rem; font-weight:700; line-height:1.4}
+  .hit .h2{font-size:.72rem; color:var(--sub); margin-top:2px}
+  .msg{font-size:.78rem; color:var(--sub); padding:10px 13px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>給水所 3ヶ所の座標取得</h1>
   <p class="lead">
-    下のカードを1つ選んでから、<b>地図をタップ</b>すると、その場所にピンが移動します。<br>
-    ピンは<b>ドラッグでも動かせます</b>。3ヶ所すべて置けたら「コピー」を押して、そのまま送ってください。
+    下のカードを1つ選び、<b>検索</b>して候補をタップするとピンが移動します。<br>
+    見つからなければ<b>地図をタップ</b>、または<b>ピンをドラッグ</b>でもOKです。<br>
+    3ヶ所そろったら「コピー」を押して、そのまま送ってください。
   </p>
+
+  <div class="search">
+    <input id="q" type="search" enterkeyhint="search" placeholder="施設名・住所で検索">
+    <button id="btnGo" class="p">検索</button>
+  </div>
+  <div class="hits" id="hits"></div>
 
   <div id="map"></div>
 
   <div class="targets" id="targets"></div>
 
   <div class="bar">
-    <button id="btnAuto">住所から自動検索</button>
+    <button id="btnAuto">3ヶ所まとめて検索</button>
     <button id="btnCopy" class="p">コピー</button>
   </div>
 
@@ -61,15 +82,15 @@
 
 /* 地図に出ていない給水所。ピンを置いた座標を seikatsu.json に反映する */
 const TARGETS = [
-  { id:"shiyakusho", label:"宇城市役所",
+  { id:"shiyakusho", label:"宇城市役所", search:"宇城市役所",
     query:"熊本県宇城市松橋町大野85",
     applies:["宇城市役所"],
     fallback:[32.6440, 130.6690] },
-  { id:"tobase", label:"戸馳地区生涯学習センター（旧戸馳小学校）",
+  { id:"tobase", label:"戸馳地区生涯学習センター（旧戸馳小学校）", search:"宇城市 戸馳小学校",
     query:"熊本県宇城市三角町戸馳",
     applies:["戸馳地区生涯学習センター（旧戸馳小学校）"],
     fallback:[32.6000, 130.4900] },
-  { id:"otao", label:"大田尾公民館",
+  { id:"otao", label:"大田尾公民館", search:"宇城市三角町大田尾",
     query:"熊本県宇城市三角町大田尾",
     applies:["大田尾公民館"],
     fallback:[32.6100, 130.5100] },
@@ -123,6 +144,11 @@ function setPos(id, lat, lng, src){
 function select(id){
   current = id;
   render();
+  // 選んだ地点の名前を検索欄に入れておく（そのまま検索できるように）
+  const t = TARGETS.find(x => x.id === id);
+  const q = document.getElementById("q");
+  if (q && t){ q.value = t.search || t.label; }
+  document.getElementById("hits").textContent = "";
   const s = state[id];
   if (s) map.panTo([s.lat, s.lng]);
 }
@@ -149,7 +175,7 @@ function render(){
     const co = document.createElement("div");
     const s = state[t.id];
     co.className = "co " + (s ? "ok" : "ng");
-    co.textContent = s ? `${s.lat}, ${s.lng}　(${s.src})` : "未設定 — 地図をタップしてください";
+    co.textContent = s ? `${s.lat}, ${s.lng}　(${s.src})` : "未設定 — 検索するか地図をタップ";
     d.appendChild(co);
 
     if (t.applies.length > 1){
@@ -175,31 +201,101 @@ function renderOut(){
 
 map.on("click", e => setPos(current, e.latlng.lat, e.latlng.lng, "手動"));
 
-/* 国土地理院の住所検索。失敗しても手動で置けるので致命的ではない */
-async function geocode(q){
+/* --- 検索 ---------------------------------------------------------------
+   住所は国土地理院、施設名は OpenStreetMap のほうが当たりやすいので両方引く。
+   片方が落ちても、もう片方の結果は出す。 */
+
+async function searchGSI(q){
   const url = "https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q);
   const res = await fetch(url);
   if (!res.ok) throw new Error("http " + res.status);
   const j = await res.json();
-  if (!j.length) throw new Error("no result");
-  const c = j[0].geometry.coordinates;   // [lng, lat]
-  return { lat:c[1], lng:c[0] };
+  return j.slice(0, 5).map(x => ({
+    title: x.properties.title,
+    sub: "住所（地理院）",
+    lat: x.geometry.coordinates[1],
+    lng: x.geometry.coordinates[0],
+    src: "住所検索"
+  }));
 }
+
+async function searchOSM(q){
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=jp&q="
+    + encodeURIComponent(q);
+  const res = await fetch(url, { headers:{ "Accept-Language":"ja" } });
+  if (!res.ok) throw new Error("http " + res.status);
+  const j = await res.json();
+  return j.map(x => ({
+    title: (x.name || x.display_name.split(",")[0]).trim(),
+    sub: x.display_name,
+    lat: parseFloat(x.lat),
+    lng: parseFloat(x.lon),
+    src: "施設名検索"
+  }));
+}
+
+function showMsg(text){
+  const box = document.getElementById("hits");
+  box.textContent = "";
+  const d = document.createElement("div"); d.className = "msg"; d.textContent = text;
+  box.appendChild(d);
+}
+
+function renderHits(hits){
+  const box = document.getElementById("hits");
+  box.textContent = "";
+  if (!hits.length){
+    showMsg("見つかりませんでした。地図を直接タップしてピンを置いてください。");
+    return;
+  }
+  hits.forEach(h => {
+    const d = document.createElement("div"); d.className = "hit";
+    const a = document.createElement("div"); a.className = "h1"; a.textContent = h.title;
+    const b = document.createElement("div"); b.className = "h2";
+    b.textContent = h.sub + "　" + h.lat.toFixed(5) + ", " + h.lng.toFixed(5);
+    d.append(a, b);
+    d.onclick = () => {
+      setPos(current, h.lat, h.lng, h.src);
+      map.setView([h.lat, h.lng], 17);
+      box.textContent = "";
+    };
+    box.appendChild(d);
+  });
+}
+
+async function runSearch(q){
+  if (!q.trim()) return;
+  showMsg("検索中…");
+  const [a, b] = await Promise.all([
+    searchGSI(q).catch(() => []),
+    searchOSM(q).catch(() => []),
+  ]);
+  // 同じ場所が両方から出たときは1つにまとめる
+  const seen = new Set(), hits = [];
+  [...b, ...a].forEach(h => {
+    const k = h.lat.toFixed(4) + "," + h.lng.toFixed(4);
+    if (seen.has(k)) return;
+    seen.add(k); hits.push(h);
+  });
+  renderHits(hits);
+}
+
+document.getElementById("btnGo").onclick = () => runSearch(document.getElementById("q").value);
+document.getElementById("q").addEventListener("keydown", e => {
+  if (e.key === "Enter"){ e.preventDefault(); runSearch(e.target.value); }
+});
 
 document.getElementById("btnAuto").onclick = async () => {
   const b = document.getElementById("btnAuto");
   b.disabled = true; b.textContent = "検索中…";
   for (const t of TARGETS){
-    try {
-      const p = await geocode(t.query);
-      setPos(t.id, p.lat, p.lng, "住所検索");
-    } catch (err){
-      setPos(t.id, t.fallback[0], t.fallback[1], "おおよそ・要調整");
-    }
+    const hits = await searchGSI(t.query).catch(() => []);
+    if (hits.length) setPos(t.id, hits[0].lat, hits[0].lng, "住所検索");
+    else setPos(t.id, t.fallback[0], t.fallback[1], "おおよそ・要調整");
   }
   const all = TARGETS.map(t => state[t.id]).filter(Boolean);
   if (all.length) map.fitBounds(L.latLngBounds(all.map(s => [s.lat, s.lng])).pad(0.3), { maxZoom:14 });
-  b.disabled = false; b.textContent = "住所から自動検索";
+  b.disabled = false; b.textContent = "3ヶ所まとめて検索";
 };
 
 document.getElementById("btnCopy").onclick = async () => {
@@ -218,7 +314,7 @@ document.getElementById("btnCopy").onclick = async () => {
 };
 
 TARGETS.forEach(markerFor);
-render();
+select(TARGETS[0].id);
 document.getElementById("btnAuto").click();
 </script>
 </body>
