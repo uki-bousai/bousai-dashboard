@@ -240,13 +240,13 @@ footer a{color:var(--text-secondary)}
   <section class="card">
     <div class="card-head">
       <h2>避難所別 受入状況</h2>
-      <span class="desc">棒の長さは人数（横軸は共通スケール）。稼働率の高い順</span>
+      <span class="desc">棒の長さは人数（横軸は共通スケール）。利用率の高い順</span>
       <button class="toggle" data-target="shelter">表で見る</button>
     </div>
     <div class="legend">
       <span class="key"><span class="swatch" style="background:var(--series-1)"></span>避難者数</span>
       <span class="key"><span class="swatch trackkey"></span>受入可能数（定員）</span>
-      <span class="statusnote">稼働率 90%以上は <b class="warn">⚠ 逼迫</b>、100%超は <b style="color:var(--status-critical)">⛔ 定員超過</b> と表示</span>
+      <span class="statusnote">利用率 90%以上は <b class="warn">⚠ 逼迫</b>、100%超は <b style="color:var(--status-critical)">⛔ 定員超過</b> と表示</span>
     </div>
     <div class="rows" id="shelterChart"></div>
     <div class="hidden" id="shelterTable"></div>
@@ -505,7 +505,7 @@ function popupContent(s){
     const ratio = s.occupants / s.capacity;
     row("避難者数", fmt(s.occupants) + "人");
     row("受入可能数", fmt(s.capacity) + "人");
-    row("稼働率", pct(ratio) + "%");
+    row("利用率", pct(ratio) + "%");
     const rem = s.capacity - s.occupants;
     row("受入余力", rem >= 0 ? `あと${fmt(rem)}人` : `${fmt(-rem)}人超過`);
   } else {
@@ -708,7 +708,7 @@ function renderKPIs(shelters, supplies, shelterObj){
 
   tile({ label: shelterObj ? "この避難所の避難者数" : "現在の避難者数", value:fmt(totalOcc), unit:"人", hero:true });
   tile({ label: shelterObj ? "受入可能数" : "受入可能数（合計）", value:fmt(totalCap), unit:"人",
-         note:`稼働率 ${pct(rate)}%`, meter:rate });
+         note:`利用率 ${pct(rate)}%`, meter:rate });
   if (shelterObj){
     const rem = totalCap - totalOcc;
     tile({ label:"受入余力", value: totalCap ? fmt(Math.abs(rem)) : "－", unit: totalCap ? "人" : "",
@@ -773,7 +773,7 @@ function renderShelters(shelters){
       tipTitle(el, `${s.name}（${s.district}）`);
       tipRow(el, cssVar("--series-1"), `${fmt(s.occupants)}人`, "避難者数");
       tipRow(el, cssVar("--track"), `${fmt(s.capacity)}人`, "受入可能数");
-      tipRow(el, null, `${pct(ratio)}%`, "稼働率");
+      tipRow(el, null, `${pct(ratio)}%`, "利用率");
       const rem = s.capacity - s.occupants;
       tipRow(el, null, rem >= 0 ? `あと${fmt(rem)}人` : `${fmt(-rem)}人超過`, "受入余力");
     });
@@ -784,7 +784,7 @@ function renderShelters(shelters){
   const tb = document.getElementById("shelterTable");
   tb.textContent = "";
   const table = document.createElement("table");
-  table.innerHTML = "<thead><tr><th>避難所</th><th>地区</th><th>避難者数</th><th>受入可能数</th><th>稼働率</th><th>受入余力</th></tr></thead>";
+  table.innerHTML = "<thead><tr><th>避難所</th><th>地区</th><th>避難者数</th><th>受入可能数</th><th>利用率</th><th>受入余力</th></tr></thead>";
   const body = document.createElement("tbody");
   sorted.forEach(s => {
     const tr = document.createElement("tr");
