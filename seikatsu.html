@@ -173,10 +173,25 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow{padding:8px 0; border-bottom:1px solid var(--grid)}
 .shrow:last-child{border-bottom:none}
 .shrow .top{display:flex; justify-content:space-between; gap:10px; align-items:baseline; font-size:.8rem}
-.shrow .top .nm{font-weight:700}
+.shrow .top .nm{font-weight:700; min-width:0}
 .shrow .top .nm small{font-weight:400; color:var(--text-muted); margin-left:6px; font-size:.68rem}
 .shrow .top .val{white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text-secondary)}
 .shrow .top .val b{color:var(--text-primary)}
+/* 幅が狭いと名前が途中で切れて読みにくいので、数値を下の行に落とす */
+@media (max-width:560px){
+  .shrow .top{display:block}
+  .shrow .top .val{display:block; margin-top:3px}
+}
+/* 現地の様子は畳んでおく。一覧の比較を邪魔しないため */
+.shrow .rep{margin-top:6px}
+.shrow .rep > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+  font-size:.7rem; font-weight:700; color:#1a5f8a; background:#eaf3fa;
+  border:1px solid #b6d4e8; border-radius:99px; padding:3px 11px;
+  -webkit-tap-highlight-color:transparent}
+.shrow .rep > summary::-webkit-details-marker{display:none}
+.shrow .rep > summary::after{content:"▾"; font-size:.66rem}
+.shrow .rep[open] > summary::after{content:"▴"}
+.shrow .rep .report{margin-top:6px}
 .shrow .flag{font-size:.7rem; font-weight:700}
 .shrow .flag.crit{color:var(--status-critical)}
 .shrow .flag.warn{color:#b97a10}
@@ -509,9 +524,13 @@ function renderShelters(){
     track.appendChild(fill);
     row.append(top, track);
     if (s.report){
+      const det = document.createElement("details"); det.className = "rep";
+      const sum = document.createElement("summary");
+      sum.textContent = "🙋 現地の様子" + (s.reportAt ? `（${whenLabel(s.reportAt)}）` : "");
       const rp = document.createElement("div"); rp.className = "report cite";
-      rp.textContent = "🙋 " + s.report + (s.reportAt ? `（${whenLabel(s.reportAt)}・市民からの報告）` : "");
-      row.appendChild(rp);
+      rp.textContent = s.report + "（市民からの報告）";
+      det.append(sum, rp);
+      row.appendChild(det);
     }
     box.appendChild(row);
   });
