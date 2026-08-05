@@ -270,7 +270,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
   <section class="card" id="secToilet">
     <h2><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</h2>
-    <p class="desc">仮設トイレの設置場所と基数。</p>
+    <p class="desc">仮設トイレの設置場所と基数。市の一覧が出ていないため、<b>市民の方から届いた情報</b>を確認のうえ掲載しています。設置されているのにここに無い場所は、ぜひ教えてください。</p>
     <div id="toiletList"><p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
@@ -371,7 +371,8 @@ function selectShelter(s){
 const FACILITY_ICONS = {
   "エアコン": "❄", "仮設トイレ": "🚻", "洋式トイレ": "🚻", "授乳室": "🍼",
   "キッズスペース": "🧸", "バリアフリー": "♿", "充電スペース": "🔌", "Wi-Fi": "📶",
-  "シャワー": "🚿", "段ボールベッド": "🛏", "ペット可": "🐾", "車中泊可": "🚗", "炊き出し": "🍚"
+  "シャワー": "🚿", "段ボールベッド": "🛏", "ペット可": "🐾", "車中泊可": "🚗", "炊き出し": "🍚",
+  "生活用水": "💧"
 };
 const facilityLabel = f => (FACILITY_ICONS[f] || "") + f;
 const SERVICE_ICONS = { "入浴":"🛁", "シャワー":"🚿", "給水":"💧", "充電":"🔌",
@@ -648,6 +649,11 @@ function renderToilets(){
     if (t.count){ const c = document.createElement("b"); c.textContent = `${t.count}基`; b.appendChild(c); }
     if (t.note) b.appendChild(document.createTextNode((t.count ? " ／ " : "") + t.note));
     b.appendChild(gmapsLink(gmapsQuery(t)));
+    if (t.report){
+      const r = document.createElement("div"); r.className = "report cite";
+      r.textContent = "🙋 " + t.report + (t.reportAt ? `（${t.reportAt} 市民からの報告）` : "");
+      b.appendChild(r);
+    }
   })));
 }
 function renderHaves(){
