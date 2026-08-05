@@ -384,7 +384,10 @@ const serviceLabel = s => (SERVICE_ICONS[s] || "") + s;
 const ITEM_ICONS = [
   [/カップ(ラーメン|麺)|即席|インスタント/, "🍜"],
   [/経口補水|スポーツドリンク/, "🧃"],
-  [/飲料水|ミネラルウォーター|お茶|水$/, "💧"],
+  [/お茶|麦茶|コーヒー/, "🍵"],
+  [/飲料水|ミネラルウォーター|水$/, "💧"],
+  [/おにぎり|弁当/, "🍙"],
+  [/軽食|お菓子|菓子|ビスケット|ゼリー/, "🍘"],
   [/粉ミルク|液体ミルク|ミルク/, "🍼"],
   [/おむつ|オムツ/, "👶"],
   [/おしりふき|お尻ふき|ウェットティッシュ/, "🧻"],
@@ -714,6 +717,11 @@ function renderHaves(){
       const at = document.createElement("div"); at.className = "atline";
       at.textContent = whenLabel(l.at);
       b.appendChild(at);
+    }
+    if (l.note){
+      const n = document.createElement("div"); n.className = "report";
+      n.textContent = l.note;
+      b.appendChild(n);
     }
     // 混んでいる避難所は、物資だけを目当てに行くと入れないことがある
     const sh = SHELTERS.find(x => x.name === l.shelter);
