@@ -490,6 +490,11 @@ function renderShelters(){
     fill.style.width = Math.min(r * 100, 100) + "%";
     track.appendChild(fill);
     row.append(top, track);
+    if (s.report){
+      const rp = document.createElement("div"); rp.className = "report cite";
+      rp.textContent = "🙋 " + s.report + (s.reportAt ? `（${whenLabel(s.reportAt)}・市民からの報告）` : "");
+      row.appendChild(rp);
+    }
     box.appendChild(row);
   });
 }
