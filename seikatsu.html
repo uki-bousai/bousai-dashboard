@@ -231,7 +231,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
   <section class="card hidden" id="shelterCard">
     <h2>避難所別 受入状況</h2>
-    <p class="desc" id="shelterDesc">避難者数は市の公表資料、受入可能数は市の地域防災計画にある指定緊急避難場所の収容者数（2㎡／1人）です。稼働率の高い順</p>
+    <p class="desc" id="shelterDesc">避難者数は市の公表資料、受入可能数は市の地域防災計画にある指定避難所の収容者数（3㎡／1人）です。稼働率の高い順</p>
     <div id="shelterList"></div>
   </section>
 
@@ -978,7 +978,7 @@ async function loadData(){
       const desc = document.getElementById("shelterDesc");
       if (d2.updatedAt) desc.textContent =
         `避難者数は市の公表資料（${d2.updatedAt}）、受入可能数は市の地域防災計画にある`
-        + `指定緊急避難場所の収容者数（2㎡／1人）です。稼働率の高い順`;
+        + `指定避難所の収容者数（3㎡／1人）です。稼働率の高い順`;
     }
   } catch (e) { /* 前回の表示を維持 */ }
   document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
