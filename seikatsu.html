@@ -98,6 +98,7 @@ html{scroll-behavior:smooth}
 .tag.low{color:#7a5200; border-color:var(--status-warning); background:rgba(250,178,25,.15)}
 @media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
+.atline{font-size:.7rem; color:var(--text-muted); margin-top:4px}
 .empty{font-size:.78rem; color:var(--text-muted)}
 .report{margin-top:6px; font-size:.76rem; line-height:1.75; color:#15794f;
   background:#eaf7f0; border:1px solid #b6e0c9; border-radius:8px; padding:6px 10px}
@@ -257,8 +258,8 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
   </section>
 
   <section class="card" id="secHaves">
-    <h2>避難所で受け取れる物資</h2>
-    <p class="desc">各避難所からの報告に基づく「いま受け取れる物資」。<span class="tag low" style="margin:0 2px">⚠残りわずか</span>の表示があるものは早めになくなる可能性があります。数量・配布方法は各避難所の案内に従ってください。</p>
+    <h2><span class="dot" style="background:var(--status-good)"></span>いま受け取れる物資</h2>
+    <p class="desc">その避難所に<b>いま置いてあるもの</b>です。<span class="tag low" style="margin:0 2px">⚠残りわずか</span>が付いているものは早めになくなる可能性があります。数量・配布方法は各避難所の案内に従ってください。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 市民からの情報提供で掲載</span> 市から物資データの提供がないため、住民の方に教えていただいた内容をもとにしています。</p>
     <div id="haveList"><p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p></div>
   </section>
 
@@ -378,6 +379,39 @@ const facilityLabel = f => (FACILITY_ICONS[f] || "") + f;
 const SERVICE_ICONS = { "入浴":"🛁", "シャワー":"🚿", "給水":"💧", "充電":"🔌",
   "洗濯":"🧺", "健康相談":"🩺", "休憩":"🛋", "Wi-Fi":"📶" };
 const serviceLabel = s => (SERVICE_ICONS[s] || "") + s;
+
+/* 物資は品目名が自由入力なので、キーワードで絵文字を当てる */
+const ITEM_ICONS = [
+  [/カップ(ラーメン|麺)|即席|インスタント/, "🍜"],
+  [/経口補水|スポーツドリンク/, "🧃"],
+  [/飲料水|ミネラルウォーター|お茶|水$/, "💧"],
+  [/粉ミルク|液体ミルク|ミルク/, "🍼"],
+  [/おむつ|オムツ/, "👶"],
+  [/おしりふき|お尻ふき|ウェットティッシュ/, "🧻"],
+  [/非常食|アルファ米|レトルト|パン|食料|食品/, "🍚"],
+  [/毛布|ブランケット/, "🧣"],
+  [/段ボールベッド|ベッド|マット|寝袋/, "🛏"],
+  [/生理用品|ナプキン/, "🌸"],
+  [/マスク/, "😷"],
+  [/歯ブラシ|歯磨き|タオル|石けん|シャンプー/, "🧼"],
+  [/電池|バッテリー|充電/, "🔋"],
+  [/携帯トイレ|簡易トイレ|トイレ/, "🚻"],
+  [/カイロ|衣類|下着|靴下/, "👕"],
+];
+const itemLabel = n => ((ITEM_ICONS.find(([re]) => re.test(n)) || [null, "📦"])[1]) + " " + n;
+
+/* 「2026-08-05 12:08」→「今日 12:08 時点」 */
+const jstDay = ms => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
+function whenLabel(v){
+  const m = String(v || "").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return v || "";
+  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5]);
+  const days = Math.round((Date.parse(jstDay(Date.now())) - Date.parse(jstDay(t))) / 86400000);
+  const hm = `${m[4]}:${m[5]}`;
+  if (days <= 0) return `今日 ${hm} 時点`;
+  if (days === 1) return `昨日 ${hm} 時点`;
+  return `${+m[2]}/${+m[3]} ${hm} 時点`;
+}
 
 /* ---------- 避難所の受入状況 ---------- */
 function shelterStatus(s){
@@ -668,15 +702,27 @@ function renderHaves(){
       : '<p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p>';
     return;
   }
-  const sorted = [...list].sort((a,b) => b.items.length - a.items.length);
+  const sorted = [...list].sort((a,b) => String(b.at || "").localeCompare(String(a.at || "")));
   sorted.forEach(l => box.appendChild(rowEl(l.shelter, l.district, b => {
     [...l.items].sort((x,y) => (x.low?1:0)-(y.low?1:0)).forEach(it => {
       const tag = document.createElement("span");
       tag.className = "tag" + (it.low ? " low" : "");
-      tag.textContent = (it.low ? "⚠残りわずか " : "") + it.name;
+      tag.textContent = (it.low ? "⚠残りわずか " : "") + itemLabel(it.name);
       b.appendChild(tag);
     });
-    if (l.at){ const at = document.createElement("span"); at.className = "at"; at.textContent = l.at + " 報告"; b.appendChild(at); }
+    if (l.at){
+      const at = document.createElement("div"); at.className = "atline";
+      at.textContent = whenLabel(l.at);
+      b.appendChild(at);
+    }
+    // 混んでいる避難所は、物資だけを目当てに行くと入れないことがある
+    const sh = SHELTERS.find(x => x.name === l.shelter);
+    const st = sh ? shelterStatus(sh) : null;
+    if (st && st.cls){
+      const w = document.createElement("div"); w.className = "report cite";
+      w.textContent = `この避難所は現在 ${st.label}（${sh.occupants}/${sh.capacity}人）です`;
+      b.appendChild(w);
+    }
   })));
 }
 
