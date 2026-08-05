@@ -418,7 +418,7 @@ const serviceLabel = s => (SERVICE_ICONS[s] || "") + s;
 /* 物資は品目名が自由入力なので、キーワードで絵文字を当てる */
 const ITEM_ICONS = [
   [/カップ(ラーメン|麺)|即席|インスタント/, "🍜"],
-  [/経口補水|スポーツドリンク/, "🧃"],
+  [/経口補水|スポーツドリンク|アクエリ|ポカリ/, "🧃"],
   [/お茶|麦茶|コーヒー/, "🍵"],
   [/飲料水|ミネラルウォーター|水$/, "💧"],
   [/おにぎり|弁当/, "🍙"],
@@ -442,14 +442,15 @@ const itemLabel = n => ((ITEM_ICONS.find(([re]) => re.test(n)) || [null, "📦"]
 /* 「2026-08-05 12:08」→「今日 12:08 時点」 */
 const jstDay = ms => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
 function whenLabel(v){
-  const m = String(v || "").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  // 時刻まで分かっているとは限らないので、日付だけの報告も受け付ける
+  const m = String(v || "").match(/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
   if (!m) return v || "";
-  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5]);
+  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], (m[4] ? +m[4] : 12) - 9, m[5] ? +m[5] : 0);
   const days = Math.round((Date.parse(jstDay(Date.now())) - Date.parse(jstDay(t))) / 86400000);
-  const hm = `${m[4]}:${m[5]}`;
-  if (days <= 0) return `今日 ${hm} 時点`;
-  if (days === 1) return `昨日 ${hm} 時点`;
-  return `${+m[2]}/${+m[3]} ${hm} 時点`;
+  const hm = m[4] ? ` ${m[4]}:${m[5]}` : "";
+  if (days <= 0) return `今日${hm} 時点`;
+  if (days === 1) return `昨日${hm} 時点`;
+  return `${+m[2]}/${+m[3]}${hm} 時点`;
 }
 
 /* ---------- 避難所の受入状況 ---------- */
