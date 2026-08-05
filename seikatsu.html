@@ -47,6 +47,11 @@ header{padding:20px 20px 0; max-width:860px; margin:0 auto}
 header h1{font-size:1.15rem; font-weight:700}
 header .sub{font-size:.76rem; color:var(--text-secondary); margin-top:2px}
 .updated{font-size:.72rem; color:var(--text-muted); margin-top:4px}
+/* 情報提供への入口。上に置いて、いつでも目に入るようにする */
+.tipbtn{display:inline-block; margin-top:10px; font-size:.78rem; font-weight:700;
+  color:var(--accent); text-decoration:none; background:var(--surface-1);
+  border:1.5px solid var(--accent); border-radius:99px; padding:6px 14px}
+.tipbtn:active{background:var(--accent); color:#fff}
 .container{max-width:860px; margin:0 auto; padding:0 20px}
 
 /* ページ内の目次（スクロールしても上に残る） */
@@ -199,6 +204,7 @@ footer a{color:var(--accent)}
   <h1>宇城市 生活支援情報</h1>
   <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、仮設トイレ、受け取れる物資</p>
   <div class="updated" id="updatedAt"></div>
+  <a class="tipbtn" href="#secContact">🙋 避難所の情報を送る</a>
 </header>
 
 <nav class="secnav" aria-label="ページ内の目次">
