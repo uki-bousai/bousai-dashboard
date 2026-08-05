@@ -189,6 +189,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface-1); color:var(--text-primary)}
 }
 footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; color:var(--text-muted); line-height:1.8}
+footer a{color:var(--accent)}
+.contact .hbtn{margin-top:8px}
 </style>
 </head>
 <body>
@@ -208,6 +210,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
     <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
+    <a href="#secContact">🙋 情報提供</a>
   </div>
 </nav>
 
@@ -263,6 +266,14 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
     <div id="haveList"><p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p></div>
   </section>
 
+  <section class="card contact" id="secContact">
+    <h2><span class="dot" style="background:var(--accent)"></span>避難所の様子を教えてください</h2>
+    <p class="desc">物資や設備の情報は、市からデータの提供がありません。このページに載っているのは、<b>住民の方に教えていただいた内容だけ</b>です。<br><b>「◯◯避難所で△△をもらえた」</b>——この一行で十分です。仮設トイレの数、エアコンやシャワーの有無、混み具合など、分かるものだけで助かります。</p>
+    <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
+    <a class="hbtn line2" href="https://www.instagram.com/akiyo_8/" target="_blank" rel="noopener">＠akiyo_8 を開く</a>
+    <p class="desc" style="margin:12px 0 0">いただいた情報は、内容を確認したうえで <span class="srcbadge via" style="margin:0 3px">🙋 市民からの情報提供で掲載</span> と分かる形で載せます。掲載してほしくない場合はその旨をお書き添えください。</p>
+  </section>
+
   <section class="card hidden" id="hotelCard">
     <h2><span class="dot" style="background:#c8506e"></span>ホテル・旅館に避難できます（宿泊費は公費負担）</h2>
     <p class="desc" id="hotelDesc"></p>
@@ -298,6 +309,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
 <footer>
   <p>このページは宇城市在住の個人が運営する非公式の情報サイトです。避難者数・給水・無料入浴などの情報は市の公表資料をもとに、避難所で受け取れる物資は市民からの提供情報を確認のうえ掲載しています。状況は変わることがあるため、時間や配布方法などは現地の案内が優先です。市の公式情報とあわせてご利用ください。</p>
+  <p>情報のご提供・誤りのご指摘は Instagram <a href="https://www.instagram.com/akiyo_8/" target="_blank" rel="noopener">＠akiyo_8</a> まで。</p>
 </footer>
 
 <script>
