@@ -131,6 +131,17 @@ html{scroll-behavior:smooth}
 .areahead{font-size:.74rem; font-weight:700; color:var(--text-secondary);
   background:var(--page); border-radius:6px; padding:4px 10px; margin:12px 0 2px}
 .areahead:first-child{margin-top:2px}
+/* 入浴はエリア数が多いので、エリアごとに開閉できるようにする */
+.areagrp{margin-top:8px}
+.areagrp:first-child{margin-top:2px}
+summary.areahead{display:flex; align-items:center; gap:8px; cursor:pointer;
+  margin:0; padding:8px 12px; list-style:none; -webkit-tap-highlight-color:transparent}
+summary.areahead::-webkit-details-marker{display:none}
+summary.areahead::after{content:"▾"; margin-left:auto; font-size:.8rem;
+  color:var(--text-muted); transition:transform .15s}
+.areagrp[open] > summary.areahead::after{transform:rotate(180deg)}
+summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
+@media (prefers-reduced-motion:reduce){ summary.areahead::after{transition:none} }
 .trend-subhead{font-size:.78rem; font-weight:700; color:var(--text-secondary); margin:14px 0 2px}
 .trend-subhead:first-child{margin-top:8px}
 /* KPI */
@@ -271,7 +282,7 @@ footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; col
 
   <section class="card" id="secBath">
     <h2><span class="dot" style="background:#d97a26"></span>無料の入浴・シャワー</h2>
-    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月4日時点）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
+    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。<b>エリア名をタップすると、その地域の施設が開きます</b>。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月4日時点）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
     <div class="bring">
       <div class="bring-title">🎒 持っていくもの</div>
       <ul>
@@ -483,15 +494,25 @@ function renderBaths(){
   box.textContent = "";
   const list = DATA.baths || [];
   if (!list.length){ box.innerHTML = '<p class="empty">施設情報は準備中です。</p>'; return; }
-  let lastArea = null;
+  // エリアごとにまとめる。並び順は元データのまま（宇城市から近い順）
+  const groups = [];
   list.forEach(bt => {
-    if (bt.area && bt.area !== lastArea){
-      lastArea = bt.area;
-      const h = document.createElement("div"); h.className = "areahead";
-      h.textContent = bt.area;
-      box.appendChild(h);
-    }
-    box.appendChild(rowEl(bt.name, bt.address, b => {
+    const area = bt.area || "その他";
+    const last = groups[groups.length - 1];
+    if (!last || last.area !== area) groups.push({ area, items:[bt] });
+    else last.items.push(bt);
+  });
+  groups.forEach((g, gi) => {
+    const det = document.createElement("details"); det.className = "areagrp";
+    det.open = gi < 2;   // 近い2エリアは開いておく
+    const sum = document.createElement("summary"); sum.className = "areahead";
+    const nm = document.createElement("span"); nm.textContent = g.area;
+    const ct = document.createElement("span"); ct.className = "cnt";
+    ct.textContent = g.items.length + "件";
+    sum.append(nm, ct);
+    det.appendChild(sum);
+    g.items.forEach(bt => {
+    det.appendChild(rowEl(bt.name, bt.address, b => {
     if (bt.via || bt.source === "施設の発表"){
       if (bt.via){
         const v = document.createElement("span"); v.className = "srcbadge via";
@@ -542,6 +563,8 @@ function renderBaths(){
       b.appendChild(r);
     }
     }));
+    });
+    box.appendChild(det);
   });
 }
 function renderHotel(){
