@@ -112,6 +112,7 @@ html{scroll-behavior:smooth}
   background:#fdf0e3; border:1px solid #f0c99b; border-radius:99px; padding:2px 9px;
   margin:0 5px 4px 0}
 .srcbadge.via{color:#1a5f8a; background:#eaf3fa; border-color:#b6d4e8}
+.srcbadge.city{color:#41556b; background:#eef1f4; border-color:#cdd6de}
 .acbadge{display:inline-block; font-size:.64rem; font-weight:700; color:#1a7fae;
   border:1px solid #8fc9e2; border-radius:99px; padding:1px 7px; margin-left:6px; white-space:nowrap}
 .acbadge.svc{color:#15794f; border-color:#8ccfae; background:#f0faf5;
@@ -148,6 +149,16 @@ summary.areahead::after{content:"▾"; margin-left:auto; font-size:.8rem;
 .areagrp[open] > summary.areahead::after{transform:rotate(180deg)}
 summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 @media (prefers-reduced-motion:reduce){ summary.areahead::after{transition:none} }
+/* 市の会議まとめ：項目ごとに見出し＋箇条書き */
+.brief{margin-top:10px}
+.brief:first-child{margin-top:2px}
+.btopic{padding:9px 2px 9px 0; border-top:1px solid var(--border)}
+.btopic:first-child{border-top:0; padding-top:4px}
+.btopic .bh{font-size:.86rem; font-weight:700; display:flex; gap:7px; align-items:baseline}
+.btopic ul{list-style:none; margin:4px 0 0; padding:0}
+.btopic li{font-size:.82rem; line-height:1.85; color:var(--text-secondary);
+  padding-left:14px; text-indent:-14px}
+.btopic li::before{content:"・"}
 .trend-subhead{font-size:.78rem; font-weight:700; color:var(--text-secondary); margin:14px 0 2px}
 .trend-subhead:first-child{margin-top:8px}
 /* KPI */
@@ -231,6 +242,7 @@ footer a{color:var(--accent)}
     <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
+    <a href="#secBrief">📋 市の会議</a>
     <a href="#secContact">🙋 情報提供</a>
   </div>
 </nav>
@@ -287,6 +299,12 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:var(--status-good)"></span>いま受け取れる物資</h2>
     <p class="desc">その避難所に<b>いま置いてあるもの</b>です。<span class="tag low" style="margin:0 2px">⚠残りわずか</span>が付いているものは早めになくなる可能性があります。数量・配布方法は各避難所の案内に従ってください。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 市民からの情報提供で掲載</span> 市から物資データの提供がないため、住民の方に教えていただいた内容をもとにしています。</p>
     <div id="haveList"><p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p></div>
+  </section>
+
+  <section class="card" id="secBrief">
+    <h2><span class="dot" style="background:#5a7fa8"></span>市の災害対策本部会議から</h2>
+    <p class="desc">市の災害対策本部会議で報告された内容です。<b>市内全体の状況</b>——住宅の被害、道路や水道の復旧、被災証明やブルーシートの手続きなど、避難所の外のこともここにまとめています。<br><span class="srcbadge city" style="margin:4px 5px 0 0">📋 市の会議の内容から要約</span> 数字は会議の時点のもので、今後変わることがあります。手続きの詳細は市の公式発表をご確認ください。</p>
+    <div id="briefList"><p class="empty">会議の内容は準備中です。</p></div>
   </section>
 
   <section class="card contact" id="secContact">
@@ -1135,6 +1153,43 @@ async function loadData(){
   renderAll();
 }
 
+/* 市の災害対策本部会議のまとめ（避難所単位ではないので絞り込みの対象外） */
+function renderBriefings(){
+  const box = document.getElementById("briefList");
+  box.textContent = "";
+  const list = (DATA.briefings || []).slice()
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if (!list.length){
+    const p = document.createElement("p"); p.className = "empty";
+    p.textContent = "会議の内容は準備中です。";
+    box.appendChild(p); return;
+  }
+  list.forEach((bf, i) => {
+    const det = document.createElement("details"); det.className = "areagrp brief";
+    det.open = i === 0;   // 最新の回だけ開いておく
+    const sum = document.createElement("summary"); sum.className = "areahead";
+    sum.appendChild(document.createTextNode(bf.label || bf.date || "会議まとめ"));
+    const cnt = document.createElement("span"); cnt.className = "cnt";
+    cnt.textContent = `${(bf.topics || []).length}件`;
+    sum.appendChild(cnt);
+    det.appendChild(sum);
+    (bf.topics || []).forEach(t => {
+      const w = document.createElement("div"); w.className = "btopic";
+      const h = document.createElement("div"); h.className = "bh";
+      const ic = document.createElement("span"); ic.textContent = t.icon || "・";
+      const hd = document.createElement("span"); hd.textContent = t.head || "";
+      h.append(ic, hd);
+      const ul = document.createElement("ul");
+      (t.lines || []).forEach(l => {
+        const li = document.createElement("li"); li.textContent = l; ul.appendChild(li);
+      });
+      w.append(h, ul);
+      det.appendChild(w);
+    });
+    box.appendChild(det);
+  });
+}
+
 function renderAll(){
   document.getElementById("clearFilter").classList.toggle("hidden", !currentDistrict && !currentShelter);
   renderUpdated();
@@ -1146,6 +1201,7 @@ function renderAll(){
   renderBaths();
   renderToilets();
   renderHaves();
+  renderBriefings();
   renderMap();
 }
 loadData();
