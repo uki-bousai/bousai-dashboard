@@ -340,6 +340,7 @@ footer a{color:var(--accent)}
 let DATA = { water: [], toilets: [], haves: [] };
 let SHELTERS = [];   // data.json（避難所ダッシュボードのデータ）から読む
 let TREND = null;    // data.json の推移（避難者数・世帯数）
+let SHELTERS_UPDATED = "";  // data.json 側の更新時刻
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = n => (n || 0).toLocaleString("ja-JP");
@@ -540,15 +541,33 @@ function renderShelters(){
   });
 }
 
-/* ---------- 鮮度表示 ---------- */
+/* ---------- 鮮度表示 ----------
+   ページに出している情報のうち、いちばん新しいものの時刻を出す。
+   市の公表と市民からの情報提供が別々に入るので、片方だけ直しても
+   ヘッダーが古いままにならないよう、毎回すべてを見て決める。 */
+function tsOf(v){
+  const m = String(v || "").match(/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
+  if (!m) return null;
+  const hasTime = !!m[4];
+  return { ms: Date.UTC(+m[1], +m[2] - 1, +m[3], (hasTime ? +m[4] : 23) - 9, hasTime ? +m[5] : 59),
+           label: `${m[1]}-${m[2]}-${m[3]}` + (hasTime ? ` ${m[4]}:${m[5]}` : "") };
+}
+function latestUpdate(){
+  const src = [DATA.updatedAt, SHELTERS_UPDATED];
+  (SHELTERS || []).forEach(s => src.push(s.reportAt));
+  (DATA.haves || []).forEach(h => src.push(h.at));
+  (DATA.water || []).forEach(w => src.push(w.reportAt));
+  (DATA.toilets || []).forEach(t => src.push(t.reportAt));
+  (DATA.baths || []).forEach(b => src.push(b.reportAt));
+  return src.map(tsOf).filter(Boolean).sort((a, b) => b.ms - a.ms)[0] || null;
+}
 function renderUpdated(){
   const el = document.getElementById("updatedAt");
-  const m = (DATA.updatedAt || "").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
-  if (!m){ el.textContent = DATA.updatedAt || ""; return; }
-  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5]);
-  const mins = Math.max(0, Math.floor((Date.now() - t) / 60000));
+  const t = latestUpdate();
+  if (!t){ el.textContent = DATA.updatedAt || ""; return; }
+  const mins = Math.max(0, Math.floor((Date.now() - t.ms) / 60000));
   const ago = mins < 1 ? "たった今" : mins < 60 ? `${mins}分前` : mins < 1440 ? `${Math.floor(mins/60)}時間前` : `${Math.floor(mins/1440)}日前`;
-  el.textContent = `${DATA.updatedAt}（${ago}）`;
+  el.textContent = `${t.label}（${ago}）`;
 }
 setInterval(renderUpdated, 60 * 1000);
 
@@ -1104,6 +1123,7 @@ async function loadData(){
       const d2 = await res2.json();
       SHELTERS = d2.shelters || [];
       TREND = d2.trend || null;
+      SHELTERS_UPDATED = d2.updatedAt || "";
       const desc = document.getElementById("shelterDesc");
       if (d2.updatedAt) desc.textContent =
         `避難者数は市の公表資料（${d2.updatedAt}）、受入可能数は市の地域防災計画にある`
