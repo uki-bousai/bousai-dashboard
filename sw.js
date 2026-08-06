@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v4";
+const VERSION = "v5";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
@@ -40,8 +40,8 @@ self.addEventListener("activate", e => {
   })());
 });
 
-// データ: ネット優先（常に最新を取りに行き、成功したら控えを保存。圏外なら控えを返す）
-async function networkFirstData(req, cacheKey){
+// データ・ページ: ネット優先（常に最新を取りに行き、成功したら控えを保存。圏外なら控えを返す）
+async function networkFirst(req, cacheKey){
   const cache = await caches.open(APP_CACHE);
   try {
     const res = await fetch(req);
@@ -54,7 +54,7 @@ async function networkFirstData(req, cacheKey){
   }
 }
 
-// ページ・ライブラリ: キャッシュ優先＋裏で更新（次回開いたとき新しくなる）
+// ライブラリ: キャッシュ優先＋裏で更新（毎回取り直す必要がないもの向け）
 async function staleWhileRevalidate(req, cacheKey){
   const cache = await caches.open(APP_CACHE);
   const hit = await cache.match(cacheKey || req);
@@ -86,11 +86,11 @@ self.addEventListener("fetch", e => {
 
   // データ本体（クエリ付きで取得されるためパスで判定）
   if (url.origin === location.origin && url.pathname.endsWith("/data.json")){
-    e.respondWith(networkFirstData(req, "data.json"));
+    e.respondWith(networkFirst(req, "data.json"));
     return;
   }
   if (url.origin === location.origin && url.pathname.endsWith("/seikatsu.json")){
-    e.respondWith(networkFirstData(req, "seikatsu.json"));
+    e.respondWith(networkFirst(req, "seikatsu.json"));
     return;
   }
   // 地図タイル
@@ -98,7 +98,8 @@ self.addEventListener("fetch", e => {
     e.respondWith(tileCacheFirst(req));
     return;
   }
-  // ページ遷移（オフライン時はキャッシュ済みのページを返す）
+  // ページ遷移: ネット優先。更新が頻繁なので、開いたときは必ず最新を取りに行く。
+  // 圏外のときだけキャッシュ済みのページを返す。
   // 一覧にないパス（管理用ページなど）は素通しする。取り違えて別ページを返さないため。
   if (req.mode === "navigate"){
     const p = url.pathname;
@@ -106,7 +107,7 @@ self.addEventListener("fetch", e => {
       : p.endsWith("/seikatsu.html") ? "seikatsu.html"
       : (p.endsWith("/") || p.endsWith("/index.html")) ? "index.html"
       : null;
-    if (page){ e.respondWith(staleWhileRevalidate(req, page)); return; }
+    if (page){ e.respondWith(networkFirst(req, page)); return; }
     return;
   }
   // 地図ライブラリ（unpkg）と同一オリジンの静的ファイル
