@@ -1253,14 +1253,20 @@ function renderRefresh(){
     box.appendChild(nb);
   }
 
+  if (r.pageUrl){
+    const a = document.createElement("a"); a.className = "hbtn"; a.href = r.pageUrl;
+    a.target = "_blank"; a.rel = "noopener";
+    a.textContent = "🏞 対象の宿を見る（南阿蘇村の特設ページ）";
+    box.appendChild(a);
+  }
   if (r.tel){
-    const a = document.createElement("a"); a.className = "hbtn";
+    const a = document.createElement("a"); a.className = "hbtn line2";
     a.href = "tel:" + r.tel.replace(/-/g, "");
     a.textContent = `📞 ${r.dept || ""} ${r.tel}`;
     box.appendChild(a);
     if (r.telNote){
       const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
-      n.textContent = `受付時間 ${r.telNote}。対象施設の一覧や予約先も、ここで確認できます。`;
+      n.textContent = `受付時間 ${r.telNote}。特設ページが開けないときは、こちらでも確認できます。`;
       box.appendChild(n);
     }
   }
