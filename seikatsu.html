@@ -163,6 +163,34 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .btopic li{font-size:.82rem; line-height:1.85; color:var(--text-secondary);
   padding-left:14px; text-indent:-14px}
 .btopic li::before{content:"・"}
+/* 自主運営の避難所 */
+.selfcard{margin-top:12px; border:1.5px solid #cfe3d8; border-radius:14px; padding:14px 16px;
+  background:#f6fbf8}
+.selfcard:first-child{margin-top:2px}
+.selfcard .sh{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.selfcard .sh .nm{font-size:1rem; font-weight:700}
+.selfcard .sh .city{font-size:.68rem; font-weight:700; color:#15794f; background:#fff;
+  border:1px solid #8ccfae; border-radius:99px; padding:3px 9px}
+.selfcard .addr{margin-top:5px; font-size:.78rem; color:var(--text-secondary); line-height:1.8}
+.selfcard .addr a{color:#15794f; font-weight:700}
+.selfcard .badges{margin-top:9px; display:flex; flex-wrap:wrap; gap:5px}
+.selfcard .badges span{font-size:.72rem; font-weight:700; color:#15794f; background:#fff;
+  border:1px solid #cfe3d8; border-radius:99px; padding:4px 10px}
+.selfblock{margin-top:11px}
+.selfblock .bt{font-size:.8rem; font-weight:700}
+.selfblock ul{list-style:none; margin:5px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
+.selfblock li{font-size:.76rem; font-weight:700; border-radius:99px; padding:4px 11px}
+.selfblock.have li{color:#15794f; background:#fff; border:1px solid #8ccfae}
+.selfblock.need li{color:#b8571f; background:#fdf0e3; border:1px solid #f0c99b}
+.selfblock.need .bt{color:#b8571f}
+.selfcard .who2{margin-top:10px; font-size:.78rem; line-height:1.85; color:var(--text-secondary)}
+.selfcard .who2 b{color:var(--text-primary)}
+.selfshots{margin-top:11px; display:flex; gap:8px}
+.selfshots figure{flex:1; margin:0}
+.selfshots img{width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:10px; display:block;
+  border:1px solid #cfe3d8}
+.selfshots figcaption{margin-top:4px; font-size:.68rem; color:var(--text-muted)}
+
 /* 市民の声を集めるための呼びかけ */
 .voice{margin-top:14px; background:#eef1f4; border:1px solid #cdd6de;
   border-radius:12px; padding:13px 15px}
@@ -239,7 +267,7 @@ footer a{color:var(--accent)}
 
 <header>
   <h1>宇城市 生活支援情報</h1>
-  <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、仮設トイレ、受け取れる物資</p>
+  <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、仮設トイレ、受け取れる物資。<br>近隣地域の<b>自主運営の避難所</b>も掲載しています</p>
   <div class="updated" id="updatedAt"></div>
   <a class="tipbtn" href="#secContact">🙋 避難所の情報を送る</a>
 </header>
@@ -254,6 +282,7 @@ footer a{color:var(--accent)}
     <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
+    <a href="#secSelf">🤝 自主避難所</a>
     <a href="#secBrief">📋 市議会</a>
     <a href="#secContact">🙋 情報提供</a>
   </div>
@@ -323,6 +352,14 @@ footer a{color:var(--accent)}
       <div class="vs">8月6日の報告では、<b>災害ごみの仮置場を増やしてほしい</b>という要望が市へ出されました。住民の方の困りごとが、こうして市に届いています。<br>ひとりの声だと届きにくくても、<b>同じ困りごとが集まれば、市議会で取り上げられることがあります</b>。困っていること、足りていないものを教えてください。</div>
       <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
     </div>
+  </section>
+
+  <section class="card" id="secSelf">
+    <h2><span class="dot" style="background:#2f8f6b"></span>自主運営の避難所</h2>
+    <p class="desc">地域の方が<b>自分たちで開設・運営されている避難所</b>です。市が開設した避難所と違い、物資が行政から自動的に届くわけではありません。<b>いま足りていないもの</b>を、そのまま載せています。<br>宇城市外の避難所も含みます。地図に載らない・行政の一覧に出ないため、情報が届きにくい場所です。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 避難所の方からの情報提供</span> 掲載内容は、その避難所を運営されている方から直接いただいたものです。</p>
+    <div id="selfList"><p class="empty">情報は準備中です。</p></div>
+    <p class="desc" style="margin:14px 0 0"><b>物資を届けたい、という方へ。</b>お送り先や受け取り方法をお伝えしますので、DMでご連絡ください。個人での持ち込みが難しい場合も、まずはご相談ください。</p>
+    <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ 物資について相談する（InstagramのDM）</a>
   </section>
 
   <section class="card contact" id="secContact">
@@ -451,7 +488,8 @@ const FACILITY_ICONS = {
   "エアコン": "❄", "仮設トイレ": "🚻", "洋式トイレ": "🚻", "授乳室": "🍼",
   "キッズスペース": "🧸", "バリアフリー": "♿", "充電スペース": "🔌", "Wi-Fi": "📶",
   "シャワー": "🚿", "段ボールベッド": "🛏", "ペット可": "🐾", "車中泊可": "🚗", "炊き出し": "🍚",
-  "生活用水": "💧", "施設内トイレ": "🚻", "薬の処方": "💊", "間仕切り": "🧱"
+  "生活用水": "💧", "施設内トイレ": "🚻", "薬の処方": "💊", "間仕切り": "🧱",
+  "電子レンジ": "🍲", "布団": "🛌"
 };
 const facilityLabel = f => (FACILITY_ICONS[f] || "") + f;
 const SERVICE_ICONS = { "入浴":"🛁", "シャワー":"🚿", "給水":"💧", "充電":"🔌",
@@ -490,10 +528,10 @@ function whenLabel(v){
   if (!m) return v || "";
   const t = Date.UTC(+m[1], +m[2] - 1, +m[3], (m[4] ? +m[4] : 12) - 9, m[5] ? +m[5] : 0);
   const days = Math.round((Date.parse(jstDay(Date.now())) - Date.parse(jstDay(t))) / 86400000);
-  const hm = m[4] ? ` ${m[4]}:${m[5]}` : "";
-  if (days <= 0) return `今日${hm} 時点`;
-  if (days === 1) return `昨日${hm} 時点`;
-  return `${+m[2]}/${+m[3]}${hm} 時点`;
+  const hm = m[4] ? ` ${m[4]}:${m[5]} ` : "";
+  if (days <= 0) return `今日${hm}時点`;
+  if (days === 1) return `昨日${hm}時点`;
+  return `${+m[2]}/${+m[3]}${hm}時点`;
 }
 
 /* ---------- 避難所の受入状況 ---------- */
@@ -1276,6 +1314,84 @@ function renderRefresh(){
   }
 }
 
+/* 自主運営の避難所（市の一覧に出ないため、必要な物資まで載せる） */
+function renderSelfShelters(){
+  const box = document.getElementById("selfList");
+  box.textContent = "";
+  const list = DATA.selfShelters || [];
+  if (!list.length){
+    const p = document.createElement("p"); p.className = "empty";
+    p.textContent = "情報は準備中です。"; box.appendChild(p); return;
+  }
+  list.forEach(sh => {
+    const c = document.createElement("div"); c.className = "selfcard";
+
+    const head = document.createElement("div"); head.className = "sh";
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = sh.name;
+    head.appendChild(nm);
+    if (sh.city){
+      const ct = document.createElement("span"); ct.className = "city";
+      ct.textContent = sh.city + (sh.area ? "・" + sh.area : "");
+      head.appendChild(ct);
+    }
+    c.appendChild(head);
+
+    if (sh.address){
+      const ad = document.createElement("div"); ad.className = "addr";
+      ad.appendChild(document.createTextNode(sh.address + " "));
+      const a = document.createElement("a");
+      a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(sh.address);
+      a.target = "_blank"; a.rel = "noopener"; a.textContent = "地図で開く";
+      ad.appendChild(a);
+      c.appendChild(ad);
+    }
+
+    if ((sh.facilities || []).length){
+      const bs = document.createElement("div"); bs.className = "badges";
+      sh.facilities.forEach(f => {
+        const b = document.createElement("span"); b.textContent = facilityLabel(f); bs.appendChild(b);
+      });
+      c.appendChild(bs);
+    }
+
+    const block = (cls, title, items, labelFn) => {
+      if (!(items || []).length) return;
+      const w = document.createElement("div"); w.className = "selfblock " + cls;
+      const t = document.createElement("div"); t.className = "bt"; t.textContent = title;
+      const ul = document.createElement("ul");
+      items.forEach(i => { const li = document.createElement("li"); li.textContent = labelFn(i); ul.appendChild(li); });
+      w.append(t, ul); c.appendChild(w);
+    };
+    block("have", "いまある物資", sh.haves, itemLabel);
+    block("need", "⚠ いま足りていないもの", sh.needs, itemLabel);
+
+    if (sh.people || sh.note){
+      const w = document.createElement("div"); w.className = "who2";
+      if (sh.people){ const b = document.createElement("b"); b.textContent = sh.people; w.append(b, document.createElement("br")); }
+      if (sh.note) w.appendChild(document.createTextNode(sh.note));
+      c.appendChild(w);
+    }
+
+    if ((sh.photos || []).length){
+      const g = document.createElement("div"); g.className = "selfshots";
+      sh.photos.slice(0, 2).forEach(ph => {
+        const fig = document.createElement("figure");
+        const im = document.createElement("img"); im.src = ph.src; im.alt = ph.cap || ""; im.loading = "lazy";
+        const cap = document.createElement("figcaption"); cap.textContent = ph.cap || "";
+        fig.append(im, cap); g.appendChild(fig);
+      });
+      c.appendChild(g);
+    }
+
+    const src = document.createElement("div"); src.className = "who2";
+    src.style.marginTop = "8px";
+    src.textContent = (sh.source ? sh.source : "") + (sh.updatedAt ? `（${whenLabel(sh.updatedAt)}）` : "");
+    c.appendChild(src);
+
+    box.appendChild(c);
+  });
+}
+
 function renderAll(){
   document.getElementById("clearFilter").classList.toggle("hidden", !currentDistrict && !currentShelter);
   renderUpdated();
@@ -1288,6 +1404,7 @@ function renderAll(){
   renderBaths();
   renderToilets();
   renderHaves();
+  renderSelfShelters();
   renderBriefings();
   renderMap();
 }
