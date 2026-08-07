@@ -246,6 +246,7 @@ footer a{color:var(--accent)}
     <a href="#mapCard">🗺 マップ</a>
     <a href="#secHaves">📦 物資</a>
     <a href="#hotelCard">🏨 ホテル</a>
+    <a href="#refreshCard">🏞 南阿蘇</a>
     <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
@@ -332,6 +333,12 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#c8506e"></span>ホテル・旅館に避難できます（宿泊費は公費負担）</h2>
     <p class="desc" id="hotelDesc"></p>
     <div id="hotelBody"></div>
+  </section>
+
+  <section class="card hidden" id="refreshCard">
+    <h2><span class="dot" style="background:#2f8f6b"></span>南阿蘇村に、無料で泊まれます</h2>
+    <p class="desc" id="refreshDesc"></p>
+    <div id="refreshBody"></div>
   </section>
 
   <section class="card" id="secToilet">
@@ -1203,6 +1210,62 @@ function renderBriefings(){
   });
 }
 
+/* 南阿蘇村のリフレッシュ宿泊支援（期間限定・宇城市民が対象） */
+function renderRefresh(){
+  const card = document.getElementById("refreshCard");
+  const box = document.getElementById("refreshBody");
+  const r = DATA.refresh;
+  box.textContent = "";
+  if (!r){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  document.getElementById("refreshDesc").textContent =
+    `${r.title}。${r.lead || ""}（${r.source || ""}）`;
+
+  const cost = document.createElement("div"); cost.className = "hcost";
+  const cb = document.createElement("b"); cb.textContent = "💰 " + (r.cost || "");
+  cost.appendChild(cb);
+  box.appendChild(cost);
+
+  const kv = [["📅 期間", r.period], ["🙋 対象", r.target], ["🛏 空き状況", r.rooms]];
+  kv.forEach(([k, v]) => {
+    if (!v) return;
+    const el = document.createElement("div"); el.className = "hstep";
+    el.textContent = `${k}：${v}`;
+    box.appendChild(el);
+  });
+  if ((r.targetNotes || []).length){
+    const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
+    n.textContent = r.targetNotes.join(" / ");
+    box.appendChild(n);
+  }
+
+  (r.steps || []).forEach(t => {
+    const el = document.createElement("div"); el.className = "hstep"; el.textContent = t;
+    box.appendChild(el);
+  });
+
+  if ((r.notes || []).length){
+    const nb = document.createElement("div"); nb.className = "bring";
+    const t = document.createElement("div"); t.className = "bring-title"; t.textContent = "⚠ 知っておいてください";
+    const ul = document.createElement("ul");
+    r.notes.forEach(n => { const li = document.createElement("li"); li.textContent = "・" + n; ul.appendChild(li); });
+    nb.append(t, ul);
+    box.appendChild(nb);
+  }
+
+  if (r.tel){
+    const a = document.createElement("a"); a.className = "hbtn";
+    a.href = "tel:" + r.tel.replace(/-/g, "");
+    a.textContent = `📞 ${r.dept || ""} ${r.tel}`;
+    box.appendChild(a);
+    if (r.telNote){
+      const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
+      n.textContent = `受付時間 ${r.telNote}。対象施設の一覧や予約先も、ここで確認できます。`;
+      box.appendChild(n);
+    }
+  }
+}
+
 function renderAll(){
   document.getElementById("clearFilter").classList.toggle("hidden", !currentDistrict && !currentShelter);
   renderUpdated();
@@ -1210,6 +1273,7 @@ function renderAll(){
   renderShelters();
   renderTrendCard();
   renderHotel();
+  renderRefresh();
   renderWater();
   renderBaths();
   renderToilets();
