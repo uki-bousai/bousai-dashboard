@@ -193,6 +193,18 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   border:1px solid #cfe3d8}
 .selfshots figcaption{margin-top:4px; font-size:.68rem; color:var(--text-muted)}
 
+/* 防災井戸（飲用不可） */
+.wells{margin-top:14px; background:#eef5fb; border:1px solid #b6d4e8; border-radius:12px;
+  padding:13px 15px}
+.wells .wt{font-size:.92rem; font-weight:700; color:#1a5f8a}
+.wells .ws{margin-top:5px; font-size:.8rem; line-height:1.85; color:var(--text-secondary)}
+.wells .ws b{color:var(--text-primary)}
+.wells ul{list-style:none; margin:8px 0 0; padding:0}
+.wells li{font-size:.8rem; line-height:1.9; color:var(--text-secondary);
+  padding-left:14px; text-indent:-14px}
+.wells li::before{content:"・"}
+.wells .wsrc{margin-top:7px; font-size:.7rem; color:var(--text-muted)}
+
 /* 市民の声を集めるための呼びかけ */
 .voice{margin-top:14px; background:#eef1f4; border:1px solid #cdd6de;
   border-radius:12px; padding:13px 15px}
@@ -392,8 +404,9 @@ footer a{color:var(--accent)}
 
   <section class="card" id="secWater">
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
-    <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<br>混み具合や現地の運用は場所ごとに違います。<b>必要な分だけ</b>受け取り、次の方に残してください。</p>
+    <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<br>混み具合や現地の運用は場所ごとに違います。<b>必要な分だけ</b>受け取り、次の方に残してください。<br><span class="srcbadge" style="margin:4px 5px 0 0">⚠ 変更</span><b>三角地区での給水は8月7日で終了しました。</b>8月8日以降の予定はありません。</p>
     <div id="waterList"><p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p></div>
+    <div id="wellBox" class="hidden"></div>
   </section>
 
   <section class="card" id="secBath">
@@ -1400,6 +1413,26 @@ function renderSelfShelters(){
   });
 }
 
+/* 防災井戸（飲めないので、生活用水としての案内） */
+function renderWells(){
+  const box = document.getElementById("wellBox");
+  const w = DATA.wells;
+  box.textContent = "";
+  box.classList.toggle("hidden", !w);
+  if (!w) return;
+  const c = document.createElement("div"); c.className = "wells";
+  const t = document.createElement("div"); t.className = "wt"; t.textContent = "🪣 防災井戸も使えます";
+  const sdiv = document.createElement("div"); sdiv.className = "ws"; sdiv.innerHTML = w.note || "";
+  const ul = document.createElement("ul");
+  (w.places || []).forEach(pl => { const li = document.createElement("li"); li.textContent = pl; ul.appendChild(li); });
+  c.append(t, sdiv, ul);
+  if (w.source){
+    const src = document.createElement("div"); src.className = "wsrc"; src.textContent = w.source;
+    c.appendChild(src);
+  }
+  box.appendChild(c);
+}
+
 function renderAll(){
   document.getElementById("clearFilter").classList.toggle("hidden", !currentDistrict && !currentShelter);
   renderUpdated();
@@ -1409,6 +1442,7 @@ function renderAll(){
   renderHotel();
   renderRefresh();
   renderWater();
+  renderWells();
   renderBaths();
   renderToilets();
   renderHaves();
