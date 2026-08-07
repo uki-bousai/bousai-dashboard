@@ -173,6 +173,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   border:1px solid #8ccfae; border-radius:99px; padding:3px 9px}
 .selfcard .addr{margin-top:5px; font-size:.78rem; color:var(--text-secondary); line-height:1.8}
 .selfcard .addr a{color:#15794f; font-weight:700}
+.selfcard .hours{margin-top:8px; font-size:.82rem; font-weight:700; color:#15794f;
+  background:#fff; border:1px solid #8ccfae; border-radius:9px; padding:7px 12px; display:inline-block}
 .selfcard .badges{margin-top:9px; display:flex; flex-wrap:wrap; gap:5px}
 .selfcard .badges span{font-size:.72rem; font-weight:700; color:#15794f; background:#fff;
   border:1px solid #cfe3d8; border-radius:99px; padding:4px 10px}
@@ -1344,6 +1346,12 @@ function renderSelfShelters(){
       a.target = "_blank"; a.rel = "noopener"; a.textContent = "地図で開く";
       ad.appendChild(a);
       c.appendChild(ad);
+    }
+
+    if (sh.hours){
+      const h = document.createElement("div"); h.className = "hours";
+      h.textContent = "🕗 受付時間：" + sh.hours;
+      c.appendChild(h);
     }
 
     if ((sh.facilities || []).length){
