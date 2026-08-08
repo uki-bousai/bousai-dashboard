@@ -193,6 +193,27 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   border:1px solid #cfe3d8}
 .selfshots figcaption{margin-top:4px; font-size:.68rem; color:var(--text-muted)}
 
+/* 市外からの住まいの提供（募集期間が短いので、締切を最初に出す） */
+.hoffer{margin-top:12px; border:1.5px solid #d6cbe6; border-radius:14px; padding:14px 16px;
+  background:#f8f6fc}
+.hoffer:first-child{margin-top:2px}
+.hoffer .hh{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.hoffer .hh .pv{font-size:1rem; font-weight:700}
+.hoffer .hh .kd{font-size:.68rem; font-weight:700; color:#5b3f8a; background:#fff;
+  border:1px solid #d6cbe6; border-radius:99px; padding:3px 9px}
+.hoffer .dl{margin-top:9px; background:#fdf3f3; border:1.5px solid #e8b2b2; border-radius:10px;
+  padding:9px 13px; font-size:.86rem; font-weight:700; color:#c0392b; line-height:1.6}
+.hoffer .dl small{display:block; margin-top:2px; font-size:.74rem; font-weight:400; color:var(--text-secondary)}
+.hoffer .kv{margin-top:9px; font-size:.8rem; line-height:1.9; color:var(--text-secondary)}
+.hoffer .kv b{color:var(--text-primary)}
+.hoffer .kv .k{font-weight:700; color:#5b3f8a}
+.hoffer .eq{margin-top:9px}
+.hoffer .eq .et{font-size:.78rem; font-weight:700; color:#5b3f8a}
+.hoffer .eq ul{list-style:none; margin:5px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
+.hoffer .eq li{font-size:.74rem; font-weight:700; color:#5b3f8a; background:#fff;
+  border:1px solid #d6cbe6; border-radius:99px; padding:3px 10px}
+.hoffer .src2{margin-top:9px; font-size:.7rem; color:var(--text-muted)}
+
 /* 防災井戸（飲用不可） */
 .wells{margin-top:14px; background:#eef5fb; border:1px solid #b6d4e8; border-radius:12px;
   padding:13px 15px}
@@ -291,7 +312,7 @@ footer a{color:var(--accent)}
     <a href="#shelterCard">🏫 避難所</a>
     <a href="#mapCard">🗺 地図</a>
     <a href="#secHaves">📦 物資</a>
-    <a href="#hotelCard">🏨 宿泊</a>
+    <a href="#hotelCard">🏨 住まい</a>
     <a href="#refreshCard">🏞 南阿蘇</a>
     <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
@@ -388,6 +409,12 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#c8506e"></span>ホテル・旅館に避難できます（宿泊費は公費負担）</h2>
     <p class="desc" id="hotelDesc"></p>
     <div id="hotelBody"></div>
+  </section>
+
+  <section class="card hidden" id="housingCard">
+    <h2><span class="dot" style="background:#7a5aa8"></span>市外からの住まいの提供</h2>
+    <p class="desc">被災した住宅に住み続けられない方に向けて、<b>市外の自治体から公営住宅の提供</b>が届いています。ホテル等避難よりも長く住める一方、<b>申請期間が短く、戸数も限られています</b>。</p>
+    <div id="housingBody"></div>
   </section>
 
   <section class="card hidden" id="refreshCard">
@@ -1452,6 +1479,75 @@ function renderWells(){
   box.appendChild(c);
 }
 
+/* 市外の自治体からの住まいの提供（締切が短いので、期限を最初に見せる） */
+function renderHousing(){
+  const card = document.getElementById("housingCard");
+  const box = document.getElementById("housingBody");
+  const list = DATA.housing || [];
+  box.textContent = "";
+  card.classList.toggle("hidden", !list.length);
+  if (!list.length) return;
+
+  list.forEach(o => {
+    const c = document.createElement("div"); c.className = "hoffer";
+
+    const hh = document.createElement("div"); hh.className = "hh";
+    const pv = document.createElement("span"); pv.className = "pv"; pv.textContent = o.provider || "";
+    hh.appendChild(pv);
+    if (o.kind){ const k = document.createElement("span"); k.className = "kd"; k.textContent = o.kind; hh.appendChild(k); }
+    if (o.units){ const u = document.createElement("span"); u.className = "kd"; u.textContent = o.units; hh.appendChild(u); }
+    c.appendChild(hh);
+
+    if (o.period){
+      const dl = document.createElement("div"); dl.className = "dl";
+      const days = o.deadline ? Math.round((Date.parse(o.deadline + "T23:59:59+09:00") - Date.now()) / 86400000) : null;
+      dl.textContent = "⏳ 申請期間：" + o.period
+        + (days !== null && days >= 0 ? `（あと${days}日）` : "");
+      const sm = document.createElement("small");
+      sm.textContent = "戸数が限られています。ご検討中の方はお早めに。";
+      dl.appendChild(sm);
+      c.appendChild(dl);
+    }
+
+    const kv = document.createElement("div"); kv.className = "kv";
+    [["対象", o.target], ["期間", o.term], ["費用", o.cost],
+     ["優先", o.priority], ["申込方法", (o.how || []).join("・")]].forEach(([k, v]) => {
+      if (!v) return;
+      const line = document.createElement("div");
+      const ks = document.createElement("span"); ks.className = "k"; ks.textContent = k + "：";
+      line.append(ks, document.createTextNode(v));
+      kv.appendChild(line);
+    });
+    c.appendChild(kv);
+
+    if ((o.equipment || []).length){
+      const eq = document.createElement("div"); eq.className = "eq";
+      const et = document.createElement("div"); et.className = "et";
+      et.textContent = "🛋 備え付けられているもの";
+      const ul = document.createElement("ul");
+      o.equipment.forEach(e => { const li = document.createElement("li"); li.textContent = e; ul.appendChild(li); });
+      eq.append(et, ul); c.appendChild(eq);
+    }
+
+    if (o.tel){
+      const a = document.createElement("a"); a.className = "hbtn";
+      a.href = "tel:" + o.tel.replace(/-/g, "");
+      a.textContent = `📞 ${o.dept || ""} ${o.tel}`;
+      c.appendChild(a);
+    }
+    if (o.fax){
+      const f = document.createElement("p"); f.className = "desc"; f.style.margin = "6px 0 0";
+      f.textContent = "FAX：" + o.fax;
+      c.appendChild(f);
+    }
+    if (o.source){
+      const sc = document.createElement("div"); sc.className = "src2"; sc.textContent = o.source;
+      c.appendChild(sc);
+    }
+    box.appendChild(c);
+  });
+}
+
 function renderAll(){
   document.getElementById("clearFilter").classList.toggle("hidden", !currentDistrict && !currentShelter);
   renderUpdated();
@@ -1459,6 +1555,7 @@ function renderAll(){
   renderShelters();
   renderTrendCard();
   renderHotel();
+  renderHousing();
   renderRefresh();
   renderWater();
   renderWells();
