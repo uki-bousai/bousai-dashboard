@@ -780,10 +780,29 @@ function renderHotel(){
   cost.appendChild(cb);
   box.appendChild(cost);
 
+  if (h.period){
+    const el = document.createElement("div"); el.className = "hstep";
+    el.textContent = "📅 期間：" + h.period;
+    box.appendChild(el);
+  }
+
   (h.steps || []).forEach(s => {
     const el = document.createElement("div"); el.className = "hstep"; el.textContent = s;
     box.appendChild(el);
   });
+
+  /* 県のコールセンター：土日も出るので、まずここに電話するのが早い */
+  if (h.callTel){
+    const a = document.createElement("a"); a.className = "hbtn";
+    a.href = "tel:" + h.callTel.replace(/-/g, "");
+    a.textContent = `📞 ${h.callName || "コールセンター"} ${h.callTel}`;
+    box.appendChild(a);
+    if (h.callNote){
+      const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
+      n.textContent = h.callNote;
+      box.appendChild(n);
+    }
+  }
 
   if (h.notes && h.notes.length){
     const nb = document.createElement("div"); nb.className = "bring";
@@ -795,12 +814,12 @@ function renderHotel(){
   }
 
   if (h.formUrl){
-    const a = document.createElement("a"); a.className = "hbtn"; a.href = h.formUrl;
+    const a = document.createElement("a"); a.className = "hbtn line2"; a.href = h.formUrl;
     a.target = "_blank"; a.rel = "noopener"; a.textContent = "📝 申込フォームを開く";
     box.appendChild(a);
   } else if (h.pageUrl){
-    const a = document.createElement("a"); a.className = "hbtn"; a.href = h.pageUrl;
-    a.target = "_blank"; a.rel = "noopener"; a.textContent = "📝 申込はこちら（市の案内ページ）";
+    const a = document.createElement("a"); a.className = "hbtn line2"; a.href = h.pageUrl;
+    a.target = "_blank"; a.rel = "noopener"; a.textContent = "📝 案内文と申込フォーム（市の案内ページ）";
     box.appendChild(a);
   }
   if (h.tel){
