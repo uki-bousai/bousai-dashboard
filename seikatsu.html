@@ -256,6 +256,7 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .deliv .who.get .wt{color:#15794f}
 .deliv .who .ws{margin-top:4px; font-size:.8rem; line-height:1.8; color:var(--text-secondary)}
 .deliv .who .ws b{color:var(--text-primary)}
+.deliv .tel{white-space:nowrap; display:inline-block}
 .deliv .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
 
 /* 防災井戸（飲用不可） */
@@ -1576,8 +1577,21 @@ function renderDelivery(){
       c.appendChild(b);
     });
 
-    if (d.contactUrl){
+    /* 代表の方に直接つながるのがいちばん早いので、電話を先に出す */
+    if (d.tel){
       const a = document.createElement("a"); a.className = "hbtn";
+      a.href = "tel:" + d.tel.replace(/[-\s]/g, "");
+      const num = document.createElement("span"); num.className = "tel"; num.textContent = d.tel;
+      a.append(document.createTextNode(`📞 ${d.lead || "代表の方"}へ電話　`), num);
+      c.appendChild(a);
+      if (d.leadRole){
+        const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
+        n.textContent = d.leadRole + "です。ご本人の了解を得て掲載しています。";
+        c.appendChild(n);
+      }
+    }
+    if (d.contactUrl){
+      const a = document.createElement("a"); a.className = "hbtn line2";
       a.href = d.contactUrl; a.target = "_blank"; a.rel = "noopener";
       a.textContent = d.contactLabel || "✉️ InstagramのDMで連絡する";
       c.appendChild(a);
