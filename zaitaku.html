@@ -123,7 +123,7 @@ footer a{color:var(--accent)}
     <p class="desc">「件」は 世帯×品目 の数です（例: ある世帯の飲料水と食料が両方少なければ2件）。</p>
     <div class="tiles" id="summaryTiles"></div>
     <div class="legend">優先度は残り日数から自動判定: <span class="st st0">最優先（1日未満）</span><span class="st st1">優先（1〜2日）</span><span class="st st2">補充候補（2〜3日）</span><span class="st st3">当面対応不要（3日以上）</span></div>
-    <div class="legend">下の地区別の棒は物資の残り日数です。<b>棒が右端まで届いていれば目標（3日分）を確保</b>できています。「最少」はその地区でいちばん残りが少ない世帯です。</div>
+    <div class="legend">下の地区別一覧には、<b>補充が必要な物資（残り3日分未満の世帯があるもの）だけ</b>を表示しています。棒は残り日数で、<b>右端 = 目標（3日分）</b>。「最少」はその地区でいちばん残りが少ない世帯です。</div>
   </div>
 
   <div class="card" id="needCard" style="display:none">
@@ -213,8 +213,16 @@ function renderDistricts(){
     head.appendChild(el("h2", "", g.district));
     head.appendChild(el("span", "meta", `対象 ${g.households}世帯・${g.people}人`));
     card.appendChild(head);
-    g.itemList.sort((a, b) => a.worst - b.worst || a.minDays - b.minDays);
-    g.itemList.forEach(it => {
+    // 補充が必要な物資だけを表示（十分ある品目まで並べると、確認が難しい
+    // 在宅避難の実態以上に「足りている」ように見えてしまうため）
+    const lacking = g.itemList.filter(it => it.worst <= 2);
+    if (!lacking.length){
+      card.appendChild(el("div", "empty", "現在、補充が必要と判定された物資はありません。"));
+      box.appendChild(card);
+      return;
+    }
+    lacking.sort((a, b) => a.worst - b.worst || a.minDays - b.minDays);
+    lacking.forEach(it => {
       const item = el("div", "item");
       const top = el("div", "top");
       top.appendChild(el("span", "iname", it.rule.name));
