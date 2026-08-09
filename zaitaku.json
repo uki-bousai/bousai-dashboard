@@ -2,9 +2,6 @@
  "updatedAt": "",
  "settings": {
   "buffer_days": 3,
-  "critical_days": 1,
-  "priority_days": 2,
-  "warning_days": 3,
   "disaster_end_date": "",
   "water_outage_end_date": ""
  },
@@ -17,11 +14,22 @@
    "target": "all",
    "buffer_days": null,
    "is_active": true,
-   "assume_zero": true,
    "packs": [
-    { "label": "2Lペットボトル", "unit": "本", "factor": 2 },
-    { "label": "500mlペットボトル", "unit": "本", "factor": 0.5 },
-    { "label": "その他（L）", "unit": "L", "factor": 1 }
+    {
+     "label": "2Lペットボトル",
+     "unit": "本",
+     "factor": 2
+    },
+    {
+     "label": "500mlペットボトル",
+     "unit": "本",
+     "factor": 0.5
+    },
+    {
+     "label": "その他（L）",
+     "unit": "L",
+     "factor": 1
+    }
    ]
   },
   {
@@ -32,10 +40,17 @@
    "target": "all",
    "buffer_days": null,
    "is_active": true,
-   "assume_zero": true,
    "packs": [
-    { "label": "個", "unit": "個", "factor": 1 },
-    { "label": "3個パック", "unit": "パック", "factor": 3 }
+    {
+     "label": "個",
+     "unit": "個",
+     "factor": 1
+    },
+    {
+     "label": "3個パック",
+     "unit": "パック",
+     "factor": 3
+    }
    ]
   },
   {
@@ -47,7 +62,11 @@
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "個（カレー・丼の素など）", "unit": "個", "factor": 1 }
+    {
+     "label": "個（カレー・丼の素など）",
+     "unit": "個",
+     "factor": 1
+    }
    ]
   },
   {
@@ -59,8 +78,16 @@
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "500mlペットボトル", "unit": "本", "factor": 0.5 },
-    { "label": "2Lペットボトル", "unit": "本", "factor": 2 }
+    {
+     "label": "500mlペットボトル",
+     "unit": "本",
+     "factor": 0.5
+    },
+    {
+     "label": "2Lペットボトル",
+     "unit": "本",
+     "factor": 2
+    }
    ]
   },
   {
@@ -72,9 +99,21 @@
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "500mlペットボトル", "unit": "本", "factor": 0.5 },
-    { "label": "2Lペットボトル", "unit": "本", "factor": 2 },
-    { "label": "粉末（1L分）", "unit": "袋", "factor": 1 }
+    {
+     "label": "500mlペットボトル",
+     "unit": "本",
+     "factor": 0.5
+    },
+    {
+     "label": "2Lペットボトル",
+     "unit": "本",
+     "factor": 2
+    },
+    {
+     "label": "粉末（1L分）",
+     "unit": "袋",
+     "factor": 1
+    }
    ]
   },
   {
@@ -86,7 +125,11 @@
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "個・袋", "unit": "個", "factor": 1 }
+    {
+     "label": "個・袋",
+     "unit": "個",
+     "factor": 1
+    }
    ]
   },
   {
@@ -98,8 +141,16 @@
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "ロール", "unit": "ロール", "factor": 1 },
-    { "label": "12ロールパック", "unit": "パック", "factor": 12 }
+    {
+     "label": "ロール",
+     "unit": "ロール",
+     "factor": 1
+    },
+    {
+     "label": "12ロールパック",
+     "unit": "パック",
+     "factor": 12
+    }
    ]
   },
   {
@@ -111,8 +162,16 @@
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "枚", "unit": "枚", "factor": 1 },
-    { "label": "80枚パック", "unit": "パック", "factor": 80 }
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    },
+    {
+     "label": "80枚パック",
+     "unit": "パック",
+     "factor": 80
+    }
    ]
   },
   {
@@ -124,8 +183,16 @@
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "枚", "unit": "枚", "factor": 1 },
-    { "label": "30枚パック", "unit": "パック", "factor": 30 }
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    },
+    {
+     "label": "30枚パック",
+     "unit": "パック",
+     "factor": 30
+    }
    ]
   },
   {
@@ -138,7 +205,11 @@
    "is_active": true,
    "note_label": "サイズ",
    "packs": [
-    { "label": "枚", "unit": "枚", "factor": 1 }
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    }
    ]
   },
   {
@@ -151,7 +222,11 @@
    "is_active": true,
    "note_label": "サイズ",
    "packs": [
-    { "label": "枚", "unit": "枚", "factor": 1 }
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    }
    ]
   },
   {
@@ -164,11 +239,25 @@
    "is_active": true,
    "note_label": "銘柄・種類",
    "packs": [
-    { "label": "粉ミルク（g・出来上がり量に換算）", "unit": "g", "factor": 7.5 },
-    { "label": "液体ミルク（240ml缶・パック）", "unit": "本", "factor": 240 }
+    {
+     "label": "粉ミルク（g・出来上がり量に換算）",
+     "unit": "g",
+     "factor": 7.5
+    },
+    {
+     "label": "液体ミルク（240ml缶・パック）",
+     "unit": "本",
+     "factor": 240
+    }
    ]
   }
  ],
- "districts": ["三角町", "不知火町", "松橋町", "小川町", "豊野町"],
+ "districts": [
+  "三角町",
+  "不知火町",
+  "松橋町",
+  "小川町",
+  "豊野町"
+ ],
  "households": []
 }

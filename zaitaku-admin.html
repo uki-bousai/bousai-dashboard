@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>在宅避難者の状況入力 ─ 世帯人数と残量を入れるだけ</title>
+<title>在宅避難者の状況入力 ─ 人数と必要な物資を選ぶだけ</title>
 <style>
 :root{
   color-scheme: light;
@@ -53,31 +53,23 @@ input[type="number"]{text-align:right}
 .chip input:checked + span{border-color:var(--accent); color:var(--accent);
   background:color-mix(in srgb, var(--accent) 10%, transparent)}
 .chip input:focus-visible + span{outline:2px solid var(--accent); outline-offset:1px}
-.itembox{border:1px solid var(--grid); border-radius:10px; padding:10px 12px; margin-top:10px}
-.itemhead{display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap}
-.itemhead .iname{font-size:.9rem; font-weight:700}
-.itemhead .idays{font-size:.8rem; font-weight:700}
-.packrow{display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin-top:6px}
-.packrow .pk{flex:1; min-width:130px}
-.packrow .pk label{font-size:.7rem; font-weight:400}
-.packrow .pk input{padding:8px 10px; font-size:1rem}
-.st{display:inline-block; font-size:.72rem; font-weight:700; border-radius:99px; padding:2px 10px; border:1.5px solid; white-space:nowrap}
-.st0{color:#d03b3b; border-color:#d03b3b; background:rgba(208,59,59,.10)}
-.st1{color:#c05f00; border-color:#c05f00; background:rgba(224,138,31,.12)}
-.st2{color:#8a6d00; border-color:#caa419; background:rgba(250,178,25,.14)}
-.st3{color:var(--good-text); border-color:var(--good-text); background:rgba(12,163,12,.10)}
-@media (prefers-color-scheme: dark){
-  .st1{color:#f0a04f; border-color:#f0a04f}
-  .st2{color:#f5c542; border-color:#caa419}
-}
+.needgrid{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.needgrid button{font:inherit; font-size:.95rem; font-weight:700; cursor:pointer;
+  border:1.5px solid var(--border); border-radius:10px; padding:12px 14px;
+  background:var(--surface-1); color:var(--text-primary)}
+.needgrid button.sel{border-color:var(--accent); color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 12%, transparent)}
+.neednotes{margin-top:8px; display:grid; gap:8px; grid-template-columns:1fr 1fr}
+@media (max-width:520px){ .neednotes{grid-template-columns:1fr} }
+.neednotes label{font-size:.72rem; font-weight:400}
 .preview{background:var(--page); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:12px}
 .preview h3{font-size:.78rem; color:var(--text-secondary); margin-bottom:6px}
 .preview .pline{display:flex; justify-content:space-between; gap:8px; align-items:baseline;
-  padding:6px 0; border-bottom:1px solid var(--grid); flex-wrap:wrap; font-size:.82rem}
+  padding:6px 0; border-bottom:1px solid var(--grid); flex-wrap:wrap; font-size:.84rem}
 .preview .pline:last-child{border-bottom:none}
 .preview .pname{font-weight:700; min-width:8em}
-.preview .pdays{font-weight:700}
-.preview .pref{color:var(--text-secondary); font-size:.76rem}
+.preview .pqty{font-weight:800}
+.preview .pref{color:var(--text-secondary); font-size:.74rem}
 button{font:inherit; font-size:.85rem; font-weight:700; cursor:pointer; border:1px solid var(--border);
   border-radius:10px; padding:11px 18px; background:var(--surface-1); color:var(--text-primary)}
 button:hover{background:var(--page)}
@@ -99,7 +91,8 @@ thead th{color:var(--text-muted); font-size:.68rem; font-weight:700; text-align:
 tbody td{padding:8px; border-bottom:1px solid var(--grid); vertical-align:top}
 tbody tr:last-child td{border-bottom:none}
 .hhchips{display:flex; gap:4px; flex-wrap:wrap}
-.hhchips .st{font-size:.66rem; padding:1px 8px}
+.tag{display:inline-block; font-size:.66rem; font-weight:700; color:var(--text-secondary);
+  border:1px solid var(--border); border-radius:99px; padding:1px 8px; white-space:nowrap}
 td input{font:inherit; font-size:.8rem; color:var(--text-primary); background:transparent;
   border:1px solid transparent; border-radius:7px; padding:6px 8px; width:100%}
 td input:hover{border-color:var(--border)}
@@ -130,7 +123,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 
 <header>
   <h1>在宅避難者の状況入力</h1>
-  <span class="sub">世帯人数と残量を入れるだけ。「あと何日分か」「補充量」は自動計算 ─ <a href="zaitaku.html">公開ページ（地区別集計）</a></span>
+  <span class="sub">人数と必要な物資を選ぶだけ。数量は自動計算 ─ <a href="zaitaku.html">公開ページ（地区別集計）</a></span>
 </header>
 
 <div class="container">
@@ -138,8 +131,8 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
   <!-- ===================== 世帯の登録・更新 ===================== -->
   <div class="card" id="formCard">
     <h2 id="formTitle">世帯の登録</h2>
-    <p class="desc">在宅避難している世帯の<b>人数</b>と<b>いまある物資の残量</b>だけ入力してください。
-      「足りているか」「何個必要か」は入力不要です。アプリが自動で計算します。</p>
+    <p class="desc">在宅避難している世帯の<b>人数</b>と、<b>必要な物資</b>をタップで選んでください。
+      在庫を数える必要はありません。「何個必要か」はアプリが世帯人数から自動計算します。</p>
 
     <div class="warnbox">このデータは<b>インターネットに公開</b>されます。<b>氏名・住所・電話番号・病名など、個人がわかる情報は絶対に書かないでください</b>。世帯の場所は「地区」までにしてください。</div>
 
@@ -162,7 +155,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       <div class="field">
         <label for="fLabel">世帯の呼び名（任意）</label>
         <input type="text" id="fLabel" placeholder="例: 松橋A-3">
-        <div class="hint">個人名は使わず、あなたの控えと対応づけられる記号にしてください。次回の残量更新のときに探しやすくなります。</div>
+        <div class="hint">個人名は使わず、あなたの控えと対応づけられる記号にしてください。次回の更新のときに探しやすくなります。</div>
       </div>
       <div class="field">
         <label for="fSize">世帯人数 <span style="color:var(--status-critical)">必須</span></label>
@@ -171,7 +164,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
     </div>
 
     <details class="adv field">
-      <summary>内訳を入力する（任意 ─ 乳幼児・高齢者がいる世帯はおむつ・ミルクが正しく計算されます）</summary>
+      <summary>内訳を入力する（任意 ─ 乳幼児・高齢者がいる世帯はおむつ・ミルクなどの量が正しく計算されます）</summary>
       <div class="cols4" style="margin-top:8px">
         <div><label for="fAdults">大人</label><input type="number" id="fAdults" min="0" step="1" inputmode="numeric"></div>
         <div><label for="fChildren">子ども</label><input type="number" id="fChildren" min="0" step="1" inputmode="numeric"></div>
@@ -181,9 +174,10 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
     </details>
 
     <div class="field">
-      <label>いまある物資の残量</label>
-      <div class="hint">確認できたものだけで構いません。未入力の品目は「未確認」として計算されません（飲料水とパックご飯だけは、未入力の場合「なし」として扱います）。</div>
-      <div id="invBox"></div>
+      <label>必要な物資（タップで選択・もう一度タップで解除）</label>
+      <div class="hint">この世帯に必要なものを選んでください。必要な数量は世帯人数から自動計算されます。</div>
+      <div class="needgrid" id="needChips"></div>
+      <div class="neednotes" id="needNotes"></div>
     </div>
 
     <div class="field">
@@ -203,7 +197,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
     </div>
 
     <div class="preview" id="previewBox" style="display:none">
-      <h3>自動計算の結果（この世帯）</h3>
+      <h3>自動計算の結果（この世帯・3日分）</h3>
       <div id="previewLines"></div>
     </div>
 
@@ -211,13 +205,13 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       <button class="primary" id="addBtn">この世帯を登録する</button>
       <button id="cancelEditBtn" style="display:none">編集をやめる</button>
     </div>
-    <div class="notice">登録・更新はまず画面上のリストに入ります。最後に一番下の<b>「保存して公開」</b>を押すと反映されます。</div>
+    <div class="notice">登録・更新はまず画面上のリストに入ります。最後に一番下の<b>「保存して公開」</b>を押すと反映されます。物資が届いたら「編集」で該当の品目を解除してください。</div>
   </div>
 
   <!-- ===================== 登録済み世帯一覧 ===================== -->
   <div class="card">
     <h2>登録済みの世帯</h2>
-    <p class="desc">残量が変わったら「編集」で開いて数字を直し、もう一度登録してください。日数は自動で再計算されます。</p>
+    <p class="desc">状況が変わったら「編集」で開いて直し、もう一度登録してください。物資が届いた世帯は該当品目のタップを外せば一覧から消えます。</p>
     <div class="tokenrow" style="margin-bottom:8px">
       <div>
         <label for="filterDistrict">地区でしぼり込み</label><br>
@@ -227,7 +221,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>地区</th><th>呼び名</th><th>人数</th><th>受取</th><th>残り日数（自動計算）</th><th>更新日時</th><th></th><th></th></tr></thead>
+        <thead><tr><th>地区</th><th>呼び名</th><th>人数</th><th>受取</th><th>必要な物資</th><th>更新日時</th><th></th><th></th></tr></thead>
         <tbody id="hhBody"></tbody>
       </table>
     </div>
@@ -236,8 +230,8 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
   <!-- ===================== 計算基準（運営スタッフ用） ===================== -->
   <div class="card">
     <details class="adv">
-      <summary>計算基準・しきい値の設定（運営スタッフ用）</summary>
-      <p class="desc" style="margin-top:8px">「1人1日あたりの必要量」「常に確保する日数（目標）」「優先度のしきい値」をここで変更できます。変更するとすべての世帯・地区の計算に反映されます。</p>
+      <summary>計算基準の設定（運営スタッフ用）</summary>
+      <p class="desc" style="margin-top:8px">「1人1日あたりの必要量」と「何日分を届けるか（目標日数）」をここで変更できます。変更するとすべての世帯・地区の必要量に反映されます。</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>使用</th><th>品目</th><th style="text-align:right">1人1日</th><th>単位</th><th>対象</th><th style="text-align:right">目標日数</th></tr></thead>
@@ -246,15 +240,10 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       </div>
       <div class="cols4" style="margin-top:12px">
         <div><label for="sBuffer">共通の目標日数</label><input type="number" id="sBuffer" min="1" step="0.5"></div>
-        <div><label for="sCritical">最優先（未満）</label><input type="number" id="sCritical" min="0.1" step="0.5"></div>
-        <div><label for="sPriority">優先（未満）</label><input type="number" id="sPriority" min="0.1" step="0.5"></div>
-        <div><label for="sWarning">補充候補（未満）</label><input type="number" id="sWarning" min="0.1" step="0.5"></div>
+        <div><label for="sDisasterEnd">災害対応の終了予定日</label><input type="date" id="sDisasterEnd"></div>
+        <div><label for="sWaterEnd">断水の解消予定日</label><input type="date" id="sWaterEnd"></div>
       </div>
-      <div class="cols" style="margin-top:10px">
-        <div><label for="sDisasterEnd">災害対応の終了予定日（任意）</label><input type="date" id="sDisasterEnd"></div>
-        <div><label for="sWaterEnd">断水の解消予定日（任意）</label><input type="date" id="sWaterEnd"></div>
-      </div>
-      <div class="notice">必要量は「予定日までの全量」ではなく<b>「目標日数分（初期値3日分）を持つのに必要な量」</b>で表示します。残りが減ってきた世帯から順に支援対象に入る運用です。</div>
+      <div class="notice">必要量は「予定日までの全量」ではなく<b>「目標日数分（初期値3日分）」</b>で計算します。届いたら品目を解除し、また必要になったら選び直す運用です。</div>
     </details>
   </div>
 
@@ -318,9 +307,10 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 const WORKER_URL = "https://bousai-relay.a-sawada813.workers.dev";
 const DATA_PATH = "zaitaku.json";
 
-let data = null;       // zaitaku.json の内容
+let data = null;        // zaitaku.json の内容
 let dirty = false;
-let editId = null;     // 編集中の世帯ID（null = 新規登録）
+let editId = null;      // 編集中の世帯ID（null = 新規登録）
+let formNeeds = {};     // フォームで選択中の必要物資 { 品目id: {note} }
 
 const $ = id => document.getElementById(id);
 const status = $("status");
@@ -335,6 +325,7 @@ function jstStamp(){
 }
 function newId(){ return "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function activeRules(){ return (data.rules || []).filter(r => r.is_active !== false); }
+function ruleName(id){ const r = (data.rules || []).find(x => x.id === id); return r ? r.name : id; }
 
 /* ---------- 認証（避難所ダッシュボードと同じ保存キーを共用） ---------- */
 function currentAuth(){ return { name: $("adminName").value.trim(), password: $("adminPass").value }; }
@@ -358,54 +349,39 @@ async function workerPost(path, payload){
   return { res, body };
 }
 
-/* ---------- 残量入力欄（品目マスターから生成） ---------- */
-function buildInventoryInputs(){
-  const box = $("invBox");
-  box.textContent = "";
+/* ---------- 必要な物資（タップ選択） ---------- */
+function renderNeedChips(){
+  const grid = $("needChips");
+  grid.textContent = "";
   activeRules().forEach(rule => {
-    const div = document.createElement("div");
-    div.className = "itembox";
-    div.dataset.rule = rule.id;
-    const head = document.createElement("div");
-    head.className = "itemhead";
-    const nm = document.createElement("span");
-    nm.className = "iname";
-    nm.textContent = rule.name;
-    const tgt = document.createElement("span");
-    tgt.style.cssText = "font-size:.68rem; color:var(--text-muted)";
-    tgt.textContent = rule.target && rule.target !== "all" ? `対象: ${ZCALC.targetLabel(rule)}` : "";
-    const days = document.createElement("span");
-    days.className = "idays";
-    days.dataset.daysFor = rule.id;
-    head.append(nm, tgt, days);
-    div.appendChild(head);
-    const row = document.createElement("div");
-    row.className = "packrow";
-    (rule.packs || []).forEach(p => {
-      const pk = document.createElement("div");
-      pk.className = "pk";
-      const lb = document.createElement("label");
-      lb.textContent = p.label + (p.unit ? `（${p.unit}）` : "");
-      const inp = document.createElement("input");
-      inp.type = "number"; inp.min = "0"; inp.inputMode = "decimal";
-      inp.dataset.pack = p.label;
-      inp.addEventListener("input", updatePreview);
-      pk.append(lb, inp);
-      row.appendChild(pk);
+    const b = document.createElement("button");
+    b.type = "button";
+    const sel = !!formNeeds[rule.id];
+    b.className = sel ? "sel" : "";
+    b.textContent = (sel ? "✓ " : "") + rule.name;
+    b.setAttribute("aria-pressed", sel);
+    b.addEventListener("click", () => {
+      if (formNeeds[rule.id]) delete formNeeds[rule.id];
+      else formNeeds[rule.id] = { note: "" };
+      renderNeedChips();
+      updatePreview();
     });
-    if (rule.note_label){
-      const pk = document.createElement("div");
-      pk.className = "pk";
-      const lb = document.createElement("label");
-      lb.textContent = rule.note_label + "（任意）";
-      const inp = document.createElement("input");
-      inp.type = "text"; inp.dataset.noteFor = rule.id;
-      inp.placeholder = rule.id.startsWith("diaper") ? "例: Mサイズ" : "";
-      pk.append(lb, inp);
-      row.appendChild(pk);
-    }
-    div.appendChild(row);
-    box.appendChild(div);
+    grid.appendChild(b);
+  });
+  // サイズ・銘柄などのメモ欄（選択された品目のみ）
+  const notes = $("needNotes");
+  notes.textContent = "";
+  activeRules().filter(r => r.note_label && formNeeds[r.id]).forEach(rule => {
+    const box = document.createElement("div");
+    const lb = document.createElement("label");
+    lb.textContent = `${rule.name} の${rule.note_label}（任意）`;
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.value = formNeeds[rule.id].note || "";
+    inp.placeholder = rule.id.startsWith("diaper") ? "例: Mサイズ" : "";
+    inp.addEventListener("input", () => { formNeeds[rule.id].note = inp.value.trim(); });
+    box.append(lb, inp);
+    notes.appendChild(box);
   });
 }
 
@@ -417,7 +393,9 @@ function intOrNull(id){
   return Number.isFinite(n) ? n : null;
 }
 function formHousehold(){
-  const hh = {
+  const needs = {};
+  Object.keys(formNeeds).forEach(k => { needs[k] = { note: formNeeds[k].note || "" }; });
+  return {
     id: editId || newId(),
     district: $("fDistrict").value.trim(),
     label: $("fLabel").value.trim(),
@@ -429,20 +407,8 @@ function formHousehold(){
     elderly: intOrNull("fElderly"),
     pickup: (document.querySelector('input[name="fPickup"]:checked') || {}).value || "不明",
     notes: $("fNotes").value.trim(),
-    inventory: {},
+    needs,
   };
-  document.querySelectorAll("#invBox .itembox").forEach(div => {
-    const packs = {};
-    let has = false;
-    div.querySelectorAll("input[data-pack]").forEach(inp => {
-      const n = Number(inp.value);
-      if (inp.value.trim() !== "" && Number.isFinite(n) && n >= 0){ packs[inp.dataset.pack] = n; has = true; }
-    });
-    const noteInp = div.querySelector("input[data-note-for]");
-    const note = noteInp ? noteInp.value.trim() : "";
-    if (has || note) hh.inventory[div.dataset.rule] = { packs, note };
-  });
-  return hh;
 }
 function fillForm(hh){
   $("fRole").value = hh.reporter_role || "区長";
@@ -456,15 +422,9 @@ function fillForm(hh){
   const r = document.querySelector(`input[name="fPickup"][value="${hh.pickup || "不明"}"]`);
   (r || document.querySelector('input[name="fPickup"][value="不明"]')).checked = true;
   $("fNotes").value = hh.notes || "";
-  document.querySelectorAll("#invBox .itembox").forEach(div => {
-    const entry = (hh.inventory || {})[div.dataset.rule] || {};
-    div.querySelectorAll("input[data-pack]").forEach(inp => {
-      const v = entry.packs ? entry.packs[inp.dataset.pack] : undefined;
-      inp.value = (v === undefined || v === null) ? "" : v;
-    });
-    const noteInp = div.querySelector("input[data-note-for]");
-    if (noteInp) noteInp.value = entry.note || "";
-  });
+  formNeeds = {};
+  Object.keys(hh.needs || {}).forEach(k => { formNeeds[k] = { note: (hh.needs[k] && hh.needs[k].note) || "" }; });
+  renderNeedChips();
   updatePreview();
 }
 function resetForm(){
@@ -477,34 +437,23 @@ function resetForm(){
 }
 
 /* ---------- 自動計算プレビュー ---------- */
-function statusChip(level){
-  const s = document.createElement("span");
-  s.className = "st st" + level;
-  s.textContent = ZCALC.STATUS[level].label;
-  return s;
-}
 function updatePreview(){
   if (!data) return;
   const hh = formHousehold();
   const lines = $("previewLines");
   lines.textContent = "";
-  document.querySelectorAll("[data-days-for]").forEach(el => { el.textContent = ""; });
   if (!hh.size){ $("previewBox").style.display = "none"; return; }
   const results = ZCALC.calcHousehold(hh, data.rules, data.settings);
   results.forEach(c => {
-    const badge = document.querySelector(`[data-days-for="${c.rule.id}"]`);
-    if (badge){
-      badge.textContent = `あと ${ZCALC.fmtDays(c.days)}`;
-      badge.style.color = c.level <= 1 ? "var(--status-critical)" : c.level === 2 ? "#8a6d00" : "var(--good-text)";
-    }
     const line = document.createElement("div");
     line.className = "pline";
     const nm = document.createElement("span"); nm.className = "pname"; nm.textContent = c.rule.name;
-    const dy = document.createElement("span"); dy.className = "pdays";
-    dy.textContent = `残量 ${ZCALC.fmtQty(c.qty, c.rule.unit)} ／ 1日 ${ZCALC.fmtQty(c.daily, c.rule.unit)} ／ あと ${ZCALC.fmtDays(c.days)}`;
+    const q = document.createElement("span"); q.className = "pqty";
+    q.textContent = ZCALC.fmtQtyWithPack(c.rule, c.need);
     const rf = document.createElement("span"); rf.className = "pref";
-    rf.textContent = `${c.buffer}日分に必要な量 ${ZCALC.fmtQtyWithPack(c.rule, c.need)}`;
-    line.append(nm, dy, statusChip(c.level), rf);
+    rf.textContent = `1日 ${ZCALC.fmtQty(c.daily, c.rule.unit)} × ${c.buffer}日分`
+      + (c.rule.target && c.rule.target !== "all" ? `（${ZCALC.targetLabel(c.rule)}${c.targetCount}人）` : "");
+    line.append(nm, q, rf);
     lines.appendChild(line);
   });
   $("previewBox").style.display = results.length ? "" : "none";
@@ -587,10 +536,17 @@ function renderHouseholds(){
     const chips = document.createElement("td");
     const wrap = document.createElement("div");
     wrap.className = "hhchips";
-    ZCALC.calcHousehold(hh, data.rules, data.settings).forEach(c => {
+    const ids = Object.keys(hh.needs || {});
+    if (!ids.length){
       const s = document.createElement("span");
-      s.className = "st st" + c.level;
-      s.textContent = `${c.rule.name} ${ZCALC.fmtDays(c.days)}`;
+      s.className = "tag";
+      s.textContent = "なし";
+      wrap.appendChild(s);
+    } else ids.forEach(id => {
+      const s = document.createElement("span");
+      s.className = "tag";
+      const note = hh.needs[id] && hh.needs[id].note;
+      s.textContent = ruleName(id) + (note ? `（${note}）` : "");
       wrap.appendChild(s);
     });
     chips.appendChild(wrap);
@@ -659,31 +615,24 @@ function renderRules(){
 }
 function onRulesChanged(){
   markDirty();
-  buildInventoryInputs();
-  if (editId){
-    const hh = (data.households || []).find(x => x.id === editId);
-    if (hh) fillForm(hh);
-  } else updatePreview();
+  renderNeedChips();
+  updatePreview();
   renderHouseholds();
 }
 function renderSettings(){
   const s = data.settings || {};
   $("sBuffer").value = ZCALC.setting(s, "buffer_days");
-  $("sCritical").value = ZCALC.setting(s, "critical_days");
-  $("sPriority").value = ZCALC.setting(s, "priority_days");
-  $("sWarning").value = ZCALC.setting(s, "warning_days");
   $("sDisasterEnd").value = s.disaster_end_date || "";
   $("sWaterEnd").value = s.water_outage_end_date || "";
 }
-[["sBuffer","buffer_days"],["sCritical","critical_days"],["sPriority","priority_days"],["sWarning","warning_days"]]
-  .forEach(([id, key]) => $(id).addEventListener("change", () => {
-    const n = Number($(id).value);
-    if (Number.isFinite(n) && n > 0){
-      data.settings = data.settings || {};
-      data.settings[key] = n;
-      markDirty(); updatePreview(); renderHouseholds();
-    }
-  }));
+$("sBuffer").addEventListener("change", () => {
+  const n = Number($("sBuffer").value);
+  if (Number.isFinite(n) && n > 0){
+    data.settings = data.settings || {};
+    data.settings.buffer_days = n;
+    markDirty(); updatePreview(); renderHouseholds();
+  }
+});
 [["sDisasterEnd","disaster_end_date"],["sWaterEnd","water_outage_end_date"]]
   .forEach(([id, key]) => $(id).addEventListener("change", () => {
     data.settings = data.settings || {};
@@ -694,7 +643,6 @@ function renderSettings(){
 /* ---------- 読み込み・保存 ---------- */
 function renderAll(){
   buildDistrictOptions();
-  buildInventoryInputs();
   renderRules();
   renderSettings();
   renderHouseholds();
