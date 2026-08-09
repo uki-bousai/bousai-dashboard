@@ -75,20 +75,8 @@ header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:2px}
 .item:last-child{border-bottom:none; padding-bottom:2px}
 .item .top{display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap}
 .item .iname{font-size:1rem; font-weight:700}
-.meter{display:flex; align-items:center; gap:8px; margin-top:6px}
-.meter .mlb{font-size:.72rem; color:var(--text-secondary); width:2.6em; flex:none}
-.meter .track{flex:1; max-width:340px; height:12px; border-radius:6px; background:var(--grid); overflow:hidden}
-.meter .fill{height:100%; border-radius:6px; min-width:2px}
-/* 棒の色は3段階（赤=要対応 / 黄=補充候補 / 緑=確保済み）。
-   最優先と優先の区別はチップの文字と棒の長さが担う（色覚多様性検証済み） */
-.meter .fill.f0, .meter .fill.f1{background:#c73535}
-.meter .fill.f2{background:#e6a700}
-.meter .fill.f3{background:#2f9e44}
-@media (prefers-color-scheme: dark){
-  .meter .fill.f2{background:#b98a10}
-  .meter .fill.f3{background:#1f9d8a}
-}
-.meter .mval{font-size:.86rem; font-weight:800; flex:none; min-width:4.5em}
+.item .days{font-size:1rem; margin-top:2px}
+.item .days b{font-size:1.2rem; font-weight:800}
 .item .need{font-size:.9rem; margin-top:2px}
 .item .need b{font-weight:800}
 .item .meta{font-size:.72rem; color:var(--text-muted); margin-top:2px}
@@ -123,7 +111,7 @@ footer a{color:var(--accent)}
     <p class="desc">「件」は 世帯×品目 の数です（例: ある世帯の飲料水と食料が両方少なければ2件）。</p>
     <div class="tiles" id="summaryTiles"></div>
     <div class="legend">優先度は残り日数から自動判定: <span class="st st0">最優先（1日未満）</span><span class="st st1">優先（1〜2日）</span><span class="st st2">補充候補（2〜3日）</span><span class="st st3">当面対応不要（3日以上）</span></div>
-    <div class="legend">下の地区別一覧には、<b>補充が必要な物資（残り3日分未満の世帯があるもの）だけ</b>を表示しています。棒は残り日数で、<b>右端 = 目標（3日分）</b>。「最少」はその地区でいちばん残りが少ない世帯です。</div>
+    <div class="legend">下の地区別一覧には、<b>不足している物資（残り3日分未満の世帯があるもの）だけ</b>を表示しています。</div>
   </div>
 
   <div class="card" id="needCard" style="display:none">
@@ -230,21 +218,11 @@ function renderDistricts(){
       top.appendChild(el("span", "iname", it.rule.name));
       top.appendChild(statusChip(it.worst));
       item.appendChild(top);
-      // 残り日数のメーター（棒の右端 = 目標日数）
-      const meter = (label, days) => {
-        const lv = ZCALC.statusLevel(days, DATA.settings);
-        const row = el("div", "meter");
-        row.setAttribute("role", "img");
-        row.setAttribute("aria-label", `${it.rule.name} ${label} あと${ZCALC.fmtDays(days)}（目標${it.buffer}日分）`);
-        const track = el("div", "track");
-        const fill = el("div", "fill f" + lv);
-        fill.style.width = Math.min(100, Math.max(days > 0 ? 2 : 0, days / it.buffer * 100)) + "%";
-        track.appendChild(fill);
-        row.append(el("span", "mlb", label), track, el("span", "mval", ZCALC.fmtDays(days)));
-        return row;
-      };
-      item.appendChild(meter("最少", it.minDays));
-      if (it.households > 1) item.appendChild(meter("平均", it.avgDays));
+      const days = el("div", "days");
+      days.append("あと ");
+      days.appendChild(el("b", "", ZCALC.fmtDays(it.minDays)));
+      if (it.households > 1) days.append(`（いちばん少ない世帯）／ 平均 ${ZCALC.fmtDays(it.avgDays)}`);
+      item.appendChild(days);
       const need = el("div", "need");
       need.append(`${it.buffer}日分に必要な量: `);
       need.appendChild(el("b", "", ZCALC.fmtQtyWithPack(it.rule, it.needShort)));
