@@ -53,6 +53,9 @@ header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:2px}
 .tile .lb{font-size:.72rem; color:var(--text-secondary); margin-top:2px}
 .dhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
 .dhead .meta{font-size:.78rem; color:var(--text-secondary)}
+.site{font-size:.95rem; font-weight:700; margin-top:4px; padding:8px 12px;
+  background:var(--page); border:1px solid var(--border); border-radius:8px}
+.site.tbd{font-weight:400; color:var(--text-secondary)}
 .item{padding:12px 0; border-bottom:1px solid var(--grid)}
 .item:last-child{border-bottom:none; padding-bottom:2px}
 .item .iname{font-size:1.05rem; font-weight:700}
@@ -94,7 +97,7 @@ footer a{color:var(--accent)}
 
   <div class="card" id="needCard" style="display:none">
     <h2>必要な物資（全体）</h2>
-    <p class="desc">必要としている世帯が<span id="bufferDaysLabel">3</span>日分を持つのに必要な量の合計です。</p>
+    <p class="desc">必要としている世帯が<span id="bufferDaysLabel">3</span>日分を持つのに必要な量の合計です。お届け先は下の<b>地区ごとの集積場所</b>です。</p>
     <div id="needList"></div>
   </div>
 
@@ -125,6 +128,12 @@ function el(tag, cls, text){
   if (cls) e.className = cls;
   if (text !== undefined) e.textContent = text;
   return e;
+}
+
+function siteOf(districtName){
+  const d = (DATA.districts || []).find(x =>
+    (typeof x === "object" ? x.name : x) === districtName);
+  return d && typeof d === "object" ? (d.site || "") : "";
 }
 
 function fmtDate(iso){
@@ -173,6 +182,11 @@ function renderDistricts(){
     head.appendChild(el("h2", "", g.district));
     head.appendChild(el("span", "meta", `対象 ${g.households}世帯・${g.people}人`));
     card.appendChild(head);
+    // 提供者が知りたいのは「どこへ届けるか」。地区ごとの集積場所を目立たせる
+    const site = siteOf(g.district);
+    card.appendChild(site
+      ? el("div", "site", `📍 集積場所: ${site}`)
+      : el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）"));
     if (!g.itemList.length){
       card.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
       box.appendChild(card);

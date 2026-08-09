@@ -145,9 +145,10 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
         </select>
       </div>
       <div class="field">
-        <label for="fDistrict">地区名 <span style="color:var(--status-critical)">必須</span></label>
-        <input type="text" id="fDistrict" list="districtList" placeholder="例: 松橋町">
+        <label for="fDistrict">地区名（行政区） <span style="color:var(--status-critical)">必須</span></label>
+        <input type="text" id="fDistrict" list="districtList" placeholder="例: 松橋町 豊福">
         <datalist id="districtList"></datalist>
+        <div class="hint">町名で一つにまとめず、<b>公民館ごとの行政区単位</b>で入力してください。物資の受け渡しは地区の集積場所（公民館など）で行います。</div>
       </div>
     </div>
 
@@ -225,6 +226,19 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
         <tbody id="hhBody"></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- ===================== 地区と集積場所 ===================== -->
+  <div class="card">
+    <h2>地区と集積場所（公民館など）</h2>
+    <p class="desc">支援物資を集める場所を地区ごとに設定します。<b>公開ページに表示され、提供者はこの場所へ届けます</b>。世帯登録で新しい地区名を入力すると、ここに自動で追加されます。</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>地区名（行政区）</th><th>集積場所（公民館など）</th><th></th></tr></thead>
+        <tbody id="districtBody"></tbody>
+      </table>
+    </div>
+    <button class="small" id="addDistrict" style="margin-top:10px">＋ 地区を追加</button>
   </div>
 
   <!-- ===================== 計算基準（運営スタッフ用） ===================== -->
@@ -472,11 +486,7 @@ $("addBtn").addEventListener("click", () => {
   const i = data.households.findIndex(x => x.id === hh.id);
   if (i >= 0){ hh.createdAt = data.households[i].createdAt || stamp; data.households[i] = hh; }
   else { hh.createdAt = stamp; data.households.push(hh); }
-  if (hh.district && !(data.districts || []).includes(hh.district)){
-    data.districts = data.districts || [];
-    data.districts.push(hh.district);
-    buildDistrictOptions();
-  }
+  ensureDistrict(hh.district);
   markDirty();
   renderHouseholds();
   const wasEdit = !!editId;
@@ -496,9 +506,77 @@ function startEdit(hh){
   $("formCard").scrollIntoView({ behavior: "smooth" });
 }
 
+/* ---------- 地区と集積場所 ---------- */
+/* districts は [{name, site}] 形式（旧データの文字列配列も読めるよう変換する） */
+function normalizeDistricts(){
+  data.districts = (data.districts || [])
+    .map(d => typeof d === "string" ? { name: d, site: "" } : d)
+    .filter(d => d && typeof d.name === "string");
+}
+function ensureDistrict(name){
+  if (!name) return;
+  if (!data.districts.some(d => d.name === name)){
+    data.districts.push({ name, site: "" });
+    renderDistrictTable();
+    buildDistrictOptions();
+  }
+}
+function renderDistrictTable(){
+  const tbody = $("districtBody");
+  tbody.textContent = "";
+  if (!data.districts.length){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.style.cssText = "color:var(--text-muted); font-size:.76rem; padding:14px 8px";
+    td.textContent = "まだ地区がありません。「＋地区を追加」か、世帯登録で地区名を入力すると追加されます。";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+  data.districts.forEach(d => {
+    const tr = document.createElement("tr");
+    const nameTd = document.createElement("td");
+    const ni = document.createElement("input");
+    ni.type = "text"; ni.value = d.name; ni.placeholder = "例: 松橋町 豊福";
+    ni.addEventListener("change", () => {
+      const old = d.name;
+      d.name = ni.value.trim();
+      // 地区名を直したら、その地区の世帯にも反映する
+      (data.households || []).forEach(h => { if (h.district === old) h.district = d.name; });
+      markDirty(); buildDistrictOptions(); renderHouseholds();
+    });
+    nameTd.appendChild(ni);
+    const siteTd = document.createElement("td");
+    const si = document.createElement("input");
+    si.type = "text"; si.value = d.site || ""; si.placeholder = "例: 豊福公民館";
+    si.addEventListener("change", () => { d.site = si.value.trim(); markDirty(); });
+    siteTd.appendChild(si);
+    const delTd = document.createElement("td");
+    delTd.style.whiteSpace = "nowrap";
+    const db = document.createElement("button");
+    db.className = "del"; db.type = "button"; db.textContent = "✕";
+    db.addEventListener("click", () => {
+      const used = (data.households || []).filter(h => h.district === d.name).length;
+      if (used){ setStatus(`「${d.name}」には${used}世帯が登録されているため削除できません`, "err"); return; }
+      if (!confirm(`地区「${d.name}」を削除しますか？`)) return;
+      data.districts = data.districts.filter(x => x !== d);
+      markDirty(); renderDistrictTable(); buildDistrictOptions();
+    });
+    delTd.appendChild(db);
+    tr.append(nameTd, siteTd, delTd);
+    tbody.appendChild(tr);
+  });
+}
+$("addDistrict").addEventListener("click", () => {
+  data.districts.push({ name: "", site: "" });
+  markDirty();
+  renderDistrictTable();
+});
+
 /* ---------- 一覧 ---------- */
 function buildDistrictOptions(){
-  const list = [...new Set([...(data.districts || []), ...(data.households || []).map(h => h.district)])]
+  const list = [...new Set([...(data.districts || []).map(d => d.name), ...(data.households || []).map(h => h.district)])]
     .filter(Boolean).sort((a, b) => a.localeCompare(b, "ja"));
   const dl = $("districtList");
   dl.textContent = "";
@@ -642,6 +720,8 @@ $("sBuffer").addEventListener("change", () => {
 
 /* ---------- 読み込み・保存 ---------- */
 function renderAll(){
+  normalizeDistricts();
+  renderDistrictTable();
   buildDistrictOptions();
   renderRules();
   renderSettings();
@@ -672,7 +752,7 @@ function collect(){
     updatedAt: jstStamp() + " 更新",
     settings: data.settings || {},
     rules: data.rules || [],
-    districts: data.districts || [],
+    districts: (data.districts || []).filter(d => d.name),   // 名前が空の行は保存しない
     households: data.households || [],
   };
   // この画面が扱わないデータ（第2フェーズの民間提供など）は元の内容をそのまま引き継ぐ
