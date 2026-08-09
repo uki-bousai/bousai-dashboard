@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>在宅避難者の状況入力 ─ 世帯人数と残量を入れるだけ</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --border:rgba(11,11,11,.10);
+  --accent:#2a78d6;
+  --status-warning:#fab219; --status-critical:#d03b3b;
+  --good-text:#006300;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --border:rgba(255,255,255,.10);
+    --accent:#3987e5; --good-text:#0ca30c;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  background:var(--page); color:var(--text-primary); line-height:1.5; padding:0 0 90px}
+header{padding:20px 20px 0; max-width:860px; margin:0 auto; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+header h1{font-size:1.15rem; font-weight:700}
+header .sub{font-size:.76rem; color:var(--text-secondary)}
+header a{color:var(--text-secondary)}
+.container{max-width:860px; margin:0 auto; padding:0 20px}
+.card{background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:14px 16px 16px; margin-top:14px}
+.card h2{font-size:.95rem; font-weight:700; margin-bottom:4px}
+.card .desc{font-size:.76rem; color:var(--text-secondary); margin-bottom:10px; line-height:1.7}
+label{font-size:.78rem; font-weight:700; color:var(--text-secondary)}
+.field{margin-top:12px}
+.field .hint{font-size:.7rem; color:var(--text-muted); margin-top:2px; line-height:1.6}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  font:inherit; font-size:1rem; color:var(--text-primary); width:100%;
+  background:var(--page); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:4px}
+textarea{min-height:70px}
+input[type="number"]{text-align:right}
+.cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.cols4{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+@media (max-width:520px){ .cols4{grid-template-columns:repeat(2,1fr)} }
+.chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px}
+.chip input{position:absolute; opacity:0; width:0; height:0}
+.chip span{display:inline-block; font-size:.9rem; font-weight:700; color:var(--text-primary);
+  border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; cursor:pointer; user-select:none}
+.chip input:checked + span{border-color:var(--accent); color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 10%, transparent)}
+.chip input:focus-visible + span{outline:2px solid var(--accent); outline-offset:1px}
+.itembox{border:1px solid var(--grid); border-radius:10px; padding:10px 12px; margin-top:10px}
+.itemhead{display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap}
+.itemhead .iname{font-size:.9rem; font-weight:700}
+.itemhead .idays{font-size:.8rem; font-weight:700}
+.packrow{display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin-top:6px}
+.packrow .pk{flex:1; min-width:130px}
+.packrow .pk label{font-size:.7rem; font-weight:400}
+.packrow .pk input{padding:8px 10px; font-size:1rem}
+.st{display:inline-block; font-size:.72rem; font-weight:700; border-radius:99px; padding:2px 10px; border:1.5px solid; white-space:nowrap}
+.st0{color:#d03b3b; border-color:#d03b3b; background:rgba(208,59,59,.10)}
+.st1{color:#c05f00; border-color:#c05f00; background:rgba(224,138,31,.12)}
+.st2{color:#8a6d00; border-color:#caa419; background:rgba(250,178,25,.14)}
+.st3{color:var(--good-text); border-color:var(--good-text); background:rgba(12,163,12,.10)}
+@media (prefers-color-scheme: dark){
+  .st1{color:#f0a04f; border-color:#f0a04f}
+  .st2{color:#f5c542; border-color:#caa419}
+}
+.preview{background:var(--page); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:12px}
+.preview h3{font-size:.78rem; color:var(--text-secondary); margin-bottom:6px}
+.preview .pline{display:flex; justify-content:space-between; gap:8px; align-items:baseline;
+  padding:6px 0; border-bottom:1px solid var(--grid); flex-wrap:wrap; font-size:.82rem}
+.preview .pline:last-child{border-bottom:none}
+.preview .pname{font-weight:700; min-width:8em}
+.preview .pdays{font-weight:700}
+.preview .pref{color:var(--text-secondary); font-size:.76rem}
+button{font:inherit; font-size:.85rem; font-weight:700; cursor:pointer; border:1px solid var(--border);
+  border-radius:10px; padding:11px 18px; background:var(--surface-1); color:var(--text-primary)}
+button:hover{background:var(--page)}
+button.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+button.primary:hover{opacity:.9}
+button.small{font-size:.74rem; padding:5px 10px; border-radius:8px}
+button.del{border:none; background:none; color:var(--text-muted); font-size:1rem; padding:4px 8px}
+button.del:hover{color:var(--status-critical)}
+button:disabled{opacity:.45; cursor:not-allowed}
+.btnrow{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap}
+.warnbox{background:rgba(250,178,25,.10); border:1px solid var(--status-warning); border-radius:8px;
+  padding:8px 12px; font-size:.74rem; color:var(--text-secondary); margin-top:8px; line-height:1.7}
+.notice{background:var(--page); border:1px solid var(--border); border-radius:8px;
+  padding:8px 12px; font-size:.72rem; color:var(--text-secondary); margin-top:10px; line-height:1.7}
+.tablewrap{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:.8rem}
+thead th{color:var(--text-muted); font-size:.68rem; font-weight:700; text-align:left;
+  padding:6px 8px; border-bottom:1px solid var(--grid); white-space:nowrap}
+tbody td{padding:8px; border-bottom:1px solid var(--grid); vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+.hhchips{display:flex; gap:4px; flex-wrap:wrap}
+.hhchips .st{font-size:.66rem; padding:1px 8px}
+td input{font:inherit; font-size:.8rem; color:var(--text-primary); background:transparent;
+  border:1px solid transparent; border-radius:7px; padding:6px 8px; width:100%}
+td input:hover{border-color:var(--border)}
+td input:focus{outline:2px solid var(--accent); outline-offset:-1px; background:var(--surface-1)}
+td input[type="number"]{text-align:right; width:5.5em}
+.tokenrow{display:flex; gap:10px; align-items:end; flex-wrap:wrap}
+.tokenrow .grow{flex:1; min-width:240px}
+.tokenrow input{margin-top:4px}
+.check{display:flex; align-items:center; gap:6px; font-size:.74rem; color:var(--text-secondary); margin-top:8px}
+.savebar{position:fixed; bottom:0; left:0; right:0; z-index:40; background:var(--surface-1);
+  border-top:1px solid var(--border); padding:12px 20px}
+.savebar .inner{max-width:860px; margin:0 auto; display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+#status{font-size:.76rem; color:var(--text-secondary); flex:1; min-width:200px}
+#status.ok{color:var(--good-text); font-weight:700}
+#status.err{color:var(--status-critical); font-weight:700}
+#dirtyMark{display:none; font-size:.72rem; font-weight:700; color:var(--status-warning)}
+#dirtyMark.show{display:inline}
+#loginOverlay{position:fixed; inset:0; z-index:60; background:var(--page); display:none;
+  align-items:center; justify-content:center; padding:20px}
+#loginOverlay.show{display:flex}
+#loginOverlay .loginbox{width:100%; max-width:400px}
+#loginErr{display:none; color:var(--status-critical); font-size:.76rem; font-weight:700; margin-top:4px}
+#loginErr.show{display:block}
+details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding:4px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>在宅避難者の状況入力</h1>
+  <span class="sub">世帯人数と残量を入れるだけ。「あと何日分か」「補充量」は自動計算 ─ <a href="zaitaku.html">公開ページ（地区別集計）</a></span>
+</header>
+
+<div class="container">
+
+  <!-- ===================== 世帯の登録・更新 ===================== -->
+  <div class="card" id="formCard">
+    <h2 id="formTitle">世帯の登録</h2>
+    <p class="desc">在宅避難している世帯の<b>人数</b>と<b>いまある物資の残量</b>だけ入力してください。
+      「足りているか」「何個必要か」は入力不要です。アプリが自動で計算します。</p>
+
+    <div class="warnbox">このデータは<b>インターネットに公開</b>されます。<b>氏名・住所・電話番号・病名など、個人がわかる情報は絶対に書かないでください</b>。世帯の場所は「地区」までにしてください。</div>
+
+    <div class="cols">
+      <div class="field">
+        <label for="fRole">あなたの立場</label>
+        <select id="fRole">
+          <option>区長</option><option>自治会長</option><option>民生委員</option>
+          <option>消防団</option><option>地域団体</option><option>その他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fDistrict">地区名 <span style="color:var(--status-critical)">必須</span></label>
+        <input type="text" id="fDistrict" list="districtList" placeholder="例: 松橋町">
+        <datalist id="districtList"></datalist>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="field">
+        <label for="fLabel">世帯の呼び名（任意）</label>
+        <input type="text" id="fLabel" placeholder="例: 松橋A-3">
+        <div class="hint">個人名は使わず、あなたの控えと対応づけられる記号にしてください。次回の残量更新のときに探しやすくなります。</div>
+      </div>
+      <div class="field">
+        <label for="fSize">世帯人数 <span style="color:var(--status-critical)">必須</span></label>
+        <input type="number" id="fSize" min="1" step="1" inputmode="numeric" placeholder="例: 4">
+      </div>
+    </div>
+
+    <details class="adv field">
+      <summary>内訳を入力する（任意 ─ 乳幼児・高齢者がいる世帯はおむつ・ミルクが正しく計算されます）</summary>
+      <div class="cols4" style="margin-top:8px">
+        <div><label for="fAdults">大人</label><input type="number" id="fAdults" min="0" step="1" inputmode="numeric"></div>
+        <div><label for="fChildren">子ども</label><input type="number" id="fChildren" min="0" step="1" inputmode="numeric"></div>
+        <div><label for="fInfants">乳幼児</label><input type="number" id="fInfants" min="0" step="1" inputmode="numeric"></div>
+        <div><label for="fElderly">高齢者</label><input type="number" id="fElderly" min="0" step="1" inputmode="numeric"></div>
+      </div>
+    </details>
+
+    <div class="field">
+      <label>いまある物資の残量</label>
+      <div class="hint">わかるものだけで構いません。空欄は「未確認」として扱われます。</div>
+      <div id="invBox"></div>
+    </div>
+
+    <div class="field">
+      <label>受取方法</label>
+      <div class="chips" id="pickupChips">
+        <label class="chip"><input type="radio" name="fPickup" value="自分で取りに行ける"><span>自分で取りに行ける</span></label>
+        <label class="chip"><input type="radio" name="fPickup" value="近くまでなら取りに行ける"><span>近くまでなら取りに行ける</span></label>
+        <label class="chip"><input type="radio" name="fPickup" value="配送が必要"><span>配送が必要</span></label>
+        <label class="chip"><input type="radio" name="fPickup" value="不明" checked><span>不明</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fNotes">備考（任意）</label>
+      <textarea id="fNotes" placeholder="例: 道路が一部通行できない"></textarea>
+      <div class="hint">個人がわかる内容（氏名・住所・電話番号など）は書かないでください。</div>
+    </div>
+
+    <div class="preview" id="previewBox" style="display:none">
+      <h3>自動計算の結果（この世帯）</h3>
+      <div id="previewLines"></div>
+    </div>
+
+    <div class="btnrow">
+      <button class="primary" id="addBtn">この世帯を登録する</button>
+      <button id="cancelEditBtn" style="display:none">編集をやめる</button>
+    </div>
+    <div class="notice">登録・更新はまず画面上のリストに入ります。最後に一番下の<b>「保存して公開」</b>を押すと反映されます。</div>
+  </div>
+
+  <!-- ===================== 登録済み世帯一覧 ===================== -->
+  <div class="card">
+    <h2>登録済みの世帯</h2>
+    <p class="desc">残量が変わったら「編集」で開いて数字を直し、もう一度登録してください。日数は自動で再計算されます。</p>
+    <div class="tokenrow" style="margin-bottom:8px">
+      <div>
+        <label for="filterDistrict">地区でしぼり込み</label><br>
+        <select id="filterDistrict" style="width:auto; min-width:10em"><option value="">すべての地区</option></select>
+      </div>
+      <span id="hhCount" style="font-size:.74rem; color:var(--text-secondary)"></span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>地区</th><th>呼び名</th><th>人数</th><th>受取</th><th>残り日数（自動計算）</th><th>更新日時</th><th></th><th></th></tr></thead>
+        <tbody id="hhBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================== 計算基準（運営スタッフ用） ===================== -->
+  <div class="card">
+    <details class="adv">
+      <summary>計算基準・しきい値の設定（運営スタッフ用）</summary>
+      <p class="desc" style="margin-top:8px">「1人1日あたりの必要量」「常に確保する日数（目標）」「優先度のしきい値」をここで変更できます。変更するとすべての世帯・地区の計算に反映されます。</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>使用</th><th>品目</th><th style="text-align:right">1人1日</th><th>単位</th><th>対象</th><th style="text-align:right">目標日数</th></tr></thead>
+          <tbody id="rulesBody"></tbody>
+        </table>
+      </div>
+      <div class="cols4" style="margin-top:12px">
+        <div><label for="sBuffer">共通の目標日数</label><input type="number" id="sBuffer" min="1" step="0.5"></div>
+        <div><label for="sCritical">最優先（未満）</label><input type="number" id="sCritical" min="0.1" step="0.5"></div>
+        <div><label for="sPriority">優先（未満）</label><input type="number" id="sPriority" min="0.1" step="0.5"></div>
+        <div><label for="sWarning">補充候補（未満）</label><input type="number" id="sWarning" min="0.1" step="0.5"></div>
+      </div>
+      <div class="cols" style="margin-top:10px">
+        <div><label for="sDisasterEnd">災害対応の終了予定日（任意）</label><input type="date" id="sDisasterEnd"></div>
+        <div><label for="sWaterEnd">断水の解消予定日（任意）</label><input type="date" id="sWaterEnd"></div>
+      </div>
+      <div class="notice">補充量は「予定日までの全量」ではなく、<b>常に目標日数分を確保するローリング方式</b>で計算します（残りが減ってきた世帯から順に補充対象になります）。</div>
+    </details>
+  </div>
+
+  <!-- ===================== ログイン ===================== -->
+  <div class="card">
+    <h2>ログイン・公開設定</h2>
+    <div class="tokenrow">
+      <div class="grow">
+        <label for="adminName">名前</label>
+        <input type="text" id="adminName" autocomplete="username">
+      </div>
+      <div class="grow">
+        <label for="adminPass">合言葉</label>
+        <input type="password" id="adminPass" autocomplete="current-password">
+      </div>
+      <button id="loadBtn">最新データを読み込み直す</button>
+    </div>
+    <div class="check">
+      <input type="checkbox" id="saveAuth" checked>
+      <label for="saveAuth" style="font-weight:400">この端末に合言葉を保存する（共用端末では外してください）</label>
+    </div>
+    <div class="notice">避難所ダッシュボードと同じ名前・合言葉が使えます。合言葉をお持ちでない方は管理責任者にご連絡ください。</div>
+  </div>
+
+</div>
+
+<div class="savebar">
+  <div class="inner">
+    <span id="status">公開データを読み込み中…</span>
+    <span id="dirtyMark">● 未保存の変更があります</span>
+    <button class="primary" id="saveBtn" disabled>保存して公開</button>
+  </div>
+</div>
+
+<div id="loginOverlay">
+  <div class="loginbox card">
+    <h2>ログイン</h2>
+    <p class="desc">管理責任者から受け取った名前と合言葉を入力してください（避難所ダッシュボードと共通）。</p>
+    <label for="loginName">名前</label>
+    <input type="text" id="loginName" autocomplete="username">
+    <label for="loginPass" style="display:block; margin-top:8px">合言葉</label>
+    <input type="password" id="loginPass" autocomplete="current-password">
+    <div class="check">
+      <input type="checkbox" id="loginSave" checked>
+      <label for="loginSave" style="font-weight:400">この端末に保存する</label>
+    </div>
+    <div id="loginErr"></div>
+    <div style="display:flex; gap:12px; margin-top:16px; align-items:center">
+      <button class="primary" id="loginBtn">ログイン</button>
+      <button id="loginSkip" style="border:none; background:none; color:var(--text-muted); font-size:.74rem; font-weight:400">閲覧のみで開く</button>
+    </div>
+  </div>
+</div>
+
+<script src="zaitaku-calc.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   設定（避難所ダッシュボードの admin.html と同じ中継サーバーを使用）
+   ============================================================ */
+const WORKER_URL = "https://bousai-relay.a-sawada813.workers.dev";
+const DATA_PATH = "zaitaku.json";
+
+let data = null;       // zaitaku.json の内容
+let dirty = false;
+let editId = null;     // 編集中の世帯ID（null = 新規登録）
+
+const $ = id => document.getElementById(id);
+const status = $("status");
+function setStatus(msg, cls){ status.textContent = msg; status.className = cls || ""; }
+function markDirty(){ dirty = true; $("dirtyMark").classList.add("show"); }
+function clearDirty(){ dirty = false; $("dirtyMark").classList.remove("show"); }
+function jstStamp(){
+  const p = new Intl.DateTimeFormat("ja-JP", {timeZone:"Asia/Tokyo",
+    year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", hour12:false})
+    .formatToParts(new Date()).reduce((a,x) => (a[x.type]=x.value, a), {});
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
+}
+function newId(){ return "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function activeRules(){ return (data.rules || []).filter(r => r.is_active !== false); }
+
+/* ---------- 認証（避難所ダッシュボードと同じ保存キーを共用） ---------- */
+function currentAuth(){ return { name: $("adminName").value.trim(), password: $("adminPass").value }; }
+function persistAuth(){
+  const a = currentAuth();
+  if ($("saveAuth").checked && a.name && a.password) localStorage.setItem("bousai_auth", JSON.stringify(a));
+  else localStorage.removeItem("bousai_auth");
+}
+try {
+  const a = JSON.parse(localStorage.getItem("bousai_auth") || "null");
+  if (a){ $("adminName").value = a.name || ""; $("adminPass").value = a.password || ""; }
+} catch (e) {}
+$("saveAuth").addEventListener("change", persistAuth);
+
+async function workerPost(path, payload){
+  const res = await fetch(WORKER_URL.replace(/\/+$/, "") + path, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) {}
+  return { res, body };
+}
+
+/* ---------- 残量入力欄（品目マスターから生成） ---------- */
+function buildInventoryInputs(){
+  const box = $("invBox");
+  box.textContent = "";
+  activeRules().forEach(rule => {
+    const div = document.createElement("div");
+    div.className = "itembox";
+    div.dataset.rule = rule.id;
+    const head = document.createElement("div");
+    head.className = "itemhead";
+    const nm = document.createElement("span");
+    nm.className = "iname";
+    nm.textContent = rule.name;
+    const tgt = document.createElement("span");
+    tgt.style.cssText = "font-size:.68rem; color:var(--text-muted)";
+    tgt.textContent = rule.target && rule.target !== "all" ? `対象: ${ZCALC.targetLabel(rule)}` : "";
+    const days = document.createElement("span");
+    days.className = "idays";
+    days.dataset.daysFor = rule.id;
+    head.append(nm, tgt, days);
+    div.appendChild(head);
+    const row = document.createElement("div");
+    row.className = "packrow";
+    (rule.packs || []).forEach(p => {
+      const pk = document.createElement("div");
+      pk.className = "pk";
+      const lb = document.createElement("label");
+      lb.textContent = p.label + (p.unit ? `（${p.unit}）` : "");
+      const inp = document.createElement("input");
+      inp.type = "number"; inp.min = "0"; inp.inputMode = "decimal";
+      inp.dataset.pack = p.label;
+      inp.addEventListener("input", updatePreview);
+      pk.append(lb, inp);
+      row.appendChild(pk);
+    });
+    if (rule.note_label){
+      const pk = document.createElement("div");
+      pk.className = "pk";
+      const lb = document.createElement("label");
+      lb.textContent = rule.note_label + "（任意）";
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.dataset.noteFor = rule.id;
+      inp.placeholder = rule.id.startsWith("diaper") ? "例: Mサイズ" : "";
+      pk.append(lb, inp);
+      row.appendChild(pk);
+    }
+    div.appendChild(row);
+    box.appendChild(div);
+  });
+}
+
+/* ---------- フォーム ⇔ 世帯オブジェクト ---------- */
+function intOrNull(id){
+  const v = $(id).value.trim();
+  if (v === "") return null;
+  const n = Math.max(0, Math.round(Number(v)));
+  return Number.isFinite(n) ? n : null;
+}
+function formHousehold(){
+  const hh = {
+    id: editId || newId(),
+    district: $("fDistrict").value.trim(),
+    label: $("fLabel").value.trim(),
+    reporter_role: $("fRole").value,
+    size: Math.round(Number($("fSize").value)) || 0,
+    adults: intOrNull("fAdults"),
+    children: intOrNull("fChildren"),
+    infants: intOrNull("fInfants"),
+    elderly: intOrNull("fElderly"),
+    pickup: (document.querySelector('input[name="fPickup"]:checked') || {}).value || "不明",
+    notes: $("fNotes").value.trim(),
+    inventory: {},
+  };
+  document.querySelectorAll("#invBox .itembox").forEach(div => {
+    const packs = {};
+    let has = false;
+    div.querySelectorAll("input[data-pack]").forEach(inp => {
+      const n = Number(inp.value);
+      if (inp.value.trim() !== "" && Number.isFinite(n) && n >= 0){ packs[inp.dataset.pack] = n; has = true; }
+    });
+    const noteInp = div.querySelector("input[data-note-for]");
+    const note = noteInp ? noteInp.value.trim() : "";
+    if (has || note) hh.inventory[div.dataset.rule] = { packs, note };
+  });
+  return hh;
+}
+function fillForm(hh){
+  $("fRole").value = hh.reporter_role || "区長";
+  $("fDistrict").value = hh.district || "";
+  $("fLabel").value = hh.label || "";
+  $("fSize").value = hh.size || "";
+  $("fAdults").value = hh.adults ?? "";
+  $("fChildren").value = hh.children ?? "";
+  $("fInfants").value = hh.infants ?? "";
+  $("fElderly").value = hh.elderly ?? "";
+  const r = document.querySelector(`input[name="fPickup"][value="${hh.pickup || "不明"}"]`);
+  (r || document.querySelector('input[name="fPickup"][value="不明"]')).checked = true;
+  $("fNotes").value = hh.notes || "";
+  document.querySelectorAll("#invBox .itembox").forEach(div => {
+    const entry = (hh.inventory || {})[div.dataset.rule] || {};
+    div.querySelectorAll("input[data-pack]").forEach(inp => {
+      const v = entry.packs ? entry.packs[inp.dataset.pack] : undefined;
+      inp.value = (v === undefined || v === null) ? "" : v;
+    });
+    const noteInp = div.querySelector("input[data-note-for]");
+    if (noteInp) noteInp.value = entry.note || "";
+  });
+  updatePreview();
+}
+function resetForm(){
+  editId = null;
+  $("formTitle").textContent = "世帯の登録";
+  $("addBtn").textContent = "この世帯を登録する";
+  $("cancelEditBtn").style.display = "none";
+  fillForm({ pickup: "不明" });
+  $("previewBox").style.display = "none";
+}
+
+/* ---------- 自動計算プレビュー ---------- */
+function statusChip(level){
+  const s = document.createElement("span");
+  s.className = "st st" + level;
+  s.textContent = ZCALC.STATUS[level].label;
+  return s;
+}
+function updatePreview(){
+  if (!data) return;
+  const hh = formHousehold();
+  const lines = $("previewLines");
+  lines.textContent = "";
+  document.querySelectorAll("[data-days-for]").forEach(el => { el.textContent = ""; });
+  if (!hh.size){ $("previewBox").style.display = "none"; return; }
+  const results = ZCALC.calcHousehold(hh, data.rules, data.settings);
+  results.forEach(c => {
+    const badge = document.querySelector(`[data-days-for="${c.rule.id}"]`);
+    if (badge){
+      badge.textContent = `あと ${ZCALC.fmtDays(c.days)}`;
+      badge.style.color = c.level <= 1 ? "var(--status-critical)" : c.level === 2 ? "#8a6d00" : "var(--good-text)";
+    }
+    const line = document.createElement("div");
+    line.className = "pline";
+    const nm = document.createElement("span"); nm.className = "pname"; nm.textContent = c.rule.name;
+    const dy = document.createElement("span"); dy.className = "pdays";
+    dy.textContent = `残量 ${ZCALC.fmtQty(c.qty, c.rule.unit)} ／ 1日 ${ZCALC.fmtQty(c.daily, c.rule.unit)} ／ あと ${ZCALC.fmtDays(c.days)}`;
+    const rf = document.createElement("span"); rf.className = "pref";
+    rf.textContent = c.refill > 0
+      ? `目標${c.buffer}日分まで 補充 ${ZCALC.fmtQtyWithPack(c.rule, c.refill)}`
+      : `目標${c.buffer}日分を確保できています`;
+    line.append(nm, dy, statusChip(c.level), rf);
+    lines.appendChild(line);
+  });
+  $("previewBox").style.display = results.length ? "" : "none";
+}
+["fSize","fAdults","fChildren","fInfants","fElderly"].forEach(id =>
+  $(id).addEventListener("input", updatePreview));
+
+/* ---------- 登録・編集 ---------- */
+$("addBtn").addEventListener("click", () => {
+  const hh = formHousehold();
+  if (!hh.district){ setStatus("地区名を入力してください", "err"); $("fDistrict").focus(); return; }
+  if (!hh.size || hh.size < 1){ setStatus("世帯人数を入力してください", "err"); $("fSize").focus(); return; }
+  const stamp = jstStamp();
+  hh.updatedAt = stamp;
+  data.households = data.households || [];
+  const i = data.households.findIndex(x => x.id === hh.id);
+  if (i >= 0){ hh.createdAt = data.households[i].createdAt || stamp; data.households[i] = hh; }
+  else { hh.createdAt = stamp; data.households.push(hh); }
+  if (hh.district && !(data.districts || []).includes(hh.district)){
+    data.districts = data.districts || [];
+    data.districts.push(hh.district);
+    buildDistrictOptions();
+  }
+  markDirty();
+  renderHouseholds();
+  const wasEdit = !!editId;
+  resetForm();
+  setStatus(wasEdit
+    ? "世帯の内容を更新しました。最後に「保存して公開」を押してください"
+    : "世帯をリストに追加しました。続けて入力するか、「保存して公開」を押してください", "ok");
+});
+$("cancelEditBtn").addEventListener("click", () => { resetForm(); setStatus("編集をやめました"); });
+
+function startEdit(hh){
+  editId = hh.id;
+  $("formTitle").textContent = `世帯の編集（${hh.district}${hh.label ? "・" + hh.label : ""}）`;
+  $("addBtn").textContent = "この内容で更新する";
+  $("cancelEditBtn").style.display = "";
+  fillForm(hh);
+  $("formCard").scrollIntoView({ behavior: "smooth" });
+}
+
+/* ---------- 一覧 ---------- */
+function buildDistrictOptions(){
+  const list = [...new Set([...(data.districts || []), ...(data.households || []).map(h => h.district)])]
+    .filter(Boolean).sort((a, b) => a.localeCompare(b, "ja"));
+  const dl = $("districtList");
+  dl.textContent = "";
+  list.forEach(d => { const o = document.createElement("option"); o.value = d; dl.appendChild(o); });
+  const sel = $("filterDistrict");
+  const prev = sel.value;
+  sel.textContent = "";
+  const all = document.createElement("option"); all.value = ""; all.textContent = "すべての地区";
+  sel.appendChild(all);
+  list.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; sel.appendChild(o); });
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+$("filterDistrict").addEventListener("change", renderHouseholds);
+
+function renderHouseholds(){
+  const tbody = $("hhBody");
+  tbody.textContent = "";
+  const filter = $("filterDistrict").value;
+  const list = (data.households || []).filter(h => !filter || h.district === filter);
+  $("hhCount").textContent = `${list.length}世帯 ／ 合計${list.reduce((a, h) => a + (Number(h.size) || 0), 0)}人`;
+  if (!list.length){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 8;
+    td.style.cssText = "color:var(--text-muted); font-size:.76rem; padding:14px 8px";
+    td.textContent = "まだ登録がありません。上のフォームから登録してください。";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+  list.forEach(hh => {
+    const tr = document.createElement("tr");
+    const td = t => { const c = document.createElement("td"); c.textContent = t; return c; };
+    tr.append(td(hh.district || ""), td(hh.label || "―"), td(`${hh.size}人`), td(hh.pickup || "不明"));
+    const chips = document.createElement("td");
+    const wrap = document.createElement("div");
+    wrap.className = "hhchips";
+    ZCALC.calcHousehold(hh, data.rules, data.settings).forEach(c => {
+      const s = document.createElement("span");
+      s.className = "st st" + c.level;
+      s.textContent = `${c.rule.name} ${ZCALC.fmtDays(c.days)}`;
+      wrap.appendChild(s);
+    });
+    chips.appendChild(wrap);
+    tr.appendChild(chips);
+    tr.appendChild(td(hh.updatedAt || ""));
+    const edit = document.createElement("td");
+    const eb = document.createElement("button");
+    eb.className = "small"; eb.type = "button"; eb.textContent = "編集";
+    eb.addEventListener("click", () => startEdit(hh));
+    edit.appendChild(eb);
+    tr.appendChild(edit);
+    const del = document.createElement("td");
+    const db = document.createElement("button");
+    db.className = "del"; db.type = "button"; db.textContent = "✕";
+    db.addEventListener("click", () => {
+      if (!confirm(`${hh.district}${hh.label ? "・" + hh.label : ""}（${hh.size}人）を削除しますか？`)) return;
+      data.households = data.households.filter(x => x.id !== hh.id);
+      if (editId === hh.id) resetForm();
+      markDirty();
+      renderHouseholds();
+    });
+    del.appendChild(db);
+    tr.appendChild(del);
+    tbody.appendChild(tr);
+  });
+}
+
+/* ---------- 計算基準・設定 ---------- */
+function renderRules(){
+  const tbody = $("rulesBody");
+  tbody.textContent = "";
+  (data.rules || []).forEach(rule => {
+    const tr = document.createElement("tr");
+    const act = document.createElement("td");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = rule.is_active !== false; cb.style.width = "auto";
+    cb.addEventListener("change", () => { rule.is_active = cb.checked; onRulesChanged(); });
+    act.appendChild(cb);
+    const name = document.createElement("td");
+    name.textContent = rule.name;
+    name.style.fontWeight = "700";
+    const daily = document.createElement("td");
+    const di = document.createElement("input");
+    di.type = "number"; di.min = "0"; di.step = "any"; di.value = rule.daily_amount_per_person;
+    di.addEventListener("change", () => {
+      const n = Number(di.value);
+      if (Number.isFinite(n) && n >= 0){ rule.daily_amount_per_person = n; onRulesChanged(); }
+    });
+    daily.appendChild(di);
+    const unit = document.createElement("td"); unit.textContent = rule.unit || "";
+    const tgt = document.createElement("td"); tgt.textContent = ZCALC.targetLabel(rule);
+    const buf = document.createElement("td");
+    const bi = document.createElement("input");
+    bi.type = "number"; bi.min = "0"; bi.step = "0.5";
+    bi.placeholder = "共通";
+    bi.value = Number(rule.buffer_days) > 0 ? rule.buffer_days : "";
+    bi.addEventListener("change", () => {
+      const n = Number(bi.value);
+      rule.buffer_days = bi.value.trim() !== "" && Number.isFinite(n) && n > 0 ? n : null;
+      onRulesChanged();
+    });
+    buf.appendChild(bi);
+    tr.append(act, name, daily, unit, tgt, buf);
+    tbody.appendChild(tr);
+  });
+}
+function onRulesChanged(){
+  markDirty();
+  buildInventoryInputs();
+  if (editId){
+    const hh = (data.households || []).find(x => x.id === editId);
+    if (hh) fillForm(hh);
+  } else updatePreview();
+  renderHouseholds();
+}
+function renderSettings(){
+  const s = data.settings || {};
+  $("sBuffer").value = ZCALC.setting(s, "buffer_days");
+  $("sCritical").value = ZCALC.setting(s, "critical_days");
+  $("sPriority").value = ZCALC.setting(s, "priority_days");
+  $("sWarning").value = ZCALC.setting(s, "warning_days");
+  $("sDisasterEnd").value = s.disaster_end_date || "";
+  $("sWaterEnd").value = s.water_outage_end_date || "";
+}
+[["sBuffer","buffer_days"],["sCritical","critical_days"],["sPriority","priority_days"],["sWarning","warning_days"]]
+  .forEach(([id, key]) => $(id).addEventListener("change", () => {
+    const n = Number($(id).value);
+    if (Number.isFinite(n) && n > 0){
+      data.settings = data.settings || {};
+      data.settings[key] = n;
+      markDirty(); updatePreview(); renderHouseholds();
+    }
+  }));
+[["sDisasterEnd","disaster_end_date"],["sWaterEnd","water_outage_end_date"]]
+  .forEach(([id, key]) => $(id).addEventListener("change", () => {
+    data.settings = data.settings || {};
+    data.settings[key] = $(id).value;
+    markDirty();
+  }));
+
+/* ---------- 読み込み・保存 ---------- */
+function renderAll(){
+  buildDistrictOptions();
+  buildInventoryInputs();
+  renderRules();
+  renderSettings();
+  renderHouseholds();
+  resetForm();
+}
+async function loadFromPublic(){
+  setStatus("公開データを読み込み中…");
+  try {
+    const res = await fetch("zaitaku.json?_=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("zaitaku.json HTTP " + res.status);
+    data = await res.json();
+    renderAll();
+    clearDirty();
+    $("saveBtn").disabled = false;
+    setStatus(`現在の公開データを表示中（${data.updatedAt || "更新日時なし"}）。編集して保存できます`, "ok");
+  } catch (e) {
+    setStatus("公開データを取得できませんでした（" + e.message + "）。再読み込みしてください", "err");
+  }
+}
+$("loadBtn").addEventListener("click", async () => {
+  if (dirty && !confirm("未保存の変更があります。破棄して最新データを読み込みますか？")) return;
+  await loadFromPublic();
+});
+
+function collect(){
+  const next = {
+    updatedAt: jstStamp() + " 更新",
+    settings: data.settings || {},
+    rules: data.rules || [],
+    districts: data.districts || [],
+    households: data.households || [],
+  };
+  // この画面が扱わないデータ（第2フェーズの民間提供など）は元の内容をそのまま引き継ぐ
+  Object.keys(data || {}).forEach(k => { if (!(k in next)) next[k] = data[k]; });
+  return next;
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  const a = currentAuth();
+  if (!a.name || !a.password){
+    setStatus("名前と合言葉を入力してください（下の「ログイン・公開設定」欄）", "err");
+    return;
+  }
+  persistAuth();
+  const next = collect();
+  if (!confirm("入力内容を保存して公開ページに反映します。よろしいですか？")) return;
+  $("saveBtn").disabled = true;
+  setStatus("保存中…");
+  try {
+    const { res, body } = await workerPost("/save", { ...a, path: DATA_PATH, data: next });
+    if (res.status === 401) throw new Error("名前または合言葉が違います。管理責任者に確認してください");
+    if (!res.ok) throw new Error((body && body.error) || "保存に失敗しました（HTTP " + res.status + "）");
+    data = next;
+    renderAll();
+    clearDirty();
+    setStatus(`保存しました（${next.updatedAt}）。公開ページには1〜2分で反映されます`, "ok");
+  } catch (e) {
+    setStatus(e.message, "err");
+  } finally {
+    $("saveBtn").disabled = false;
+  }
+});
+
+/* ---------- ログイン ---------- */
+function showLoginErr(msg){ const el = $("loginErr"); el.textContent = msg; el.classList.add("show"); }
+function closeLogin(){ $("loginOverlay").classList.remove("show"); }
+async function initLogin(){
+  const a = currentAuth();
+  if (a.name && a.password){
+    try {
+      const { res } = await workerPost("/auth", a);
+      if (res.ok) return;
+    } catch (e) {}
+  }
+  $("loginName").value = a.name || "";
+  $("loginOverlay").classList.add("show");
+}
+$("loginBtn").addEventListener("click", async () => {
+  const a = { name: $("loginName").value.trim(), password: $("loginPass").value };
+  if (!a.name || !a.password){ showLoginErr("名前と合言葉を入力してください"); return; }
+  $("loginBtn").disabled = true;
+  $("loginErr").classList.remove("show");
+  try {
+    const { res, body } = await workerPost("/auth", a);
+    if (res.ok){
+      $("adminName").value = a.name;
+      $("adminPass").value = a.password;
+      $("saveAuth").checked = $("loginSave").checked;
+      persistAuth();
+      closeLogin();
+    } else {
+      showLoginErr((body && body.error) || "ログインできませんでした（HTTP " + res.status + "）");
+    }
+  } catch (e) {
+    showLoginErr("中継サーバーに接続できませんでした。通信環境を確認してください");
+  } finally {
+    $("loginBtn").disabled = false;
+  }
+});
+$("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("loginSkip").addEventListener("click", closeLogin);
+
+addEventListener("beforeunload", e => { if (dirty){ e.preventDefault(); e.returnValue = ""; } });
+
+initLogin();
+loadFromPublic();
+</script>
+</body>
+</html>
