@@ -84,9 +84,8 @@ const ZCALC = (() => {
         .sort((a, b) => b.households - a.households || b.people - a.people);
       g.needCount = g.itemList.reduce((a, it) => a + it.households, 0);
     });
-    // 必要件数が多い地区から並べる
-    return Object.values(map).sort((a, b) =>
-      b.needCount - a.needCount || a.district.localeCompare(b.district, "ja"));
+    // 地区名順（「松橋町 豊福」「松橋町 久具」のように同じ町の地区が続けて並ぶ）
+    return Object.values(map).sort((a, b) => a.district.localeCompare(b.district, "ja"));
   }
 
   /* 全体サマリー（件数は 世帯×品目 の数え方） */
