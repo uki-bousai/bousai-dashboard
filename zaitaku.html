@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="避難所へ行くことが難しい在宅避難の方の物資の状況を、地区単位で公開しています。世帯人数と残量から「あと何日分あるか」「補充に必要な量」を自動計算しています。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="宇城市 生活支援情報">
+<meta property="og:title" content="在宅避難の方への物資支援 ─ 地区別の状況">
+<meta property="og:description" content="地区ごとの「あと何日分あるか」と補充に必要な量を公開しています。個人がわかる情報は掲載していません。">
+<meta property="og:url" content="https://uki-bousai.github.io/bousai-dashboard/zaitaku.html">
+<meta property="og:image" content="https://uki-bousai.github.io/bousai-dashboard/ogp.png">
+<meta name="theme-color" content="#2a78d6">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>在宅避難の方への物資支援 ─ 地区別の状況 ─ 宇城市 生活支援情報</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --border:rgba(11,11,11,.10);
+  --accent:#2a78d6;
+  --status-warning:#fab219; --status-critical:#d03b3b; --status-good:#0ca30c;
+  --good-text:#006300;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --border:rgba(255,255,255,.10);
+    --accent:#3987e5; --good-text:#0ca30c;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  background:var(--page); color:var(--text-primary); line-height:1.6; padding-bottom:40px}
+header{padding:20px 20px 0; max-width:860px; margin:0 auto}
+header h1{font-size:1.2rem; font-weight:700}
+header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:2px}
+.updated{font-size:.72rem; color:var(--text-muted); margin-top:4px}
+.backlink{display:inline-block; font-size:.78rem; margin-top:8px; color:var(--accent)}
+.container{max-width:860px; margin:0 auto; padding:0 20px}
+.card{background:var(--surface-1); border:1px solid var(--border); border-radius:12px;
+  padding:14px 16px 16px; margin-top:14px}
+.card h2{font-size:1.05rem; font-weight:700; margin-bottom:2px}
+.card .desc{font-size:.76rem; color:var(--text-secondary); margin-bottom:10px; line-height:1.7}
+.privacy{background:var(--surface-1); border:1px solid var(--border); border-radius:10px;
+  padding:10px 14px; font-size:.76rem; color:var(--text-secondary); line-height:1.8; margin-top:14px}
+.tiles{display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:8px}
+.tile{background:var(--page); border:1px solid var(--border); border-radius:10px; padding:12px 10px; text-align:center}
+.tile .num{font-size:1.7rem; font-weight:800; line-height:1.2}
+.tile .lb{font-size:.72rem; color:var(--text-secondary); margin-top:2px}
+.tile.t0 .num{color:#d03b3b}
+.tile.t1 .num{color:#c05f00}
+.tile.t2 .num{color:#8a6d00}
+.tile.t3 .num{color:var(--good-text)}
+@media (prefers-color-scheme: dark){
+  .tile.t1 .num{color:#f0a04f}
+  .tile.t2 .num{color:#f5c542}
+}
+.st{display:inline-block; font-size:.76rem; font-weight:700; border-radius:99px; padding:3px 12px; border:1.5px solid; white-space:nowrap}
+.st0{color:#d03b3b; border-color:#d03b3b; background:rgba(208,59,59,.10)}
+.st1{color:#c05f00; border-color:#c05f00; background:rgba(224,138,31,.12)}
+.st2{color:#8a6d00; border-color:#caa419; background:rgba(250,178,25,.14)}
+.st3{color:var(--good-text); border-color:var(--good-text); background:rgba(12,163,12,.10)}
+@media (prefers-color-scheme: dark){
+  .st1{color:#f0a04f; border-color:#f0a04f}
+  .st2{color:#f5c542; border-color:#caa419}
+}
+.dhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
+.dhead .meta{font-size:.78rem; color:var(--text-secondary)}
+.item{padding:12px 0; border-bottom:1px solid var(--grid)}
+.item:last-child{border-bottom:none; padding-bottom:2px}
+.item .top{display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap}
+.item .iname{font-size:1rem; font-weight:700}
+.item .days{font-size:1.05rem; margin-top:2px}
+.item .days b{font-size:1.25rem; font-weight:800}
+.item .need{font-size:.9rem; margin-top:2px}
+.item .need b{font-weight:800}
+.item .meta{font-size:.72rem; color:var(--text-muted); margin-top:2px}
+.legend{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:.7rem; color:var(--text-secondary); align-items:center}
+.empty{color:var(--text-muted); font-size:.82rem; padding:10px 0}
+.itemsum{display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:baseline;
+  padding:8px 0; border-bottom:1px solid var(--grid); font-size:.9rem}
+.itemsum:last-child{border-bottom:none}
+.itemsum b{font-weight:800}
+footer{max-width:860px; margin:24px auto 0; padding:0 20px; font-size:.72rem; color:var(--text-muted); line-height:1.8}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>在宅避難の方への物資支援 ─ 地区別の状況</h1>
+  <div class="sub">避難所へ行くことが難しい在宅避難の世帯について、<b>世帯人数といまある残量</b>から「あと何日分あるか」「補充に必要な量」を自動計算して公開しています。</div>
+  <div class="updated" id="updatedAt">読み込み中…</div>
+  <a class="backlink" href="seikatsu.html">← 生活支援情報（給水・トイレ・避難所）はこちら</a>
+</header>
+
+<div class="container">
+
+  <div class="privacy">
+    🔒 このページに<b>個人がわかる情報は掲載していません</b>。世帯の場所は「地区」単位でのみ集計しています。
+    在宅避難の状況の登録は、区長・自治会長・民生委員などの<a href="zaitaku-admin.html">入力ページ</a>から行えます。
+  </div>
+
+  <div class="card" id="summaryCard">
+    <h2>全体の状況</h2>
+    <p class="desc">「件」は 世帯×品目 の数です（例: ある世帯の飲料水と食料が両方少なければ2件）。</p>
+    <div class="tiles" id="summaryTiles"></div>
+    <div class="legend">優先度は残り日数から自動判定: <span class="st st0">最優先（1日未満）</span><span class="st st1">優先（1〜2日）</span><span class="st st2">補充候補（2〜3日）</span><span class="st st3">当面対応不要（3日以上）</span></div>
+  </div>
+
+  <div class="card" id="needCard" style="display:none">
+    <h2>いま補充が必要な量（全体）</h2>
+    <p class="desc">各世帯が常に<span id="bufferDaysLabel">3</span>日分を確保できるようにするための量です（一度に全期間分を集めるのではなく、少なくなった世帯から順に補充する方式です）。</p>
+    <div id="needList"></div>
+  </div>
+
+  <div id="districtCards"></div>
+
+  <div class="card" id="emptyCard" style="display:none">
+    <h2>まだ登録がありません</h2>
+    <p class="desc">在宅避難の世帯が登録されると、ここに地区ごとの状況が表示されます。</p>
+  </div>
+
+</div>
+
+<footer>
+  <div id="settingsInfo"></div>
+  <div>このページは5分ごとに自動更新されます。数値は地域の情報提供者（区長・自治会長・民生委員など）の報告に基づく自動計算値であり、市の公式発表ではありません。</div>
+</footer>
+
+<script src="zaitaku-calc.js"></script>
+<script>
+"use strict";
+
+let DATA = null;
+
+const $ = id => document.getElementById(id);
+
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function statusChip(level){ return el("span", "st st" + level, ZCALC.STATUS[level].label); }
+
+function fmtDate(iso){
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-").map(Number);
+  return Number.isFinite(m) && Number.isFinite(d) ? `${m}月${d}日` : iso;
+}
+
+function renderSummary(){
+  const s = ZCALC.summary(DATA.households, DATA.rules, DATA.settings);
+  const tiles = $("summaryTiles");
+  tiles.textContent = "";
+  const add = (num, label, cls) => {
+    const t = el("div", "tile" + (cls ? " " + cls : ""));
+    t.append(el("div", "num", String(num)), el("div", "lb", label));
+    tiles.appendChild(t);
+  };
+  add(s.households, "対象世帯");
+  add(s.people, "対象人数");
+  add(s.levels[0], "最優先（1日未満）", "t0");
+  add(s.levels[1], "優先（1〜2日）", "t1");
+  add(s.levels[2], "補充候補（2〜3日）", "t2");
+  add(s.levels[3], "当面対応不要", "t3");
+  return s;
+}
+
+function renderNeed(s){
+  const list = $("needList");
+  list.textContent = "";
+  const items = Object.values(s.refillByItem).filter(r => r.refill > 0);
+  $("needCard").style.display = items.length ? "" : "none";
+  $("bufferDaysLabel").textContent = ZCALC.setting(DATA.settings, "buffer_days");
+  items.forEach(r => {
+    const line = el("div", "itemsum");
+    line.appendChild(el("span", "", r.rule.name));
+    const v = el("span");
+    v.appendChild(el("b", "", ZCALC.fmtQtyWithPack(r.rule, r.refill)));
+    line.appendChild(v);
+    list.appendChild(line);
+  });
+}
+
+function renderDistricts(){
+  const box = $("districtCards");
+  box.textContent = "";
+  const groups = ZCALC.aggregate(DATA.households, DATA.rules, DATA.settings);
+  groups.sort((a, b) => a.worst - b.worst || a.district.localeCompare(b.district, "ja"));
+  groups.forEach(g => {
+    const card = el("div", "card");
+    const head = el("div", "dhead");
+    head.appendChild(el("h2", "", g.district));
+    head.appendChild(el("span", "meta", `対象 ${g.households}世帯・${g.people}人`));
+    card.appendChild(head);
+    g.itemList.sort((a, b) => a.worst - b.worst || a.minDays - b.minDays);
+    g.itemList.forEach(it => {
+      const item = el("div", "item");
+      const top = el("div", "top");
+      top.appendChild(el("span", "iname", it.rule.name));
+      top.appendChild(statusChip(it.worst));
+      item.appendChild(top);
+      const days = el("div", "days");
+      days.append("最少 ");
+      days.appendChild(el("b", "", ZCALC.fmtDays(it.minDays)));
+      days.append(` ／ 平均 ${ZCALC.fmtDays(it.avgDays)} ／ 目標 ${it.buffer}日分`);
+      item.appendChild(days);
+      const need = el("div", "need");
+      if (it.refill > 0){
+        need.append("補充に必要な量: ");
+        need.appendChild(el("b", "", ZCALC.fmtQtyWithPack(it.rule, it.refill)));
+      } else {
+        need.textContent = "目標の日数分を確保できています";
+      }
+      item.appendChild(need);
+      const tgt = it.rule.target && it.rule.target !== "all"
+        ? `対象: ${it.households}世帯・${ZCALC.targetLabel(it.rule)}${it.people}人`
+        : `対象: ${it.households}世帯・${it.people}人`;
+      item.appendChild(el("div", "meta", tgt));
+      card.appendChild(item);
+    });
+    box.appendChild(card);
+  });
+}
+
+function renderSettingsInfo(){
+  const s = DATA.settings || {};
+  const parts = [];
+  if (s.water_outage_end_date) parts.push(`断水の解消予定: ${fmtDate(s.water_outage_end_date)}（予定は変わることがあります）`);
+  if (s.disaster_end_date) parts.push(`災害対応の終了予定: ${fmtDate(s.disaster_end_date)}`);
+  $("settingsInfo").textContent = parts.join(" ／ ");
+}
+
+function renderAll(){
+  const has = (DATA.households || []).length > 0;
+  $("emptyCard").style.display = has ? "none" : "";
+  $("summaryCard").style.display = has ? "" : "none";
+  if (!has){ $("needCard").style.display = "none"; $("districtCards").textContent = ""; renderSettingsInfo(); return; }
+  const s = renderSummary();
+  renderNeed(s);
+  renderDistricts();
+  renderSettingsInfo();
+}
+
+async function load(){
+  try {
+    const res = await fetch("zaitaku.json?_=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    DATA = await res.json();
+    $("updatedAt").textContent = DATA.updatedAt ? `最終更新: ${DATA.updatedAt}` : "まだデータが登録されていません";
+    renderAll();
+  } catch (e) {
+    $("updatedAt").textContent = "データを読み込めませんでした。通信環境を確認して再読み込みしてください";
+  }
+}
+
+load();
+setInterval(load, 5 * 60 * 1000);
+
+if ("serviceWorker" in navigator){
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>

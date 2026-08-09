@@ -18,7 +18,7 @@ const OWNER  = "uki-bousai";
 const REPO   = "bousai-dashboard";
 const BRANCH = "main";
 // 保存を許可するファイル（先頭が既定値。リクエストの path で切り替え可能）
-const PATHS  = ["data.json", "seikatsu.json"];
+const PATHS  = ["data.json", "seikatsu.json", "zaitaku.json"];
 const ALLOWED_ORIGINS = [
   "https://uki-bousai.github.io",
 ];
@@ -108,11 +108,15 @@ export default {
       const data = body.data;
       const valid = filePath === "seikatsu.json"
         ? (data && typeof data === "object" && Array.isArray(data.water) && Array.isArray(data.toilets) && Array.isArray(data.haves))
+        : filePath === "zaitaku.json"
+        ? (data && typeof data === "object" && Array.isArray(data.households) && Array.isArray(data.rules) &&
+           data.settings && typeof data.settings === "object")
         : (data && typeof data === "object" && Array.isArray(data.shelters) && Array.isArray(data.supplies));
       if (!valid) return json({ error: "データの形式が不正です" }, 400, cors);
       const text = JSON.stringify(data, null, 2) + "\n";
       if (text.length > 1000000) return json({ error: "データが大きすぎます" }, 400, cors);
-      const prefix = filePath === "seikatsu.json" ? "生活情報更新" : "状況更新";
+      const prefix = filePath === "seikatsu.json" ? "生活情報更新"
+        : filePath === "zaitaku.json" ? "在宅避難者情報更新" : "状況更新";
       const message = `${prefix} ${data.updatedAt || ""}（更新者: ${body.name}）`;
       try {
         let res = await putFile(env, filePath, text, message, await latestSha(env, filePath));

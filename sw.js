@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v5";
+const VERSION = "v6";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
@@ -15,6 +15,8 @@ const APP_ASSETS = [
   "index.html",
   "recruit.html",
   "seikatsu.html",
+  "zaitaku.html",
+  "zaitaku-calc.js",
   "manifest.json",
   "icons/icon-192.png",
   "icons/icon-512.png",
@@ -93,6 +95,10 @@ self.addEventListener("fetch", e => {
     e.respondWith(networkFirst(req, "seikatsu.json"));
     return;
   }
+  if (url.origin === location.origin && url.pathname.endsWith("/zaitaku.json")){
+    e.respondWith(networkFirst(req, "zaitaku.json"));
+    return;
+  }
   // 地図タイル
   if (url.hostname === "cyberjapandata.gsi.go.jp"){
     e.respondWith(tileCacheFirst(req));
@@ -105,6 +111,7 @@ self.addEventListener("fetch", e => {
     const p = url.pathname;
     const page = p.endsWith("/recruit.html") ? "recruit.html"
       : p.endsWith("/seikatsu.html") ? "seikatsu.html"
+      : p.endsWith("/zaitaku.html") ? "zaitaku.html"
       : (p.endsWith("/") || p.endsWith("/index.html")) ? "index.html"
       : null;
     if (page){ e.respondWith(networkFirst(req, page)); return; }
