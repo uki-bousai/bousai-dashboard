@@ -1,0 +1,81 @@
+{
+ "updatedAt": "",
+ "settings": {
+  "buffer_days": 3,
+  "critical_days": 1,
+  "priority_days": 2,
+  "warning_days": 3,
+  "disaster_end_date": "",
+  "water_outage_end_date": ""
+ },
+ "rules": [
+  {
+   "id": "water",
+   "name": "飲料水",
+   "unit": "L",
+   "daily_amount_per_person": 3,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "2Lペットボトル", "unit": "本", "factor": 2 },
+    { "label": "500mlペットボトル", "unit": "本", "factor": 0.5 },
+    { "label": "その他（L）", "unit": "L", "factor": 1 }
+   ]
+  },
+  {
+   "id": "food",
+   "name": "食料",
+   "unit": "食",
+   "daily_amount_per_person": 3,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "食分", "unit": "食", "factor": 1 }
+   ]
+  },
+  {
+   "id": "diaper_child",
+   "name": "子ども用紙おむつ",
+   "unit": "枚",
+   "daily_amount_per_person": 5,
+   "target": "infant",
+   "buffer_days": null,
+   "is_active": true,
+   "note_label": "サイズ",
+   "packs": [
+    { "label": "枚", "unit": "枚", "factor": 1 }
+   ]
+  },
+  {
+   "id": "diaper_adult",
+   "name": "大人用紙おむつ",
+   "unit": "枚",
+   "daily_amount_per_person": 3,
+   "target": "elderly",
+   "buffer_days": null,
+   "is_active": true,
+   "note_label": "サイズ",
+   "packs": [
+    { "label": "枚", "unit": "枚", "factor": 1 }
+   ]
+  },
+  {
+   "id": "milk",
+   "name": "ミルク",
+   "unit": "ml",
+   "daily_amount_per_person": 800,
+   "target": "infant",
+   "buffer_days": null,
+   "is_active": true,
+   "note_label": "銘柄・種類",
+   "packs": [
+    { "label": "粉ミルク（g・出来上がり量に換算）", "unit": "g", "factor": 7.5 },
+    { "label": "液体ミルク（240ml缶・パック）", "unit": "本", "factor": 240 }
+   ]
+  }
+ ],
+ "districts": ["三角町", "不知火町", "松橋町", "小川町", "豊野町"],
+ "households": []
+}
