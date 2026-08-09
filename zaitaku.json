@@ -17,6 +17,7 @@
    "target": "all",
    "buffer_days": null,
    "is_active": true,
+   "assume_zero": true,
    "packs": [
     { "label": "2Lペットボトル", "unit": "本", "factor": 2 },
     { "label": "500mlペットボトル", "unit": "本", "factor": 0.5 },
@@ -24,15 +25,107 @@
    ]
   },
   {
-   "id": "food",
-   "name": "食料",
-   "unit": "食",
+   "id": "rice_pack",
+   "name": "パックご飯",
+   "unit": "個",
+   "daily_amount_per_person": 3,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "assume_zero": true,
+   "packs": [
+    { "label": "個", "unit": "個", "factor": 1 },
+    { "label": "3個パック", "unit": "パック", "factor": 3 }
+   ]
+  },
+  {
+   "id": "retort",
+   "name": "レトルト食品",
+   "unit": "個",
    "daily_amount_per_person": 3,
    "target": "all",
    "buffer_days": null,
    "is_active": true,
    "packs": [
-    { "label": "食分", "unit": "食", "factor": 1 }
+    { "label": "個（カレー・丼の素など）", "unit": "個", "factor": 1 }
+   ]
+  },
+  {
+   "id": "tea",
+   "name": "お茶",
+   "unit": "L",
+   "daily_amount_per_person": 0.5,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "500mlペットボトル", "unit": "本", "factor": 0.5 },
+    { "label": "2Lペットボトル", "unit": "本", "factor": 2 }
+   ]
+  },
+  {
+   "id": "sports_drink",
+   "name": "スポーツドリンク（アクエリアス・ポカリ等）",
+   "unit": "L",
+   "daily_amount_per_person": 0.5,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "500mlペットボトル", "unit": "本", "factor": 0.5 },
+    { "label": "2Lペットボトル", "unit": "本", "factor": 2 },
+    { "label": "粉末（1L分）", "unit": "袋", "factor": 1 }
+   ]
+  },
+  {
+   "id": "snack",
+   "name": "お菓子",
+   "unit": "個",
+   "daily_amount_per_person": 1,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "個・袋", "unit": "個", "factor": 1 }
+   ]
+  },
+  {
+   "id": "toilet_paper",
+   "name": "トイレットペーパー",
+   "unit": "ロール",
+   "daily_amount_per_person": 0.15,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "ロール", "unit": "ロール", "factor": 1 },
+    { "label": "12ロールパック", "unit": "パック", "factor": 12 }
+   ]
+  },
+  {
+   "id": "baby_wipes",
+   "name": "お尻拭き",
+   "unit": "枚",
+   "daily_amount_per_person": 30,
+   "target": "infant",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "枚", "unit": "枚", "factor": 1 },
+    { "label": "80枚パック", "unit": "パック", "factor": 80 }
+   ]
+  },
+  {
+   "id": "body_wipes",
+   "name": "身体を拭くシート",
+   "unit": "枚",
+   "daily_amount_per_person": 2,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    { "label": "枚", "unit": "枚", "factor": 1 },
+    { "label": "30枚パック", "unit": "パック", "factor": 30 }
    ]
   },
   {

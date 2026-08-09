@@ -65,19 +65,24 @@ const ZCALC = (() => {
     return entryExists ? 1 : 0;
   }
 
-  /* 1世帯×1品目の計算。対象外（乳幼児0人など）は null を返す */
+  /* 1世帯×1品目の計算。対象外（乳幼児0人など）は null を返す。
+     残量が未登録の品目は「未確認」として計算しない（在宅避難は全品目の
+     確認が難しいため）。ただし assume_zero の品目（飲料水・主食）だけは
+     未登録=残量ゼロとみなして必ず計算する（生命線のため見落としを防ぐ）。 */
   function calcItem(rule, hh, settings){
     if (rule.is_active === false) return null;
     const entry = (hh.inventory || {})[rule.id];
+    if (!entry && rule.assume_zero !== true) return null;
     const tc = targetCount(rule, hh, !!entry);
     const daily = (Number(rule.daily_amount_per_person) || 0) * tc;
     if (daily <= 0) return null;
     const qty = normalizedQty(rule, entry);
     const days = qty / daily;
     const buffer = Number(rule.buffer_days) > 0 ? Number(rule.buffer_days) : setting(settings, "buffer_days");
-    const refill = Math.max(0, daily * buffer - qty);   // ローリング補充: 常に buffer 日分を確保
+    const need = daily * buffer;                        // buffer日分持つのに必要な総量
+    const refill = Math.max(0, need - qty);             // （参考）目標までの差分
     return {
-      rule, targetCount: tc, qty, daily, days, buffer, refill,
+      rule, targetCount: tc, qty, daily, days, buffer, need, refill,
       level: statusLevel(days, settings),
       note: entry && entry.note ? String(entry.note) : "",
     };
@@ -98,12 +103,14 @@ const ZCALC = (() => {
       calcHousehold(hh, rules, settings).forEach(c => {
         const it = g.items[c.rule.id] || (g.items[c.rule.id] = {
           rule: c.rule, households: 0, people: 0, daysSum: 0,
-          minDays: Infinity, refill: 0, worst: 3, buffer: c.buffer,
+          minDays: Infinity, need: 0, needShort: 0, refill: 0, worst: 3, buffer: c.buffer,
         });
         it.households++;
         it.people += c.targetCount;
         it.daysSum += c.days;
         if (c.days < it.minDays) it.minDays = c.days;
+        it.need += c.need;
+        if (c.level <= 2) it.needShort += c.need;   // 不足している世帯の分だけ
         it.refill += c.refill;
         if (c.level < it.worst) it.worst = c.level;
       });
@@ -118,14 +125,17 @@ const ZCALC = (() => {
 
   /* 全体サマリー（ダッシュボード用。件数は 世帯×品目 の数え方） */
   function summary(households, rules, settings){
-    const s = { households: 0, people: 0, levels: [0, 0, 0, 0], refillByItem: {} };
+    const s = { households: 0, people: 0, levels: [0, 0, 0, 0], items: {} };
     (households || []).forEach(hh => {
       s.households++;
       s.people += Number(hh.size) || 0;
       calcHousehold(hh, rules, settings).forEach(c => {
         s.levels[c.level]++;
-        const r = s.refillByItem[c.rule.id] || (s.refillByItem[c.rule.id] = { rule: c.rule, refill: 0 });
+        const r = s.items[c.rule.id] || (s.items[c.rule.id] = { rule: c.rule, need: 0, needShort: 0, refill: 0, worst: 3, buffer: c.buffer });
+        r.need += c.need;
+        if (c.level <= 2) r.needShort += c.need;   // 不足している世帯の分だけ
         r.refill += c.refill;
+        if (c.level < r.worst) r.worst = c.level;
       });
     });
     return s;

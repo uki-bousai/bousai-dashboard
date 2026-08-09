@@ -182,7 +182,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 
     <div class="field">
       <label>いまある物資の残量</label>
-      <div class="hint">わかるものだけで構いません。空欄は「未確認」として扱われます。</div>
+      <div class="hint">確認できたものだけで構いません。未入力の品目は「未確認」として計算されません（飲料水とパックご飯だけは、未入力の場合「なし」として扱います）。</div>
       <div id="invBox"></div>
     </div>
 
@@ -254,7 +254,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
         <div><label for="sDisasterEnd">災害対応の終了予定日（任意）</label><input type="date" id="sDisasterEnd"></div>
         <div><label for="sWaterEnd">断水の解消予定日（任意）</label><input type="date" id="sWaterEnd"></div>
       </div>
-      <div class="notice">補充量は「予定日までの全量」ではなく、<b>常に目標日数分を確保するローリング方式</b>で計算します（残りが減ってきた世帯から順に補充対象になります）。</div>
+      <div class="notice">必要量は「予定日までの全量」ではなく<b>「目標日数分（初期値3日分）を持つのに必要な量」</b>で表示します。残りが減ってきた世帯から順に支援対象に入る運用です。</div>
     </details>
   </div>
 
@@ -503,9 +503,7 @@ function updatePreview(){
     const dy = document.createElement("span"); dy.className = "pdays";
     dy.textContent = `残量 ${ZCALC.fmtQty(c.qty, c.rule.unit)} ／ 1日 ${ZCALC.fmtQty(c.daily, c.rule.unit)} ／ あと ${ZCALC.fmtDays(c.days)}`;
     const rf = document.createElement("span"); rf.className = "pref";
-    rf.textContent = c.refill > 0
-      ? `目標${c.buffer}日分まで 補充 ${ZCALC.fmtQtyWithPack(c.rule, c.refill)}`
-      : `目標${c.buffer}日分を確保できています`;
+    rf.textContent = `${c.buffer}日分に必要な量 ${ZCALC.fmtQtyWithPack(c.rule, c.need)}`;
     line.append(nm, dy, statusChip(c.level), rf);
     lines.appendChild(line);
   });

@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="避難所へ行くことが難しい在宅避難の方の物資の状況を、地区単位で公開しています。世帯人数と残量から「あと何日分あるか」「補充に必要な量」を自動計算しています。">
+<meta name="description" content="避難所へ行くことが難しい在宅避難の方の物資の状況を、地区単位で公開しています。世帯人数と残量から「あと何日分あるか」「3日分持つのに必要な量」を自動計算しています。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="宇城市 生活支援情報">
 <meta property="og:title" content="在宅避難の方への物資支援 ─ 地区別の状況">
-<meta property="og:description" content="地区ごとの「あと何日分あるか」と補充に必要な量を公開しています。個人がわかる情報は掲載していません。">
+<meta property="og:description" content="地区ごとの「あと何日分あるか」と3日分持つのに必要な量を公開しています。個人がわかる情報は掲載していません。">
 <meta property="og:url" content="https://uki-bousai.github.io/bousai-dashboard/zaitaku.html">
 <meta property="og:image" content="https://uki-bousai.github.io/bousai-dashboard/ogp.png">
 <meta name="theme-color" content="#2a78d6">
@@ -106,7 +106,7 @@ footer a{color:var(--accent)}
 
 <header>
   <h1>在宅避難の方への物資支援 ─ 地区別の状況</h1>
-  <div class="sub">避難所へ行くことが難しい在宅避難の世帯について、<b>世帯人数といまある残量</b>から「あと何日分あるか」「補充に必要な量」を自動計算して公開しています。</div>
+  <div class="sub">避難所へ行くことが難しい在宅避難の世帯について、<b>世帯人数といまある残量</b>から「あと何日分あるか」「3日分持つのに必要な量」を自動計算して公開しています。</div>
   <div class="updated" id="updatedAt">読み込み中…</div>
   <a class="backlink" href="seikatsu.html">← 生活支援情報（給水・トイレ・避難所）はこちら</a>
 </header>
@@ -127,8 +127,8 @@ footer a{color:var(--accent)}
   </div>
 
   <div class="card" id="needCard" style="display:none">
-    <h2>いま補充が必要な量（全体）</h2>
-    <p class="desc">各世帯が常に<span id="bufferDaysLabel">3</span>日分を確保できるようにするための量です（一度に全期間分を集めるのではなく、少なくなった世帯から順に補充する方式です）。</p>
+    <h2>3日分持つのに必要な量（全体）</h2>
+    <p class="desc">不足している世帯が<span id="bufferDaysLabel">3</span>日分を持つのに必要な量の合計です（足りている世帯の分は含みません）。</p>
     <div id="needList"></div>
   </div>
 
@@ -189,14 +189,16 @@ function renderSummary(){
 function renderNeed(s){
   const list = $("needList");
   list.textContent = "";
-  const items = Object.values(s.refillByItem).filter(r => r.refill > 0);
+  // 不足している世帯がある品目だけ、「3日分持つのに必要な量」（残量は差し引かない総量）を出す
+  const items = Object.values(s.items).filter(r => r.worst <= 2);
   $("needCard").style.display = items.length ? "" : "none";
   $("bufferDaysLabel").textContent = ZCALC.setting(DATA.settings, "buffer_days");
+  items.sort((a, b) => a.worst - b.worst);
   items.forEach(r => {
     const line = el("div", "itemsum");
     line.appendChild(el("span", "", r.rule.name));
     const v = el("span");
-    v.appendChild(el("b", "", ZCALC.fmtQtyWithPack(r.rule, r.refill)));
+    v.appendChild(el("b", "", ZCALC.fmtQtyWithPack(r.rule, r.needShort)));
     line.appendChild(v);
     list.appendChild(line);
   });
@@ -244,12 +246,8 @@ function renderDistricts(){
       item.appendChild(meter("最少", it.minDays));
       if (it.households > 1) item.appendChild(meter("平均", it.avgDays));
       const need = el("div", "need");
-      if (it.refill > 0){
-        need.append("補充に必要な量: ");
-        need.appendChild(el("b", "", ZCALC.fmtQtyWithPack(it.rule, it.refill)));
-      } else {
-        need.textContent = "目標の日数分を確保できています";
-      }
+      need.append(`${it.buffer}日分に必要な量: `);
+      need.appendChild(el("b", "", ZCALC.fmtQtyWithPack(it.rule, it.needShort)));
       item.appendChild(need);
       const tgt = it.rule.target && it.rule.target !== "all"
         ? `対象: ${it.households}世帯・${ZCALC.targetLabel(it.rule)}${it.people}人`
