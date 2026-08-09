@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>在宅避難者の状況入力 ─ 世帯人数と残量を入れるだけ</title>
+<title>在宅避難の状況入力 ─ 区ごとに世帯数と必要な物資を選ぶだけ</title>
 <style>
 :root{
   color-scheme: light;
@@ -44,40 +44,24 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea{
 textarea{min-height:70px}
 input[type="number"]{text-align:right}
 .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-.cols4{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
-@media (max-width:520px){ .cols4{grid-template-columns:repeat(2,1fr)} }
-.chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px}
-.chip input{position:absolute; opacity:0; width:0; height:0}
-.chip span{display:inline-block; font-size:.9rem; font-weight:700; color:var(--text-primary);
-  border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; cursor:pointer; user-select:none}
-.chip input:checked + span{border-color:var(--accent); color:var(--accent);
-  background:color-mix(in srgb, var(--accent) 10%, transparent)}
-.chip input:focus-visible + span{outline:2px solid var(--accent); outline-offset:1px}
-.itembox{border:1px solid var(--grid); border-radius:10px; padding:10px 12px; margin-top:10px}
-.itemhead{display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap}
-.itemhead .iname{font-size:.9rem; font-weight:700}
-.itemhead .idays{font-size:.8rem; font-weight:700}
-.packrow{display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin-top:6px}
-.packrow .pk{flex:1; min-width:130px}
-.packrow .pk label{font-size:.7rem; font-weight:400}
-.packrow .pk input{padding:8px 10px; font-size:1rem}
-.st{display:inline-block; font-size:.72rem; font-weight:700; border-radius:99px; padding:2px 10px; border:1.5px solid; white-space:nowrap}
-.st0{color:#d03b3b; border-color:#d03b3b; background:rgba(208,59,59,.10)}
-.st1{color:#c05f00; border-color:#c05f00; background:rgba(224,138,31,.12)}
-.st2{color:#8a6d00; border-color:#caa419; background:rgba(250,178,25,.14)}
-.st3{color:var(--good-text); border-color:var(--good-text); background:rgba(12,163,12,.10)}
-@media (prefers-color-scheme: dark){
-  .st1{color:#f0a04f; border-color:#f0a04f}
-  .st2{color:#f5c542; border-color:#caa419}
-}
+@media (max-width:520px){ .cols{grid-template-columns:1fr} }
+.needgrid{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.needgrid button{font:inherit; font-size:.95rem; font-weight:700; cursor:pointer;
+  border:1.5px solid var(--border); border-radius:10px; padding:12px 14px;
+  background:var(--surface-1); color:var(--text-primary)}
+.needgrid button.sel{border-color:var(--accent); color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 12%, transparent)}
+.neednotes{margin-top:8px; display:grid; gap:8px; grid-template-columns:1fr 1fr}
+@media (max-width:520px){ .neednotes{grid-template-columns:1fr} }
+.neednotes label{font-size:.72rem; font-weight:400}
 .preview{background:var(--page); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:12px}
 .preview h3{font-size:.78rem; color:var(--text-secondary); margin-bottom:6px}
 .preview .pline{display:flex; justify-content:space-between; gap:8px; align-items:baseline;
-  padding:6px 0; border-bottom:1px solid var(--grid); flex-wrap:wrap; font-size:.82rem}
+  padding:6px 0; border-bottom:1px solid var(--grid); flex-wrap:wrap; font-size:.84rem}
 .preview .pline:last-child{border-bottom:none}
 .preview .pname{font-weight:700; min-width:8em}
-.preview .pdays{font-weight:700}
-.preview .pref{color:var(--text-secondary); font-size:.76rem}
+.preview .pqty{font-weight:800}
+.preview .pref{color:var(--text-secondary); font-size:.74rem}
 button{font:inherit; font-size:.85rem; font-weight:700; cursor:pointer; border:1px solid var(--border);
   border-radius:10px; padding:11px 18px; background:var(--surface-1); color:var(--text-primary)}
 button:hover{background:var(--page)}
@@ -99,7 +83,8 @@ thead th{color:var(--text-muted); font-size:.68rem; font-weight:700; text-align:
 tbody td{padding:8px; border-bottom:1px solid var(--grid); vertical-align:top}
 tbody tr:last-child td{border-bottom:none}
 .hhchips{display:flex; gap:4px; flex-wrap:wrap}
-.hhchips .st{font-size:.66rem; padding:1px 8px}
+.tag{display:inline-block; font-size:.66rem; font-weight:700; color:var(--text-secondary);
+  border:1px solid var(--border); border-radius:99px; padding:1px 8px; white-space:nowrap}
 td input{font:inherit; font-size:.8rem; color:var(--text-primary); background:transparent;
   border:1px solid transparent; border-radius:7px; padding:6px 8px; width:100%}
 td input:hover{border-color:var(--border)}
@@ -128,20 +113,24 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 </head>
 <body>
 
+<div id="demoBanner" style="display:none; position:sticky; top:0; z-index:80; background:#6d28d9; color:#fff;
+  text-align:center; font-size:.8rem; font-weight:700; padding:8px 12px">
+  🧪 検証環境（練習用）─ ここでの登録・保存は本番のデータに影響しません</div>
+
 <header>
-  <h1>在宅避難者の状況入力</h1>
-  <span class="sub">世帯人数と残量を入れるだけ。「あと何日分か」「補充量」は自動計算 ─ <a href="zaitaku.html">公開ページ（地区別集計）</a></span>
+  <h1>在宅避難の状況入力</h1>
+  <span class="sub">区ごとに世帯数と必要な物資を選ぶだけ。数量は自動計算 ─ <a href="zaitaku.html" data-envlink>公開ページ（地区別集計）</a></span>
 </header>
 
 <div class="container">
 
-  <!-- ===================== 世帯の登録・更新 ===================== -->
+  <!-- ===================== 区の登録・更新 ===================== -->
   <div class="card" id="formCard">
-    <h2 id="formTitle">世帯の登録</h2>
-    <p class="desc">在宅避難している世帯の<b>人数</b>と<b>いまある物資の残量</b>だけ入力してください。
-      「足りているか」「何個必要か」は入力不要です。アプリが自動で計算します。</p>
+    <h2 id="formTitle">区の状況を登録・更新</h2>
+    <p class="desc">あなたの区の<b>在宅避難の世帯数</b>と、<b>必要な物資</b>をタップで選んでください。
+      世帯ごとの登録や人数の把握は不要です。数量はアプリが世帯数から概算します。</p>
 
-    <div class="warnbox">このデータは<b>インターネットに公開</b>されます。<b>氏名・住所・電話番号・病名など、個人がわかる情報は絶対に書かないでください</b>。世帯の場所は「地区」までにしてください。</div>
+    <div class="warnbox">このデータは<b>インターネットに公開</b>されます。<b>氏名・住所・電話番号など、個人がわかる情報は書かないでください</b>。</div>
 
     <div class="cols">
       <div class="field">
@@ -152,48 +141,40 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
         </select>
       </div>
       <div class="field">
-        <label for="fDistrict">地区名 <span style="color:var(--status-critical)">必須</span></label>
-        <input type="text" id="fDistrict" list="districtList" placeholder="例: 松橋町">
+        <label for="fDistrict">地区名（行政区） <span style="color:var(--status-critical)">必須</span></label>
+        <input type="text" id="fDistrict" list="districtList" placeholder="例: 松橋町 豊福">
         <datalist id="districtList"></datalist>
+        <div class="hint">町名で一つにまとめず、<b>公民館ごとの行政区単位</b>で入力してください。すでに登録済みの地区名を入れると上書き更新になります。</div>
       </div>
     </div>
 
     <div class="cols">
       <div class="field">
-        <label for="fLabel">世帯の呼び名（任意）</label>
-        <input type="text" id="fLabel" placeholder="例: 松橋A-3">
-        <div class="hint">個人名は使わず、あなたの控えと対応づけられる記号にしてください。次回の残量更新のときに探しやすくなります。</div>
+        <label for="fSite">集積場所（公民館など）</label>
+        <input type="text" id="fSite" placeholder="例: 豊福公民館">
+        <div class="hint">支援物資を受け取る場所。公開ページに表示されます。</div>
       </div>
       <div class="field">
-        <label for="fSize">世帯人数 <span style="color:var(--status-critical)">必須</span></label>
-        <input type="number" id="fSize" min="1" step="1" inputmode="numeric" placeholder="例: 4">
+        <label for="fHouseholds">在宅避難の世帯数 <span style="color:var(--status-critical)">必須</span></label>
+        <input type="number" id="fHouseholds" min="1" step="1" inputmode="numeric" placeholder="例: 8">
+        <div class="hint">おおよそで構いません。数量は「世帯数 × 平均<span id="avgLabel">2</span>人」で概算します。</div>
       </div>
     </div>
 
     <details class="adv field">
-      <summary>内訳を入力する（任意 ─ 乳幼児・高齢者がいる世帯はおむつ・ミルクが正しく計算されます）</summary>
-      <div class="cols4" style="margin-top:8px">
-        <div><label for="fAdults">大人</label><input type="number" id="fAdults" min="0" step="1" inputmode="numeric"></div>
-        <div><label for="fChildren">子ども</label><input type="number" id="fChildren" min="0" step="1" inputmode="numeric"></div>
-        <div><label for="fInfants">乳幼児</label><input type="number" id="fInfants" min="0" step="1" inputmode="numeric"></div>
-        <div><label for="fElderly">高齢者</label><input type="number" id="fElderly" min="0" step="1" inputmode="numeric"></div>
+      <summary>乳幼児・高齢者の人数を入力する（任意 ─ おむつ・ミルクの数量が正確になります）</summary>
+      <div class="cols" style="margin-top:8px">
+        <div><label for="fInfants">区内の乳幼児（人）</label><input type="number" id="fInfants" min="0" step="1" inputmode="numeric"></div>
+        <div><label for="fElderly">区内の高齢者で介助が必要な方（人）</label><input type="number" id="fElderly" min="0" step="1" inputmode="numeric"></div>
       </div>
+      <div class="hint" style="margin-top:6px">未入力のままおむつ・ミルクを選んだ場合は、ひとまず1人分で計算します。</div>
     </details>
 
     <div class="field">
-      <label>いまある物資の残量</label>
-      <div class="hint">わかるものだけで構いません。空欄は「未確認」として扱われます。</div>
-      <div id="invBox"></div>
-    </div>
-
-    <div class="field">
-      <label>受取方法</label>
-      <div class="chips" id="pickupChips">
-        <label class="chip"><input type="radio" name="fPickup" value="自分で取りに行ける"><span>自分で取りに行ける</span></label>
-        <label class="chip"><input type="radio" name="fPickup" value="近くまでなら取りに行ける"><span>近くまでなら取りに行ける</span></label>
-        <label class="chip"><input type="radio" name="fPickup" value="配送が必要"><span>配送が必要</span></label>
-        <label class="chip"><input type="radio" name="fPickup" value="不明" checked><span>不明</span></label>
-      </div>
+      <label>必要な物資（タップで選択・もう一度タップで解除）</label>
+      <div class="hint">区内で必要とされているものを選んでください。数量は自動計算されます。物資が届いたらタップを外して更新してください。</div>
+      <div class="needgrid" id="needChips"></div>
+      <div class="neednotes" id="needNotes"></div>
     </div>
 
     <div class="field">
@@ -203,58 +184,50 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
     </div>
 
     <div class="preview" id="previewBox" style="display:none">
-      <h3>自動計算の結果（この世帯）</h3>
+      <h3>自動計算の結果（この区・3日分）</h3>
       <div id="previewLines"></div>
     </div>
 
     <div class="btnrow">
-      <button class="primary" id="addBtn">この世帯を登録する</button>
-      <button id="cancelEditBtn" style="display:none">編集をやめる</button>
+      <button class="primary" id="addBtn">この内容で登録する</button>
+      <button id="cancelEditBtn" style="display:none">入力をクリア</button>
     </div>
     <div class="notice">登録・更新はまず画面上のリストに入ります。最後に一番下の<b>「保存して公開」</b>を押すと反映されます。</div>
   </div>
 
-  <!-- ===================== 登録済み世帯一覧 ===================== -->
+  <!-- ===================== 登録状況一覧 ===================== -->
   <div class="card">
-    <h2>登録済みの世帯</h2>
-    <p class="desc">残量が変わったら「編集」で開いて数字を直し、もう一度登録してください。日数は自動で再計算されます。</p>
-    <div class="tokenrow" style="margin-bottom:8px">
-      <div>
-        <label for="filterDistrict">地区でしぼり込み</label><br>
-        <select id="filterDistrict" style="width:auto; min-width:10em"><option value="">すべての地区</option></select>
-      </div>
-      <span id="hhCount" style="font-size:.74rem; color:var(--text-secondary)"></span>
-    </div>
+    <h2>各区の登録状況</h2>
+    <p class="desc">状況が変わったら「編集」で開いて直し、もう一度登録してください。</p>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>地区</th><th>呼び名</th><th>人数</th><th>受取</th><th>残り日数（自動計算）</th><th>更新日時</th><th></th><th></th></tr></thead>
-        <tbody id="hhBody"></tbody>
+        <thead><tr><th>地区</th><th>世帯数</th><th>必要な物資</th><th>集積場所</th><th>更新日時</th><th></th><th></th></tr></thead>
+        <tbody id="districtBody"></tbody>
       </table>
     </div>
+    <button class="small" id="addDistrict" style="margin-top:10px">＋ 地区だけ先に追加する（運営用）</button>
   </div>
 
   <!-- ===================== 計算基準（運営スタッフ用） ===================== -->
-  <div class="card">
+  <div class="card" id="rulesCard">
     <details class="adv">
-      <summary>計算基準・しきい値の設定（運営スタッフ用）</summary>
-      <p class="desc" style="margin-top:8px">「1人1日あたりの必要量」「常に確保する日数（目標）」「優先度のしきい値」をここで変更できます。変更するとすべての世帯・地区の計算に反映されます。</p>
+      <summary>計算基準の設定（運営スタッフ用）</summary>
+      <p class="desc" style="margin-top:8px">「1人1日あたりの必要量」「1世帯あたり平均人数」「何日分を届けるか」をここで変更できます。変更するとすべての区の数量に反映されます。</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>使用</th><th>品目</th><th style="text-align:right">1人1日</th><th>単位</th><th>対象</th><th style="text-align:right">目標日数</th></tr></thead>
           <tbody id="rulesBody"></tbody>
         </table>
       </div>
-      <div class="cols4" style="margin-top:12px">
+      <div class="cols" style="margin-top:12px">
+        <div><label for="sAvgSize">1世帯あたり平均人数</label><input type="number" id="sAvgSize" min="1" step="0.1"></div>
         <div><label for="sBuffer">共通の目標日数</label><input type="number" id="sBuffer" min="1" step="0.5"></div>
-        <div><label for="sCritical">最優先（未満）</label><input type="number" id="sCritical" min="0.1" step="0.5"></div>
-        <div><label for="sPriority">優先（未満）</label><input type="number" id="sPriority" min="0.1" step="0.5"></div>
-        <div><label for="sWarning">補充候補（未満）</label><input type="number" id="sWarning" min="0.1" step="0.5"></div>
       </div>
       <div class="cols" style="margin-top:10px">
         <div><label for="sDisasterEnd">災害対応の終了予定日（任意）</label><input type="date" id="sDisasterEnd"></div>
         <div><label for="sWaterEnd">断水の解消予定日（任意）</label><input type="date" id="sWaterEnd"></div>
       </div>
-      <div class="notice">補充量は「予定日までの全量」ではなく、<b>常に目標日数分を確保するローリング方式</b>で計算します（残りが減ってきた世帯から順に補充対象になります）。</div>
+      <div class="notice">数量は「予定日までの全量」ではなく<b>「目標日数分（初期値3日分）」</b>で計算します。届いたら品目を解除し、また必要になったら選び直す運用です。</div>
     </details>
   </div>
 
@@ -316,11 +289,20 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
    設定（避難所ダッシュボードの admin.html と同じ中継サーバーを使用）
    ============================================================ */
 const WORKER_URL = "https://bousai-relay.a-sawada813.workers.dev";
-const DATA_PATH = "zaitaku.json";
+/* 検証環境: URLに ?env=demo を付けると zaitaku-demo.json（練習用）に読み書きする。
+   本番の zaitaku.json には一切影響しない */
+const IS_DEMO = new URLSearchParams(location.search).get("env") === "demo";
+const DATA_PATH = IS_DEMO ? "zaitaku-demo.json" : "zaitaku.json";
+if (IS_DEMO){
+  document.getElementById("demoBanner").style.display = "";
+  document.title = "【検証】" + document.title;
+  document.querySelectorAll("a[data-envlink]").forEach(a => { a.href += "?env=demo"; });
+}
 
-let data = null;       // zaitaku.json の内容
+let data = null;        // zaitaku.json の内容
 let dirty = false;
-let editId = null;     // 編集中の世帯ID（null = 新規登録）
+let formNeeds = {};     // フォームで選択中の必要物資 { 品目id: {note} }
+let scope = null;       // ログイン中の担当範囲（/auth の応答。admin=全部 / district=担当地区のみ）
 
 const $ = id => document.getElementById(id);
 const status = $("status");
@@ -333,8 +315,24 @@ function jstStamp(){
     .formatToParts(new Date()).reduce((a,x) => (a[x.type]=x.value, a), {});
   return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
 }
-function newId(){ return "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function activeRules(){ return (data.rules || []).filter(r => r.is_active !== false); }
+function ruleName(id){ const r = (data.rules || []).find(x => x.id === id); return r ? r.name : id; }
+
+/* 地区担当者は担当地区だけ編集できる（最終的な制限はサーバー側で強制される） */
+function canEditDistrict(name){
+  return !scope || scope.type !== "district" || (scope.districts || []).includes(name);
+}
+function applyScope(){
+  const limited = scope && scope.type === "district";
+  $("rulesCard").style.display = limited ? "none" : "";
+  $("addDistrict").style.display = limited ? "none" : "";
+  if (limited){
+    const list = scope.districts || [];
+    if (list.length === 1 && !$("fDistrict").value) $("fDistrict").value = list[0];
+    setStatus(`地区担当としてログイン中（担当: ${list.join("、") || "なし"}）。担当地区だけ登録・更新できます`, "ok");
+  }
+  if (data){ renderDistricts(); loadDistrictToForm($("fDistrict").value, { keepStatus: true }); }
+}
 
 /* ---------- 認証（避難所ダッシュボードと同じ保存キーを共用） ---------- */
 function currentAuth(){ return { name: $("adminName").value.trim(), password: $("adminPass").value }; }
@@ -358,267 +356,247 @@ async function workerPost(path, payload){
   return { res, body };
 }
 
-/* ---------- 残量入力欄（品目マスターから生成） ---------- */
-function buildInventoryInputs(){
-  const box = $("invBox");
-  box.textContent = "";
+/* ---------- 地区マスター ---------- */
+/* districts は [{name, site, report}] 形式（旧データの文字列配列も読めるよう変換する） */
+function normalizeDistricts(){
+  data.districts = (data.districts || [])
+    .map(d => typeof d === "string" ? { name: d, site: "" } : d)
+    .filter(d => d && typeof d.name === "string");
+}
+function districtOf(name){ return (data.districts || []).find(d => d.name === name); }
+
+/* ---------- 必要な物資（タップ選択） ---------- */
+function renderNeedChips(){
+  const grid = $("needChips");
+  grid.textContent = "";
   activeRules().forEach(rule => {
-    const div = document.createElement("div");
-    div.className = "itembox";
-    div.dataset.rule = rule.id;
-    const head = document.createElement("div");
-    head.className = "itemhead";
-    const nm = document.createElement("span");
-    nm.className = "iname";
-    nm.textContent = rule.name;
-    const tgt = document.createElement("span");
-    tgt.style.cssText = "font-size:.68rem; color:var(--text-muted)";
-    tgt.textContent = rule.target && rule.target !== "all" ? `対象: ${ZCALC.targetLabel(rule)}` : "";
-    const days = document.createElement("span");
-    days.className = "idays";
-    days.dataset.daysFor = rule.id;
-    head.append(nm, tgt, days);
-    div.appendChild(head);
-    const row = document.createElement("div");
-    row.className = "packrow";
-    (rule.packs || []).forEach(p => {
-      const pk = document.createElement("div");
-      pk.className = "pk";
-      const lb = document.createElement("label");
-      lb.textContent = p.label + (p.unit ? `（${p.unit}）` : "");
-      const inp = document.createElement("input");
-      inp.type = "number"; inp.min = "0"; inp.inputMode = "decimal";
-      inp.dataset.pack = p.label;
-      inp.addEventListener("input", updatePreview);
-      pk.append(lb, inp);
-      row.appendChild(pk);
+    const b = document.createElement("button");
+    b.type = "button";
+    const sel = !!formNeeds[rule.id];
+    b.className = sel ? "sel" : "";
+    b.textContent = (sel ? "✓ " : "") + rule.name;
+    b.setAttribute("aria-pressed", sel);
+    b.addEventListener("click", () => {
+      if (formNeeds[rule.id]) delete formNeeds[rule.id];
+      else formNeeds[rule.id] = { note: "" };
+      renderNeedChips();
+      updatePreview();
     });
-    if (rule.note_label){
-      const pk = document.createElement("div");
-      pk.className = "pk";
-      const lb = document.createElement("label");
-      lb.textContent = rule.note_label + "（任意）";
-      const inp = document.createElement("input");
-      inp.type = "text"; inp.dataset.noteFor = rule.id;
-      inp.placeholder = rule.id.startsWith("diaper") ? "例: Mサイズ" : "";
-      pk.append(lb, inp);
-      row.appendChild(pk);
-    }
-    div.appendChild(row);
-    box.appendChild(div);
+    grid.appendChild(b);
+  });
+  // サイズ・銘柄などのメモ欄（選択された品目のみ）
+  const notes = $("needNotes");
+  notes.textContent = "";
+  activeRules().filter(r => r.note_label && formNeeds[r.id]).forEach(rule => {
+    const box = document.createElement("div");
+    const lb = document.createElement("label");
+    lb.textContent = `${rule.name} の${rule.note_label}（任意）`;
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.value = formNeeds[rule.id].note || "";
+    inp.placeholder = rule.id.startsWith("diaper") ? "例: Mサイズ 3人・Lサイズ 2人" : "";
+    inp.addEventListener("input", () => { formNeeds[rule.id].note = inp.value.trim(); });
+    box.append(lb, inp);
+    notes.appendChild(box);
   });
 }
 
-/* ---------- フォーム ⇔ 世帯オブジェクト ---------- */
+/* ---------- フォーム ⇔ 地区オブジェクト ---------- */
 function intOrNull(id){
   const v = $(id).value.trim();
   if (v === "") return null;
   const n = Math.max(0, Math.round(Number(v)));
   return Number.isFinite(n) ? n : null;
 }
-function formHousehold(){
-  const hh = {
-    id: editId || newId(),
-    district: $("fDistrict").value.trim(),
-    label: $("fLabel").value.trim(),
-    reporter_role: $("fRole").value,
-    size: Math.round(Number($("fSize").value)) || 0,
-    adults: intOrNull("fAdults"),
-    children: intOrNull("fChildren"),
-    infants: intOrNull("fInfants"),
-    elderly: intOrNull("fElderly"),
-    pickup: (document.querySelector('input[name="fPickup"]:checked') || {}).value || "不明",
-    notes: $("fNotes").value.trim(),
-    inventory: {},
+function formDistrict(){
+  const needs = {};
+  Object.keys(formNeeds).forEach(k => { needs[k] = { note: formNeeds[k].note || "" }; });
+  return {
+    name: $("fDistrict").value.trim(),
+    site: $("fSite").value.trim(),
+    report: {
+      reporter_role: $("fRole").value,
+      households: Math.round(Number($("fHouseholds").value)) || 0,
+      infants: intOrNull("fInfants"),
+      elderly: intOrNull("fElderly"),
+      needs,
+      notes: $("fNotes").value.trim(),
+    },
   };
-  document.querySelectorAll("#invBox .itembox").forEach(div => {
-    const packs = {};
-    let has = false;
-    div.querySelectorAll("input[data-pack]").forEach(inp => {
-      const n = Number(inp.value);
-      if (inp.value.trim() !== "" && Number.isFinite(n) && n >= 0){ packs[inp.dataset.pack] = n; has = true; }
-    });
-    const noteInp = div.querySelector("input[data-note-for]");
-    const note = noteInp ? noteInp.value.trim() : "";
-    if (has || note) hh.inventory[div.dataset.rule] = { packs, note };
-  });
-  return hh;
 }
-function fillForm(hh){
-  $("fRole").value = hh.reporter_role || "区長";
-  $("fDistrict").value = hh.district || "";
-  $("fLabel").value = hh.label || "";
-  $("fSize").value = hh.size || "";
-  $("fAdults").value = hh.adults ?? "";
-  $("fChildren").value = hh.children ?? "";
-  $("fInfants").value = hh.infants ?? "";
-  $("fElderly").value = hh.elderly ?? "";
-  const r = document.querySelector(`input[name="fPickup"][value="${hh.pickup || "不明"}"]`);
-  (r || document.querySelector('input[name="fPickup"][value="不明"]')).checked = true;
-  $("fNotes").value = hh.notes || "";
-  document.querySelectorAll("#invBox .itembox").forEach(div => {
-    const entry = (hh.inventory || {})[div.dataset.rule] || {};
-    div.querySelectorAll("input[data-pack]").forEach(inp => {
-      const v = entry.packs ? entry.packs[inp.dataset.pack] : undefined;
-      inp.value = (v === undefined || v === null) ? "" : v;
-    });
-    const noteInp = div.querySelector("input[data-note-for]");
-    if (noteInp) noteInp.value = entry.note || "";
-  });
+function fillForm(d){
+  const r = (d && d.report) || {};
+  $("fRole").value = r.reporter_role || "区長";
+  $("fDistrict").value = (d && d.name) || "";
+  $("fSite").value = (d && d.site) || "";
+  $("fHouseholds").value = r.households || "";
+  $("fInfants").value = r.infants ?? "";
+  $("fElderly").value = r.elderly ?? "";
+  $("fNotes").value = r.notes || "";
+  formNeeds = {};
+  Object.keys(r.needs || {}).forEach(k => { formNeeds[k] = { note: (r.needs[k] && r.needs[k].note) || "" }; });
+  renderNeedChips();
   updatePreview();
 }
 function resetForm(){
-  editId = null;
-  $("formTitle").textContent = "世帯の登録";
-  $("addBtn").textContent = "この世帯を登録する";
-  $("cancelEditBtn").style.display = "none";
-  fillForm({ pickup: "不明" });
+  fillForm(null);
+  const list = scope && scope.type === "district" ? (scope.districts || []) : [];
+  if (list.length === 1) $("fDistrict").value = list[0];
   $("previewBox").style.display = "none";
 }
+/* 地区名を入れたとき、登録済みならその内容をフォームに読み込む */
+function loadDistrictToForm(name, opts){
+  const d = districtOf(name);
+  if (!d) return;
+  fillForm(d);
+  if (!(opts && opts.keepStatus) && d.report)
+    setStatus(`「${name}」の登録内容を読み込みました。直して「この内容で登録する」を押してください`);
+}
+$("fDistrict").addEventListener("change", () => loadDistrictToForm($("fDistrict").value.trim()));
 
 /* ---------- 自動計算プレビュー ---------- */
-function statusChip(level){
-  const s = document.createElement("span");
-  s.className = "st st" + level;
-  s.textContent = ZCALC.STATUS[level].label;
-  return s;
-}
 function updatePreview(){
   if (!data) return;
-  const hh = formHousehold();
+  const d = formDistrict();
   const lines = $("previewLines");
   lines.textContent = "";
-  document.querySelectorAll("[data-days-for]").forEach(el => { el.textContent = ""; });
-  if (!hh.size){ $("previewBox").style.display = "none"; return; }
-  const results = ZCALC.calcHousehold(hh, data.rules, data.settings);
+  if (!d.report.households){ $("previewBox").style.display = "none"; return; }
+  const results = ZCALC.calcDistrict(d, data.rules, data.settings);
   results.forEach(c => {
-    const badge = document.querySelector(`[data-days-for="${c.rule.id}"]`);
-    if (badge){
-      badge.textContent = `あと ${ZCALC.fmtDays(c.days)}`;
-      badge.style.color = c.level <= 1 ? "var(--status-critical)" : c.level === 2 ? "#8a6d00" : "var(--good-text)";
-    }
     const line = document.createElement("div");
     line.className = "pline";
     const nm = document.createElement("span"); nm.className = "pname"; nm.textContent = c.rule.name;
-    const dy = document.createElement("span"); dy.className = "pdays";
-    dy.textContent = `残量 ${ZCALC.fmtQty(c.qty, c.rule.unit)} ／ 1日 ${ZCALC.fmtQty(c.daily, c.rule.unit)} ／ あと ${ZCALC.fmtDays(c.days)}`;
+    const q = document.createElement("span"); q.className = "pqty";
+    q.textContent = ZCALC.fmtQtyWithPack(c.rule, c.need);
     const rf = document.createElement("span"); rf.className = "pref";
-    rf.textContent = c.refill > 0
-      ? `目標${c.buffer}日分まで 補充 ${ZCALC.fmtQtyWithPack(c.rule, c.refill)}`
-      : `目標${c.buffer}日分を確保できています`;
-    line.append(nm, dy, statusChip(c.level), rf);
+    rf.textContent = c.rule.target && c.rule.target !== "all"
+      ? `${ZCALC.targetLabel(c.rule)}${c.people}人 × ${c.buffer}日分`
+      : `${d.report.households}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
+    line.append(nm, q, rf);
     lines.appendChild(line);
   });
   $("previewBox").style.display = results.length ? "" : "none";
 }
-["fSize","fAdults","fChildren","fInfants","fElderly"].forEach(id =>
+["fHouseholds","fInfants","fElderly"].forEach(id =>
   $(id).addEventListener("input", updatePreview));
 
-/* ---------- 登録・編集 ---------- */
+/* ---------- 登録（区ごとに1件・上書き） ---------- */
 $("addBtn").addEventListener("click", () => {
-  const hh = formHousehold();
-  if (!hh.district){ setStatus("地区名を入力してください", "err"); $("fDistrict").focus(); return; }
-  if (!hh.size || hh.size < 1){ setStatus("世帯人数を入力してください", "err"); $("fSize").focus(); return; }
-  const stamp = jstStamp();
-  hh.updatedAt = stamp;
-  data.households = data.households || [];
-  const i = data.households.findIndex(x => x.id === hh.id);
-  if (i >= 0){ hh.createdAt = data.households[i].createdAt || stamp; data.households[i] = hh; }
-  else { hh.createdAt = stamp; data.households.push(hh); }
-  if (hh.district && !(data.districts || []).includes(hh.district)){
-    data.districts = data.districts || [];
-    data.districts.push(hh.district);
-    buildDistrictOptions();
+  const d = formDistrict();
+  if (!d.name){ setStatus("地区名を入力してください", "err"); $("fDistrict").focus(); return; }
+  if (!canEditDistrict(d.name)){
+    setStatus(`担当外の地区「${d.name}」は登録できません（担当: ${(scope.districts || []).join("、")}）`, "err");
+    $("fDistrict").focus();
+    return;
+  }
+  if (!d.report.households || d.report.households < 1){
+    setStatus("在宅避難の世帯数を入力してください", "err");
+    $("fHouseholds").focus();
+    return;
+  }
+  d.report.updatedAt = jstStamp();
+  const cur = districtOf(d.name);
+  if (cur){
+    cur.site = d.site;
+    cur.report = d.report;
+  } else {
+    data.districts.push(d);
   }
   markDirty();
-  renderHouseholds();
-  const wasEdit = !!editId;
+  renderDistricts();
+  buildDistrictOptions();
   resetForm();
-  setStatus(wasEdit
-    ? "世帯の内容を更新しました。最後に「保存して公開」を押してください"
-    : "世帯をリストに追加しました。続けて入力するか、「保存して公開」を押してください", "ok");
+  setStatus(`「${d.name}」を${cur && cur.report ? "更新" : "登録"}しました。最後に「保存して公開」を押してください`, "ok");
 });
-$("cancelEditBtn").addEventListener("click", () => { resetForm(); setStatus("編集をやめました"); });
-
-function startEdit(hh){
-  editId = hh.id;
-  $("formTitle").textContent = `世帯の編集（${hh.district}${hh.label ? "・" + hh.label : ""}）`;
-  $("addBtn").textContent = "この内容で更新する";
-  $("cancelEditBtn").style.display = "";
-  fillForm(hh);
-  $("formCard").scrollIntoView({ behavior: "smooth" });
-}
+$("cancelEditBtn").addEventListener("click", () => { resetForm(); setStatus("入力をクリアしました"); });
 
 /* ---------- 一覧 ---------- */
 function buildDistrictOptions(){
-  const list = [...new Set([...(data.districts || []), ...(data.households || []).map(h => h.district)])]
-    .filter(Boolean).sort((a, b) => a.localeCompare(b, "ja"));
   const dl = $("districtList");
   dl.textContent = "";
-  list.forEach(d => { const o = document.createElement("option"); o.value = d; dl.appendChild(o); });
-  const sel = $("filterDistrict");
-  const prev = sel.value;
-  sel.textContent = "";
-  const all = document.createElement("option"); all.value = ""; all.textContent = "すべての地区";
-  sel.appendChild(all);
-  list.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; sel.appendChild(o); });
-  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  const names = (scope && scope.type === "district")
+    ? (scope.districts || [])
+    : (data.districts || []).map(d => d.name).filter(Boolean);
+  [...new Set(names)].sort((a, b) => a.localeCompare(b, "ja"))
+    .forEach(n => { const o = document.createElement("option"); o.value = n; dl.appendChild(o); });
 }
-$("filterDistrict").addEventListener("change", renderHouseholds);
-
-function renderHouseholds(){
-  const tbody = $("hhBody");
+function renderDistricts(){
+  const tbody = $("districtBody");
   tbody.textContent = "";
-  const filter = $("filterDistrict").value;
-  const list = (data.households || []).filter(h => !filter || h.district === filter);
-  $("hhCount").textContent = `${list.length}世帯 ／ 合計${list.reduce((a, h) => a + (Number(h.size) || 0), 0)}人`;
+  const list = [...(data.districts || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
   if (!list.length){
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 8;
+    td.colSpan = 7;
     td.style.cssText = "color:var(--text-muted); font-size:.76rem; padding:14px 8px";
     td.textContent = "まだ登録がありません。上のフォームから登録してください。";
     tr.appendChild(td);
     tbody.appendChild(tr);
     return;
   }
-  list.forEach(hh => {
+  const limited = scope && scope.type === "district";
+  list.forEach(d => {
+    const editable = canEditDistrict(d.name);
+    const r = d.report;
     const tr = document.createElement("tr");
     const td = t => { const c = document.createElement("td"); c.textContent = t; return c; };
-    tr.append(td(hh.district || ""), td(hh.label || "―"), td(`${hh.size}人`), td(hh.pickup || "不明"));
+    tr.append(td(d.name || "（名前未設定）"), td(r ? `${r.households}世帯` : "未登録"));
     const chips = document.createElement("td");
     const wrap = document.createElement("div");
     wrap.className = "hhchips";
-    ZCALC.calcHousehold(hh, data.rules, data.settings).forEach(c => {
+    const ids = r ? Object.keys(r.needs || {}) : [];
+    if (!ids.length){
       const s = document.createElement("span");
-      s.className = "st st" + c.level;
-      s.textContent = `${c.rule.name} ${ZCALC.fmtDays(c.days)}`;
+      s.className = "tag";
+      s.textContent = r ? "なし" : "―";
+      wrap.appendChild(s);
+    } else ids.forEach(id => {
+      const s = document.createElement("span");
+      s.className = "tag";
+      const note = r.needs[id] && r.needs[id].note;
+      s.textContent = ruleName(id) + (note ? `（${note}）` : "");
       wrap.appendChild(s);
     });
     chips.appendChild(wrap);
     tr.appendChild(chips);
-    tr.appendChild(td(hh.updatedAt || ""));
+    tr.append(td(d.site || "調整中"), td(r ? (r.updatedAt || "") : ""));
     const edit = document.createElement("td");
     const eb = document.createElement("button");
     eb.className = "small"; eb.type = "button"; eb.textContent = "編集";
-    eb.addEventListener("click", () => startEdit(hh));
+    eb.disabled = !editable;
+    if (!editable) eb.title = "担当外の地区のため編集できません";
+    eb.addEventListener("click", () => {
+      fillForm(d);
+      setStatus(`「${d.name}」の内容をフォームに読み込みました`);
+      $("formCard").scrollIntoView({ behavior: "smooth" });
+    });
     edit.appendChild(eb);
     tr.appendChild(edit);
     const del = document.createElement("td");
     const db = document.createElement("button");
     db.className = "del"; db.type = "button"; db.textContent = "✕";
+    if (limited) db.style.display = "none";
     db.addEventListener("click", () => {
-      if (!confirm(`${hh.district}${hh.label ? "・" + hh.label : ""}（${hh.size}人）を削除しますか？`)) return;
-      data.households = data.households.filter(x => x.id !== hh.id);
-      if (editId === hh.id) resetForm();
+      if (!confirm(`地区「${d.name}」を削除しますか？（登録内容も消えます）`)) return;
+      data.districts = data.districts.filter(x => x !== d);
       markDirty();
-      renderHouseholds();
+      renderDistricts();
+      buildDistrictOptions();
     });
     del.appendChild(db);
     tr.appendChild(del);
     tbody.appendChild(tr);
   });
 }
+$("addDistrict").addEventListener("click", () => {
+  const name = prompt("追加する地区名（例: 松橋町 豊福）");
+  if (!name || !name.trim()) return;
+  if (districtOf(name.trim())){ setStatus("その地区はすでにあります", "err"); return; }
+  data.districts.push({ name: name.trim(), site: "" });
+  markDirty();
+  renderDistricts();
+  buildDistrictOptions();
+});
 
 /* ---------- 計算基準・設定 ---------- */
 function renderRules(){
@@ -661,29 +639,26 @@ function renderRules(){
 }
 function onRulesChanged(){
   markDirty();
-  buildInventoryInputs();
-  if (editId){
-    const hh = (data.households || []).find(x => x.id === editId);
-    if (hh) fillForm(hh);
-  } else updatePreview();
-  renderHouseholds();
+  renderNeedChips();
+  updatePreview();
+  renderDistricts();
 }
 function renderSettings(){
   const s = data.settings || {};
+  $("sAvgSize").value = ZCALC.setting(s, "avg_household_size");
+  $("avgLabel").textContent = ZCALC.setting(s, "avg_household_size");
   $("sBuffer").value = ZCALC.setting(s, "buffer_days");
-  $("sCritical").value = ZCALC.setting(s, "critical_days");
-  $("sPriority").value = ZCALC.setting(s, "priority_days");
-  $("sWarning").value = ZCALC.setting(s, "warning_days");
   $("sDisasterEnd").value = s.disaster_end_date || "";
   $("sWaterEnd").value = s.water_outage_end_date || "";
 }
-[["sBuffer","buffer_days"],["sCritical","critical_days"],["sPriority","priority_days"],["sWarning","warning_days"]]
+[["sAvgSize","avg_household_size"],["sBuffer","buffer_days"]]
   .forEach(([id, key]) => $(id).addEventListener("change", () => {
     const n = Number($(id).value);
     if (Number.isFinite(n) && n > 0){
       data.settings = data.settings || {};
       data.settings[key] = n;
-      markDirty(); updatePreview(); renderHouseholds();
+      $("avgLabel").textContent = ZCALC.setting(data.settings, "avg_household_size");
+      markDirty(); updatePreview(); renderDistricts();
     }
   }));
 [["sDisasterEnd","disaster_end_date"],["sWaterEnd","water_outage_end_date"]]
@@ -695,18 +670,18 @@ function renderSettings(){
 
 /* ---------- 読み込み・保存 ---------- */
 function renderAll(){
+  normalizeDistricts();
   buildDistrictOptions();
-  buildInventoryInputs();
   renderRules();
   renderSettings();
-  renderHouseholds();
+  renderDistricts();
   resetForm();
 }
 async function loadFromPublic(){
   setStatus("公開データを読み込み中…");
   try {
-    const res = await fetch("zaitaku.json?_=" + Date.now(), { cache: "no-store" });
-    if (!res.ok) throw new Error("zaitaku.json HTTP " + res.status);
+    const res = await fetch(DATA_PATH + "?_=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error(DATA_PATH + " HTTP " + res.status);
     data = await res.json();
     renderAll();
     clearDirty();
@@ -726,8 +701,8 @@ function collect(){
     updatedAt: jstStamp() + " 更新",
     settings: data.settings || {},
     rules: data.rules || [],
-    districts: data.districts || [],
-    households: data.households || [],
+    districts: (data.districts || []).filter(d => d.name),   // 名前が空の行は保存しない
+    households: [],                                          // 旧形式との互換用（未使用）
   };
   // この画面が扱わないデータ（第2フェーズの民間提供など）は元の内容をそのまま引き継ぐ
   Object.keys(data || {}).forEach(k => { if (!(k in next)) next[k] = data[k]; });
@@ -767,8 +742,12 @@ async function initLogin(){
   const a = currentAuth();
   if (a.name && a.password){
     try {
-      const { res } = await workerPost("/auth", a);
-      if (res.ok) return;
+      const { res, body } = await workerPost("/auth", a);
+      if (res.ok){
+        scope = (body && body.scope) || null;
+        applyScope();
+        return;
+      }
     } catch (e) {}
   }
   $("loginName").value = a.name || "";
@@ -787,6 +766,8 @@ $("loginBtn").addEventListener("click", async () => {
       $("saveAuth").checked = $("loginSave").checked;
       persistAuth();
       closeLogin();
+      scope = (body && body.scope) || null;
+      applyScope();
     } else {
       showLoginErr((body && body.error) || "ログインできませんでした（HTTP " + res.status + "）");
     }
