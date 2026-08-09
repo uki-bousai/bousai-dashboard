@@ -77,6 +77,10 @@ footer a{color:var(--accent)}
 </head>
 <body>
 
+<div id="demoBanner" style="display:none; position:sticky; top:0; z-index:80; background:#6d28d9; color:#fff;
+  text-align:center; font-size:.8rem; font-weight:700; padding:8px 12px">
+  🧪 検証環境（練習用）─ ここでの登録・保存は本番のデータに影響しません</div>
+
 <header>
   <h1>在宅避難の方に必要な物資 ─ 地区別の一覧</h1>
   <div class="sub">避難所へ行くことが難しい在宅避難の世帯について、地域の情報提供者が確認した<b>必要な物資</b>を公開しています。数量は<b>世帯人数から自動計算した「3日分」</b>です。</div>
@@ -88,7 +92,7 @@ footer a{color:var(--accent)}
 
   <div class="privacy">
     🔒 このページに<b>個人がわかる情報は掲載していません</b>。世帯の場所は「地区」単位でのみ集計しています。
-    在宅避難の状況の登録は、区長・自治会長・民生委員などの<a href="zaitaku-admin.html">入力ページ</a>から行えます。
+    在宅避難の状況の登録は、区長・自治会長・民生委員などの<a href="zaitaku-admin.html" data-envlink>入力ページ</a>から行えます。
   </div>
 
   <div class="card" id="summaryCard">
@@ -120,6 +124,15 @@ footer a{color:var(--accent)}
 <script src="zaitaku-calc.js"></script>
 <script>
 "use strict";
+
+/* 検証環境: URLに ?env=demo を付けると zaitaku-demo.json（練習用データ）を表示する */
+const IS_DEMO = new URLSearchParams(location.search).get("env") === "demo";
+const DATA_PATH = IS_DEMO ? "zaitaku-demo.json" : "zaitaku.json";
+if (IS_DEMO){
+  document.getElementById("demoBanner").style.display = "";
+  document.title = "【検証】" + document.title;
+  document.querySelectorAll("a[data-envlink]").forEach(a => { a.href += "?env=demo"; });
+}
 
 let DATA = null;
 
@@ -274,7 +287,7 @@ function renderAll(){
 
 async function load(){
   try {
-    const res = await fetch("zaitaku.json?_=" + Date.now(), { cache: "no-store" });
+    const res = await fetch(DATA_PATH + "?_=" + Date.now(), { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     DATA = await res.json();
     $("updatedAt").textContent = DATA.updatedAt ? `最終更新: ${DATA.updatedAt}` : "まだデータが登録されていません";

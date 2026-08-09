@@ -28,7 +28,9 @@ const OWNER  = "uki-bousai";
 const REPO   = "bousai-dashboard";
 const BRANCH = "main";
 // 保存を許可するファイル（先頭が既定値。リクエストの path で切り替え可能）
-const PATHS  = ["data.json", "seikatsu.json", "zaitaku.json"];
+const PATHS  = ["data.json", "seikatsu.json", "zaitaku.json", "zaitaku-demo.json"];
+// 在宅避難者アプリのデータ（zaitaku-demo.json は ?env=demo の検証環境用。仕組み・権限は本番と同じ）
+const ZAITAKU_PATHS = ["zaitaku.json", "zaitaku-demo.json"];
 const ALLOWED_ORIGINS = [
   "https://uki-bousai.github.io",
 ];
@@ -175,13 +177,13 @@ export default {
     // データ保存（GitHubへコミット）
     if (path === "/save"){
       const filePath = PATHS.includes(body.path) ? body.path : PATHS[0];
-      // 地区担当者は在宅避難者データ（zaitaku.json）のみ保存できる
-      if (auth.scope.type === "district" && filePath !== "zaitaku.json")
+      // 地区担当者は在宅避難者データ（本番・検証）のみ保存できる
+      if (auth.scope.type === "district" && !ZAITAKU_PATHS.includes(filePath))
         return json({ error: "このデータの保存権限がありません" }, 403, cors);
       const data = body.data;
       const valid = filePath === "seikatsu.json"
         ? (data && typeof data === "object" && Array.isArray(data.water) && Array.isArray(data.toilets) && Array.isArray(data.haves))
-        : filePath === "zaitaku.json"
+        : ZAITAKU_PATHS.includes(filePath)
         ? (data && typeof data === "object" && Array.isArray(data.households) && Array.isArray(data.rules) &&
            data.settings && typeof data.settings === "object")
         : (data && typeof data === "object" && Array.isArray(data.shelters) && Array.isArray(data.supplies));
@@ -189,7 +191,8 @@ export default {
       const text = JSON.stringify(data, null, 2) + "\n";
       if (text.length > 1000000) return json({ error: "データが大きすぎます" }, 400, cors);
       const prefix = filePath === "seikatsu.json" ? "生活情報更新"
-        : filePath === "zaitaku.json" ? "在宅避難者情報更新" : "状況更新";
+        : filePath === "zaitaku.json" ? "在宅避難者情報更新"
+        : filePath === "zaitaku-demo.json" ? "在宅避難者情報更新（検証）" : "状況更新";
       const message = `${prefix} ${data.updatedAt || ""}（更新者: ${body.name}）`;
       try {
         let cur = await latestFile(env, filePath);

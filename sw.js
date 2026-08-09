@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v6";
+const VERSION = "v7";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
@@ -97,6 +97,10 @@ self.addEventListener("fetch", e => {
   }
   if (url.origin === location.origin && url.pathname.endsWith("/zaitaku.json")){
     e.respondWith(networkFirst(req, "zaitaku.json"));
+    return;
+  }
+  if (url.origin === location.origin && url.pathname.endsWith("/zaitaku-demo.json")){
+    e.respondWith(networkFirst(req, "zaitaku-demo.json"));
     return;
   }
   // 地図タイル

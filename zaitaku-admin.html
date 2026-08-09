@@ -121,9 +121,13 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 </head>
 <body>
 
+<div id="demoBanner" style="display:none; position:sticky; top:0; z-index:80; background:#6d28d9; color:#fff;
+  text-align:center; font-size:.8rem; font-weight:700; padding:8px 12px">
+  🧪 検証環境（練習用）─ ここでの登録・保存は本番のデータに影響しません</div>
+
 <header>
   <h1>在宅避難者の状況入力</h1>
-  <span class="sub">人数と必要な物資を選ぶだけ。数量は自動計算 ─ <a href="zaitaku.html">公開ページ（地区別集計）</a></span>
+  <span class="sub">人数と必要な物資を選ぶだけ。数量は自動計算 ─ <a href="zaitaku.html" data-envlink>公開ページ（地区別集計）</a></span>
 </header>
 
 <div class="container">
@@ -319,7 +323,15 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
    設定（避難所ダッシュボードの admin.html と同じ中継サーバーを使用）
    ============================================================ */
 const WORKER_URL = "https://bousai-relay.a-sawada813.workers.dev";
-const DATA_PATH = "zaitaku.json";
+/* 検証環境: URLに ?env=demo を付けると zaitaku-demo.json（練習用）に読み書きする。
+   本番の zaitaku.json には一切影響しない */
+const IS_DEMO = new URLSearchParams(location.search).get("env") === "demo";
+const DATA_PATH = IS_DEMO ? "zaitaku-demo.json" : "zaitaku.json";
+if (IS_DEMO){
+  document.getElementById("demoBanner").style.display = "";
+  document.title = "【検証】" + document.title;
+  document.querySelectorAll("a[data-envlink]").forEach(a => { a.href += "?env=demo"; });
+}
 
 let data = null;        // zaitaku.json の内容
 let dirty = false;
@@ -762,8 +774,8 @@ function renderAll(){
 async function loadFromPublic(){
   setStatus("公開データを読み込み中…");
   try {
-    const res = await fetch("zaitaku.json?_=" + Date.now(), { cache: "no-store" });
-    if (!res.ok) throw new Error("zaitaku.json HTTP " + res.status);
+    const res = await fetch(DATA_PATH + "?_=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error(DATA_PATH + " HTTP " + res.status);
     data = await res.json();
     renderAll();
     clearDirty();
