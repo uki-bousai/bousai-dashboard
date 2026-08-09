@@ -5,107 +5,98 @@
    両方から読み込んで使う。
 
    考え方:
-     在宅避難の世帯は、いまの在庫（残量）を正確に確認できない。
-     だから入力は「世帯人数」と「必要な物資はどれか」だけ。
-     数量はここで計算する:
-       3日分持つのに必要な量 = 1人1日あたり × 対象人数 × 目標日数
+     世帯ごとの登録は現場の負担が大きく、人数の把握も難しい。
+     だから登録は「区ごとに1件」: 在宅避難の世帯数と、必要な物資だけ。
+     数量はここで概算する:
+       3日分の数量 = 1人1日あたり × 世帯数 × 1世帯あたり平均人数 × 目標日数
+     おむつ・ミルクなど対象が限られる品目は、地区の乳幼児・高齢者の
+     人数（任意入力）があればそれで計算する。
 
-   計算基準（1人1日あたりの量・目標日数）は zaitaku.json の
+   計算基準（1人1日あたりの量・平均人数・目標日数）は zaitaku.json の
    rules / settings に持ち、入力画面から変更できる。
    ============================================================ */
 "use strict";
 
 const ZCALC = (() => {
 
-  const DEFAULT_SETTINGS = { buffer_days: 3 };
+  const DEFAULT_SETTINGS = { buffer_days: 3, avg_household_size: 2.5 };
 
   function setting(settings, key){
     const v = settings ? Number(settings[key]) : NaN;
     return Number.isFinite(v) && v > 0 ? v : DEFAULT_SETTINGS[key];
   }
 
-  /* 対象人数の解決:
-       all    → 世帯人数
-       infant → 乳幼児の人数, elderly → 高齢者の人数 など
-     内訳が未入力の世帯でも、その品目が「必要」と報告されていれば
-     「対象者が1人いる」とみなして計算する（報告=対象者がいる、という扱い）。 */
-  const TARGET_FIELD = { adult: "adults", child: "children", infant: "infants", elderly: "elderly" };
   const TARGET_LABEL = { all: "全員", adult: "大人", child: "子ども", infant: "乳幼児", elderly: "高齢者" };
+  const TARGET_FIELD = { infant: "infants", elderly: "elderly" };
 
-  function targetCount(rule, hh, needExists){
-    if (!rule.target || rule.target === "all") return Number(hh.size) || 0;
-    const raw = hh[TARGET_FIELD[rule.target]];
+  /* 対象人数の解決:
+       all    → 世帯数 × 1世帯あたり平均人数（概算）
+       infant / elderly → 地区の報告人数。未入力なら1人とみなす
+                          （必要と報告された=対象者がいる、という扱い） */
+  function peopleFor(rule, report, settings){
+    if (!rule.target || rule.target === "all")
+      return (Number(report.households) || 0) * setting(settings, "avg_household_size");
+    const raw = report[TARGET_FIELD[rule.target]];
     if (raw !== null && raw !== undefined && raw !== "" && Number.isFinite(Number(raw)))
       return Math.max(0, Number(raw));
-    return needExists ? 1 : 0;
+    return 1;
   }
 
-  /* 1世帯×1品目の計算。
-     「必要」と報告されていない品目、対象外（乳幼児0人など）は null */
-  function calcItem(rule, hh, settings){
+  /* 1地区×1品目の計算。「必要」と報告されていない品目、対象外は null */
+  function calcItem(rule, district, settings){
     if (rule.is_active === false) return null;
-    const entry = (hh.needs || {})[rule.id];
+    const report = district.report;
+    if (!report) return null;
+    const entry = (report.needs || {})[rule.id];
     if (!entry) return null;
-    const tc = targetCount(rule, hh, true);
-    const daily = (Number(rule.daily_amount_per_person) || 0) * tc;
+    const people = peopleFor(rule, report, settings);
+    const daily = (Number(rule.daily_amount_per_person) || 0) * people;
     if (daily <= 0) return null;
     const buffer = Number(rule.buffer_days) > 0 ? Number(rule.buffer_days) : setting(settings, "buffer_days");
     return {
-      rule, targetCount: tc, daily, buffer,
-      need: daily * buffer,                 // 目標日数分持つのに必要な量
+      rule, people, daily, buffer,
+      need: daily * buffer,                 // 目標日数分の数量
       note: entry && entry.note ? String(entry.note) : "",
     };
   }
 
-  function calcHousehold(hh, rules, settings){
-    return (rules || []).map(r => calcItem(r, hh, settings)).filter(Boolean);
+  function calcDistrict(district, rules, settings){
+    return (rules || []).map(r => calcItem(r, district, settings)).filter(Boolean);
   }
 
-  /* 地区別集計（公開ページは地区単位のみ表示。個人は出さない） */
-  function aggregate(households, rules, settings){
-    const map = {};
-    (households || []).forEach(hh => {
-      const d = (hh.district || "").trim() || "地区未設定";
-      const g = map[d] || (map[d] = { district: d, households: 0, people: 0, items: {} });
-      g.households++;
-      g.people += Number(hh.size) || 0;
-      calcHousehold(hh, rules, settings).forEach(c => {
-        const it = g.items[c.rule.id] || (g.items[c.rule.id] = {
-          rule: c.rule, households: 0, people: 0, need: 0, buffer: c.buffer, notes: [],
-        });
-        it.households++;
-        it.people += c.targetCount;
-        it.need += c.need;
-        if (c.note) it.notes.push(c.note);
-      });
-    });
-    Object.values(map).forEach(g => {
-      g.itemList = Object.values(g.items)
-        .sort((a, b) => b.households - a.households || b.people - a.people);
-      g.needCount = g.itemList.reduce((a, it) => a + it.households, 0);
-    });
-    // 地区名順（「松橋町 豊福」「松橋町 久具」のように同じ町の地区が続けて並ぶ）
-    return Object.values(map).sort((a, b) => a.district.localeCompare(b.district, "ja"));
+  /* 公開ページ用: 報告のある地区の一覧（地区名順。町ごとの見出しはページ側で付ける） */
+  function aggregate(districts, rules, settings){
+    return (districts || [])
+      .filter(d => d && d.name && d.report)
+      .map(d => ({
+        name: d.name,
+        site: d.site || "",
+        households: Number(d.report.households) || 0,
+        notes: d.report.notes || "",
+        updatedAt: d.report.updatedAt || "",
+        itemList: calcDistrict(d, rules, settings),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, "ja"));
   }
 
-  /* 全体サマリー（件数は 世帯×品目 の数え方） */
-  function summary(households, rules, settings){
-    const s = { households: 0, people: 0, needCount: 0, items: {} };
-    (households || []).forEach(hh => {
-      s.households++;
-      s.people += Number(hh.size) || 0;
-      calcHousehold(hh, rules, settings).forEach(c => {
+  /* 全体サマリー（「件」は 地区×品目 の数え方） */
+  function summary(districts, rules, settings){
+    const s = { districts: 0, households: 0, needCount: 0, items: {} };
+    aggregate(districts, rules, settings).forEach(g => {
+      s.districts++;
+      s.households += g.households;
+      g.itemList.forEach(c => {
         s.needCount++;
         const r = s.items[c.rule.id] || (s.items[c.rule.id] = {
-          rule: c.rule, households: 0, people: 0, need: 0, buffer: c.buffer,
+          rule: c.rule, districts: 0, households: 0, need: 0, buffer: c.buffer,
         });
-        r.households++;
-        r.people += c.targetCount;
+        r.districts++;
+        r.households += g.households;
         r.need += c.need;
       });
     });
     s.itemList = Object.values(s.items)
-      .sort((a, b) => b.households - a.households || b.people - a.people);
+      .sort((a, b) => b.districts - a.districts || b.need - a.need);
     return s;
   }
 
@@ -117,8 +108,8 @@ const ZCALC = (() => {
       if (v >= 1000) return (Math.ceil(v / 100) / 10).toFixed(1) + "L";
       return Math.ceil(v) + "ml";
     }
-    const n = Math.ceil(v * 10) / 10;
-    return (Number.isInteger(n) ? String(n) : n.toFixed(1)) + (unit || "");
+    const n = Math.ceil(v);   // 概算なので切り上げの整数で十分
+    return String(n) + (unit || "");
   }
 
   /* なじみのある単位への換算の補足（「2Lペット 約12本」）。なければ空文字 */
@@ -130,7 +121,6 @@ const ZCALC = (() => {
     return `${p.label} 約${Math.ceil(v / Number(p.factor))}${p.unit}`;
   }
 
-  /* 「24L（2Lペット 約12本）」のように1つの文字列で返す */
   function fmtQtyWithPack(rule, v){
     const base = fmtQty(v, rule.unit);
     const hint = packHint(rule, v);
@@ -140,8 +130,8 @@ const ZCALC = (() => {
   function targetLabel(rule){ return TARGET_LABEL[rule.target || "all"] || "全員"; }
 
   return {
-    DEFAULT_SETTINGS, setting, targetCount,
-    calcItem, calcHousehold, aggregate, summary,
+    DEFAULT_SETTINGS, setting, peopleFor,
+    calcItem, calcDistrict, aggregate, summary,
     fmtQty, packHint, fmtQtyWithPack, targetLabel,
   };
 })();

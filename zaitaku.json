@@ -2,6 +2,7 @@
  "updatedAt": "",
  "settings": {
   "buffer_days": 3,
+  "avg_household_size": 2.5,
   "disaster_end_date": "",
   "water_outage_end_date": ""
  },

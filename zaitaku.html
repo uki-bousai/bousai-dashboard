@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="避難所へ行くことが難しい在宅避難の方に必要な物資を、地区単位で公開しています。必要な数量は世帯人数から自動計算しています。">
+<meta name="description" content="避難所へ行くことが難しい在宅避難の方に必要な物資を、地区単位で公開しています。必要な数量は各区の世帯数から自動計算しています。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="宇城市 生活支援情報">
 <meta property="og:title" content="在宅避難の方に必要な物資 ─ 地区別の一覧">
@@ -83,7 +83,7 @@ footer a{color:var(--accent)}
 
 <header>
   <h1>在宅避難の方に必要な物資 ─ 地区別の一覧</h1>
-  <div class="sub">避難所へ行くことが難しい在宅避難の世帯について、地域の情報提供者が確認した<b>必要な物資</b>を公開しています。数量は<b>世帯人数から自動計算した「3日分」</b>です。</div>
+  <div class="sub">避難所へ行くことが難しい在宅避難の世帯について、地域の情報提供者が確認した<b>必要な物資</b>を公開しています。数量は<b>各区の世帯数から自動計算した概算の「3日分」</b>です。</div>
   <div class="updated" id="updatedAt">読み込み中…</div>
   <a class="backlink" href="seikatsu.html">← 生活支援情報（給水・トイレ・避難所）はこちら</a>
 </header>
@@ -98,7 +98,7 @@ footer a{color:var(--accent)}
   <div class="card" id="summaryCard">
     <h2>全体の状況</h2>
     <div class="tiles" id="summaryTiles"></div>
-    <p class="desc" style="margin:10px 0 0">「件」は 世帯×品目 の数です。下の一覧には<b>必要と報告された物資だけ</b>を表示しています。</p>
+    <p class="desc" style="margin:10px 0 0">「件」は 地区×品目 の数です。下の一覧には<b>必要と報告された物資だけ</b>を表示しています。世帯数は区長など地域の情報提供者の報告によるおおよその数です。</p>
   </div>
 
   <div class="card" id="needCard" style="display:none">
@@ -111,7 +111,7 @@ footer a{color:var(--accent)}
 
   <div class="card" id="emptyCard" style="display:none">
     <h2>まだ登録がありません</h2>
-    <p class="desc">在宅避難の世帯が登録されると、ここに地区ごとの必要な物資が表示されます。</p>
+    <p class="desc">各区の状況が登録されると、ここに地区ごとの必要な物資が表示されます。</p>
   </div>
 
 </div>
@@ -145,12 +145,6 @@ function el(tag, cls, text){
   return e;
 }
 
-function siteOf(districtName){
-  const d = (DATA.districts || []).find(x =>
-    (typeof x === "object" ? x.name : x) === districtName);
-  return d && typeof d === "object" ? (d.site || "") : "";
-}
-
 function fmtDate(iso){
   if (!iso) return "";
   const [y, m, d] = iso.split("-").map(Number);
@@ -165,8 +159,8 @@ function renderSummary(s){
     t.append(el("div", "num", String(num)), el("div", "lb", label));
     tiles.appendChild(t);
   };
-  add(s.households, "対象世帯");
-  add(s.people, "対象人数");
+  add(s.districts, "登録地区");
+  add(s.households, "対象世帯（概数）");
   add(s.needCount, "必要とされている物資（件）");
 }
 
@@ -183,7 +177,7 @@ function renderNeed(s){
     const row = el("div", "irow");
     const nm = el("div", "nm", r.rule.name);
     const s2 = document.createElement("small");
-    s2.textContent = `${r.households}世帯・${ZCALC.targetLabel(r.rule) === "全員" ? "" : ZCALC.targetLabel(r.rule)}${r.people}人`;
+    s2.textContent = `${r.districts}地区・約${r.households}世帯`;
     nm.appendChild(s2);
     const qt = el("div", "qt");
     qt.appendChild(el("b", "", ZCALC.fmtQty(r.need, r.rule.unit)));
@@ -208,11 +202,11 @@ function splitDistrict(name){
 function renderDistricts(){
   const box = $("districtCards");
   box.textContent = "";
-  const groups = ZCALC.aggregate(DATA.households, DATA.rules, DATA.settings);
+  const groups = ZCALC.aggregate(DATA.districts, DATA.rules, DATA.settings);
   let curTown = null;
   groups.forEach(g => {
     // 町名を見出しにして、その下に地区カードを並べる
-    const [town, local] = splitDistrict(g.district);
+    const [town, local] = splitDistrict(g.name);
     if (town !== curTown){
       box.appendChild(el("div", "townhead", town));
       curTown = town;
@@ -220,12 +214,11 @@ function renderDistricts(){
     const card = el("div", "card");
     const head = el("div", "dhead");
     head.appendChild(el("h2", "", local || town));
-    head.appendChild(el("span", "meta", `対象 ${g.households}世帯・${g.people}人`));
+    head.appendChild(el("span", "meta", `在宅避難 約${g.households}世帯`));
     card.appendChild(head);
     // 提供者が知りたいのは「どこへ届けるか」。地区ごとの集積場所を目立たせる
-    const site = siteOf(g.district);
-    card.appendChild(site
-      ? el("div", "site", `📍 集積場所: ${site}`)
+    card.appendChild(g.site
+      ? el("div", "site", `📍 集積場所: ${g.site}`)
       : el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）"));
     if (!g.itemList.length){
       card.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
@@ -240,11 +233,9 @@ function renderDistricts(){
       const row = el("div", "irow");
       const nm = el("div", "nm", it.rule.name);
       const sub = [];
-      if (it.notes.length) sub.push([...new Set(it.notes)].join("・"));
+      if (it.note) sub.push(it.note);
       if (it.rule.target && it.rule.target !== "all")
         sub.push(`${ZCALC.targetLabel(it.rule)}${it.people}人`);
-      else if (g.households > 1 && it.households < g.households)
-        sub.push(`${it.households}世帯`);
       if (sub.length){
         const s = document.createElement("small");
         s.textContent = sub.join(" ／ ");
@@ -274,11 +265,11 @@ function renderSettingsInfo(){
 }
 
 function renderAll(){
-  const has = (DATA.households || []).length > 0;
+  const has = (DATA.districts || []).some(d => d && d.report);
   $("emptyCard").style.display = has ? "none" : "";
   $("summaryCard").style.display = has ? "" : "none";
   if (!has){ $("needCard").style.display = "none"; $("districtCards").textContent = ""; renderSettingsInfo(); return; }
-  const s = ZCALC.summary(DATA.households, DATA.rules, DATA.settings);
+  const s = ZCALC.summary(DATA.districts, DATA.rules, DATA.settings);
   renderSummary(s);
   renderNeed(s);
   renderDistricts();
