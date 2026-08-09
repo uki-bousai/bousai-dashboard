@@ -1577,6 +1577,21 @@ function renderDelivery(){
       c.appendChild(b);
     });
 
+    /* いま足りていないもの。在宅の方は遠慮されるので、注記まで含めて出す */
+    if ((d.needs || []).length){
+      const w = document.createElement("div"); w.className = "selfblock need";
+      const t = document.createElement("div"); t.className = "bt"; t.textContent = "⚠ いま足りていないもの";
+      const ul = document.createElement("ul");
+      d.needs.forEach(n => { const li = document.createElement("li"); li.textContent = itemLabel(n); ul.appendChild(li); });
+      w.append(t, ul);
+      if (d.needsNote){
+        const nn = document.createElement("p"); nn.className = "desc"; nn.style.margin = "7px 0 0";
+        nn.textContent = d.needsNote;
+        w.appendChild(nn);
+      }
+      c.appendChild(w);
+    }
+
     /* 代表の方に直接つながるのがいちばん早いので、電話を先に出す */
     if (d.tel){
       const a = document.createElement("a"); a.className = "hbtn";
