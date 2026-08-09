@@ -19,7 +19,7 @@
 
 const ZCALC = (() => {
 
-  const DEFAULT_SETTINGS = { buffer_days: 3, avg_household_size: 2.5 };
+  const DEFAULT_SETTINGS = { buffer_days: 3, avg_household_size: 2 };   // 在宅避難は高齢世帯が中心のため平均2人と見る
 
   function setting(settings, key){
     const v = settings ? Number(settings[key]) : NaN;

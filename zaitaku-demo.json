@@ -2,7 +2,7 @@
  "updatedAt": "2026-08-09 18:00 更新（仮データ）",
  "settings": {
   "buffer_days": 3,
-  "avg_household_size": 2.5,
+  "avg_household_size": 2,
   "disaster_end_date": "",
   "water_outage_end_date": ""
  },
