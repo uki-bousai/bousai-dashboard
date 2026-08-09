@@ -16,12 +16,12 @@
    "is_active": true,
    "packs": [
     {
-     "label": "2Lペットボトル",
+     "label": "2Lペット",
      "unit": "本",
      "factor": 2
     },
     {
-     "label": "500mlペットボトル",
+     "label": "500mlペット",
      "unit": "本",
      "factor": 0.5
     },
@@ -63,7 +63,7 @@
    "is_active": true,
    "packs": [
     {
-     "label": "個（カレー・丼の素など）",
+     "label": "個",
      "unit": "個",
      "factor": 1
     }
@@ -79,12 +79,12 @@
    "is_active": true,
    "packs": [
     {
-     "label": "500mlペットボトル",
+     "label": "500mlペット",
      "unit": "本",
      "factor": 0.5
     },
     {
-     "label": "2Lペットボトル",
+     "label": "2Lペット",
      "unit": "本",
      "factor": 2
     }
@@ -92,7 +92,7 @@
   },
   {
    "id": "sports_drink",
-   "name": "スポーツドリンク（アクエリアス・ポカリ等）",
+   "name": "スポーツドリンク（ポカリ等）",
    "unit": "L",
    "daily_amount_per_person": 0.5,
    "target": "all",
@@ -100,12 +100,12 @@
    "is_active": true,
    "packs": [
     {
-     "label": "500mlペットボトル",
+     "label": "500mlペット",
      "unit": "本",
      "factor": 0.5
     },
     {
-     "label": "2Lペットボトル",
+     "label": "2Lペット",
      "unit": "本",
      "factor": 2
     },
@@ -245,7 +245,7 @@
      "factor": 7.5
     },
     {
-     "label": "液体ミルク（240ml缶・パック）",
+     "label": "液体ミルク240ml",
      "unit": "本",
      "factor": 240
     }

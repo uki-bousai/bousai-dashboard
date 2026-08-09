@@ -121,14 +121,20 @@ const ZCALC = (() => {
     return (Number.isInteger(n) ? String(n) : n.toFixed(1)) + (unit || "");
   }
 
-  /* 「24L（2Lペットボトル 約12本）」のように、なじみのある単位でも補足する */
+  /* なじみのある単位への換算の補足（「2Lペット 約12本」）。なければ空文字 */
+  function packHint(rule, v){
+    if (!Number.isFinite(v) || v <= 0) return "";
+    const packs = (rule.packs || []).filter(p => Number(p.factor) > 1 && p.unit && p.unit !== rule.unit);
+    if (!packs.length) return "";
+    const p = packs.reduce((a, b) => (Number(b.factor) > Number(a.factor) ? b : a));
+    return `${p.label} 約${Math.ceil(v / Number(p.factor))}${p.unit}`;
+  }
+
+  /* 「24L（2Lペット 約12本）」のように1つの文字列で返す */
   function fmtQtyWithPack(rule, v){
     const base = fmtQty(v, rule.unit);
-    if (!Number.isFinite(v) || v <= 0) return base;
-    const packs = (rule.packs || []).filter(p => Number(p.factor) > 1 && p.unit && p.unit !== rule.unit);
-    if (!packs.length) return base;
-    const p = packs.reduce((a, b) => (Number(b.factor) > Number(a.factor) ? b : a));
-    return `${base}（${p.label} 約${Math.ceil(v / Number(p.factor))}${p.unit}）`;
+    const hint = packHint(rule, v);
+    return hint ? `${base}（${hint}）` : base;
   }
 
   function targetLabel(rule){ return TARGET_LABEL[rule.target || "all"] || "全員"; }
@@ -136,7 +142,7 @@ const ZCALC = (() => {
   return {
     DEFAULT_SETTINGS, setting, targetCount,
     calcItem, calcHousehold, aggregate, summary,
-    fmtQty, fmtQtyWithPack, targetLabel,
+    fmtQty, packHint, fmtQtyWithPack, targetLabel,
   };
 })();
 
