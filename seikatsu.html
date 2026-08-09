@@ -214,6 +214,24 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   border:1px solid #d6cbe6; border-radius:99px; padding:3px 10px}
 .hoffer .src2{margin-top:9px; font-size:.7rem; color:var(--text-muted)}
 
+/* 住宅の緊急修理（上限額と「先に直す前に」の注意を目立たせる） */
+.rep{margin-top:2px; border:1.5px solid #f0c99b; border-radius:14px; padding:14px 16px;
+  background:#fdf7f0}
+.rep .money{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:#fff; border:1.5px solid #b8571f; border-radius:11px; padding:10px 14px}
+.rep .money .ml{font-size:.76rem; font-weight:700; color:#b8571f; line-height:1.5}
+.rep .money .mv{font-size:1.5rem; font-weight:700; color:#b8571f; white-space:nowrap}
+.rep .money .mv small{font-size:.72rem; font-weight:400; color:var(--text-secondary)}
+.rep .kv{margin-top:10px; font-size:.8rem; line-height:1.9; color:var(--text-secondary)}
+.rep .kv b{color:var(--text-primary)}
+.rep .kv .k{font-weight:700; color:#b8571f}
+.rep .warn{margin-top:10px; background:#fdf3f3; border:1.5px solid #e8b2b2; border-radius:10px;
+  padding:9px 13px; font-size:.8rem; line-height:1.75; color:var(--text-secondary)}
+.rep .warn b{color:#c0392b}
+.rep .nb{margin-top:10px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.rep .nb li{margin-left:1.1em}
+.rep .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
+
 /* 防災井戸（飲用不可） */
 .wells{margin-top:14px; background:#eef5fb; border:1px solid #b6d4e8; border-radius:12px;
   padding:13px 15px}
@@ -312,6 +330,7 @@ footer a{color:var(--accent)}
     <a href="#shelterCard">🏫 避難所</a>
     <a href="#mapCard">🗺 地図</a>
     <a href="#secHaves">📦 物資</a>
+    <a href="#repairCard">🔨 住宅修理</a>
     <a href="#hotelCard">🏨 住まい</a>
     <a href="#refreshCard">🏞 南阿蘇</a>
     <a href="#secToilet">🚻 トイレ</a>
@@ -403,6 +422,12 @@ footer a{color:var(--accent)}
     <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
     <a class="hbtn line2" href="https://www.instagram.com/akiyo_8/" target="_blank" rel="noopener">＠akiyo_8 を開く</a>
     <p class="desc" style="margin:12px 0 0">いただいた情報は、内容を確認したうえで <span class="srcbadge via" style="margin:0 3px">🙋 市民からの情報提供で掲載</span> と分かる形で載せます。掲載してほしくない場合はその旨をお書き添えください。</p>
+  </section>
+
+  <section class="card hidden" id="repairCard">
+    <h2><span class="dot" style="background:#b8571f"></span>住宅の緊急修理（被害の拡大を防ぐため）</h2>
+    <p class="desc">雨漏りなどを放っておくと被害が広がってしまう住宅について、<b>屋根や外壁などを直す費用を市が負担する制度</b>です。半壊以上でなくても対象になる場合があります。</p>
+    <div id="repairBody"></div>
   </section>
 
   <section class="card hidden" id="hotelCard">
@@ -1480,6 +1505,63 @@ function renderWells(){
 }
 
 /* 市外の自治体からの住まいの提供（締切が短いので、期限を最初に見せる） */
+/* 住宅の緊急修理：上限額 → 受付 → 対象 → 注意 の順。工事の前に見積もりが要る点がいちばん大事 */
+function renderRepair(){
+  const card = document.getElementById("repairCard");
+  const box = document.getElementById("repairBody");
+  const r = DATA.repair;
+  box.textContent = "";
+  card.classList.toggle("hidden", !r);
+  if (!r) return;
+
+  const c = document.createElement("div"); c.className = "rep";
+
+  if (r.limit){
+    const m = document.createElement("div"); m.className = "money";
+    const ml = document.createElement("div"); ml.className = "ml"; ml.textContent = r.limitLabel || "1世帯あたりの上限額";
+    const mv = document.createElement("div"); mv.className = "mv"; mv.textContent = r.limit;
+    if (r.limitNote){ const s = document.createElement("small"); s.textContent = " " + r.limitNote; mv.appendChild(s); }
+    m.append(ml, mv); c.appendChild(m);
+  }
+
+  const kv = document.createElement("div"); kv.className = "kv";
+  [["オンライン申請", r.online], ["本庁の窓口", r.counter], ["支所の窓口", r.branch],
+   ["必要なもの", (r.needs || []).join("／")], ["対象になる方", r.target],
+   ["対象になる費用", r.cost], ["支払い", r.pay]].forEach(([k, v]) => {
+    if (!v) return;
+    const line = document.createElement("div");
+    const ks = document.createElement("span"); ks.className = "k"; ks.textContent = k + "：";
+    line.append(ks, document.createTextNode(v));
+    kv.appendChild(line);
+  });
+  c.appendChild(kv);
+
+  if (r.warn){
+    const w = document.createElement("div"); w.className = "warn";
+    const b = document.createElement("b"); b.textContent = r.warnHead || "工事を始める前に";
+    w.append(b, document.createElement("br"), document.createTextNode(r.warn));
+    c.appendChild(w);
+  }
+
+  if ((r.notes || []).length){
+    const ul = document.createElement("ul"); ul.className = "nb";
+    r.notes.forEach(n => { const li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
+    c.appendChild(ul);
+  }
+
+  if (r.tel){
+    const a = document.createElement("a"); a.className = "hbtn";
+    a.href = "tel:" + r.tel.replace(/-/g, "");
+    a.textContent = `📞 ${r.dept || "宇城市"} ${r.tel}`;
+    c.appendChild(a);
+  }
+  if (r.source){
+    const sc = document.createElement("div"); sc.className = "src2"; sc.textContent = r.source;
+    c.appendChild(sc);
+  }
+  box.appendChild(c);
+}
+
 function renderHousing(){
   const card = document.getElementById("housingCard");
   const box = document.getElementById("housingBody");
@@ -1554,6 +1636,7 @@ function renderAll(){
   renderKPIs();
   renderShelters();
   renderTrendCard();
+  renderRepair();
   renderHotel();
   renderHousing();
   renderRefresh();
