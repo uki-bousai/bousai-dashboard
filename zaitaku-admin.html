@@ -229,7 +229,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
   </div>
 
   <!-- ===================== 地区と集積場所 ===================== -->
-  <div class="card">
+  <div class="card" id="districtMasterCard">
     <h2>地区と集積場所（公民館など）</h2>
     <p class="desc">支援物資を集める場所を地区ごとに設定します。<b>公開ページに表示され、提供者はこの場所へ届けます</b>。世帯登録で新しい地区名を入力すると、ここに自動で追加されます。</p>
     <div class="tablewrap">
@@ -242,7 +242,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
   </div>
 
   <!-- ===================== 計算基準（運営スタッフ用） ===================== -->
-  <div class="card">
+  <div class="card" id="rulesCard">
     <details class="adv">
       <summary>計算基準の設定（運営スタッフ用）</summary>
       <p class="desc" style="margin-top:8px">「1人1日あたりの必要量」と「何日分を届けるか（目標日数）」をここで変更できます。変更するとすべての世帯・地区の必要量に反映されます。</p>
@@ -325,6 +325,23 @@ let data = null;        // zaitaku.json の内容
 let dirty = false;
 let editId = null;      // 編集中の世帯ID（null = 新規登録）
 let formNeeds = {};     // フォームで選択中の必要物資 { 品目id: {note} }
+let scope = null;       // ログイン中の担当範囲（/auth の応答。admin=全部 / district=担当地区のみ）
+
+/* 地区担当者は担当地区だけ編集できる（最終的な制限はサーバー側で強制される） */
+function canEditDistrict(name){
+  return !scope || scope.type !== "district" || (scope.districts || []).includes(name);
+}
+function applyScope(){
+  const limited = scope && scope.type === "district";
+  $("rulesCard").style.display = limited ? "none" : "";
+  $("addDistrict").style.display = limited ? "none" : "";
+  if (limited){
+    const list = scope.districts || [];
+    if (list.length === 1 && !editId && !$("fDistrict").value) $("fDistrict").value = list[0];
+    setStatus(`地区担当としてログイン中（担当: ${list.join("、") || "なし"}）。担当地区の世帯だけ登録・更新できます`, "ok");
+  }
+  if (data){ renderDistrictTable(); renderHouseholds(); }
+}
 
 const $ = id => document.getElementById(id);
 const status = $("status");
@@ -479,6 +496,11 @@ function updatePreview(){
 $("addBtn").addEventListener("click", () => {
   const hh = formHousehold();
   if (!hh.district){ setStatus("地区名を入力してください", "err"); $("fDistrict").focus(); return; }
+  if (!canEditDistrict(hh.district)){
+    setStatus(`担当外の地区「${hh.district}」には登録できません（担当: ${(scope.districts || []).join("、")}）`, "err");
+    $("fDistrict").focus();
+    return;
+  }
   if (!hh.size || hh.size < 1){ setStatus("世帯人数を入力してください", "err"); $("fSize").focus(); return; }
   const stamp = jstStamp();
   hh.updatedAt = stamp;
@@ -534,11 +556,14 @@ function renderDistrictTable(){
     tbody.appendChild(tr);
     return;
   }
+  const limited = scope && scope.type === "district";
   data.districts.forEach(d => {
+    const editable = canEditDistrict(d.name);
     const tr = document.createElement("tr");
     const nameTd = document.createElement("td");
     const ni = document.createElement("input");
     ni.type = "text"; ni.value = d.name; ni.placeholder = "例: 松橋町 豊福";
+    ni.readOnly = limited;   // 地区名の変更は運営スタッフのみ
     ni.addEventListener("change", () => {
       const old = d.name;
       d.name = ni.value.trim();
@@ -550,12 +575,14 @@ function renderDistrictTable(){
     const siteTd = document.createElement("td");
     const si = document.createElement("input");
     si.type = "text"; si.value = d.site || ""; si.placeholder = "例: 豊福公民館";
+    si.disabled = !editable;   // 集積場所は担当地区のみ変更可
     si.addEventListener("change", () => { d.site = si.value.trim(); markDirty(); });
     siteTd.appendChild(si);
     const delTd = document.createElement("td");
     delTd.style.whiteSpace = "nowrap";
     const db = document.createElement("button");
     db.className = "del"; db.type = "button"; db.textContent = "✕";
+    if (limited) db.style.display = "none";
     db.addEventListener("click", () => {
       const used = (data.households || []).filter(h => h.district === d.name).length;
       if (used){ setStatus(`「${d.name}」には${used}世帯が登録されているため削除できません`, "err"); return; }
@@ -630,15 +657,19 @@ function renderHouseholds(){
     chips.appendChild(wrap);
     tr.appendChild(chips);
     tr.appendChild(td(hh.updatedAt || ""));
+    const editable = canEditDistrict(hh.district);
     const edit = document.createElement("td");
     const eb = document.createElement("button");
     eb.className = "small"; eb.type = "button"; eb.textContent = "編集";
+    eb.disabled = !editable;
+    if (!editable) eb.title = "担当外の地区のため編集できません";
     eb.addEventListener("click", () => startEdit(hh));
     edit.appendChild(eb);
     tr.appendChild(edit);
     const del = document.createElement("td");
     const db = document.createElement("button");
     db.className = "del"; db.type = "button"; db.textContent = "✕";
+    db.disabled = !editable;
     db.addEventListener("click", () => {
       if (!confirm(`${hh.district}${hh.label ? "・" + hh.label : ""}（${hh.size}人）を削除しますか？`)) return;
       data.households = data.households.filter(x => x.id !== hh.id);
@@ -793,8 +824,12 @@ async function initLogin(){
   const a = currentAuth();
   if (a.name && a.password){
     try {
-      const { res } = await workerPost("/auth", a);
-      if (res.ok) return;
+      const { res, body } = await workerPost("/auth", a);
+      if (res.ok){
+        scope = (body && body.scope) || null;
+        applyScope();
+        return;
+      }
     } catch (e) {}
   }
   $("loginName").value = a.name || "";
@@ -813,6 +848,8 @@ $("loginBtn").addEventListener("click", async () => {
       $("saveAuth").checked = $("loginSave").checked;
       persistAuth();
       closeLogin();
+      scope = (body && body.scope) || null;
+      applyScope();
     } else {
       showLoginErr((body && body.error) || "ログインできませんでした（HTTP " + res.status + "）");
     }
