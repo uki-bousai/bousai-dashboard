@@ -45,6 +45,8 @@ textarea{min-height:70px}
 input[type="number"]{text-align:right}
 .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 @media (max-width:520px){ .cols{grid-template-columns:1fr} }
+.cols3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+@media (max-width:520px){ .cols3{grid-template-columns:1fr} }
 .needgrid{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
 .needgrid button{font:inherit; font-size:.95rem; font-weight:700; cursor:pointer;
   border:1.5px solid var(--border); border-radius:10px; padding:12px 14px;
@@ -132,21 +134,35 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 
     <div class="warnbox">このデータは<b>インターネットに公開</b>されます。<b>氏名・住所・電話番号など、個人がわかる情報は書かないでください</b>。</div>
 
-    <div class="cols">
+    <div class="field">
+      <label for="fRole">あなたの立場</label>
+      <select id="fRole">
+        <option>区長</option><option>自治会長</option><option>民生委員</option>
+        <option>消防団</option><option>地域団体</option><option>その他</option>
+      </select>
+    </div>
+
+    <div class="cols3">
       <div class="field">
-        <label for="fRole">あなたの立場</label>
-        <select id="fRole">
-          <option>区長</option><option>自治会長</option><option>民生委員</option>
-          <option>消防団</option><option>地域団体</option><option>その他</option>
+        <label for="fTown">町名 <span style="color:var(--status-critical)">必須</span></label>
+        <select id="fTown">
+          <option value="">選択してください</option>
+          <option>三角町</option><option>不知火町</option><option>松橋町</option>
+          <option>小川町</option><option>豊野町</option>
         </select>
       </div>
       <div class="field">
-        <label for="fDistrict">地区名（行政区） <span style="color:var(--status-critical)">必須</span></label>
-        <input type="text" id="fDistrict" list="districtList" placeholder="例: 松橋町 豊福">
-        <datalist id="districtList"></datalist>
-        <div class="hint">町名で一つにまとめず、<b>公民館ごとの行政区単位</b>で入力してください。すでに登録済みの地区名を入れると上書き更新になります。</div>
+        <label for="fSchool">校区名</label>
+        <input type="text" id="fSchool" list="schoolList" placeholder="例: 豊福校区">
+        <datalist id="schoolList"></datalist>
+      </div>
+      <div class="field">
+        <label for="fWard">区名 <span style="color:var(--status-critical)">必須</span></label>
+        <input type="text" id="fWard" list="wardList" placeholder="例: 豊福区">
+        <datalist id="wardList"></datalist>
       </div>
     </div>
+    <div class="hint">登録・集計は<b>区単位</b>です。すでに登録済みの区を入れると内容を読み込んで上書き更新になります。</div>
 
     <div class="cols">
       <div class="field">
@@ -291,9 +307,20 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
     <input type="text" id="signupCode" autocomplete="off">
     <label for="signupName" style="display:block; margin-top:8px">名前</label>
     <input type="text" id="signupName" autocomplete="username" placeholder="例: 豊福・山田">
-    <div class="hint">運営が誰か分かる名前にしてください（地区名＋名字がおすすめ）。更新の記録に残ります。</div>
-    <label for="signupDistrict" style="display:block; margin-top:8px">担当地区</label>
-    <input type="text" id="signupDistrict" list="districtList" placeholder="例: 松橋町 豊福">
+    <div class="hint">運営が誰か分かる名前にしてください（区名＋名字がおすすめ）。更新の記録に残ります。</div>
+    <label style="display:block; margin-top:8px">担当地区</label>
+    <div class="cols3">
+      <div><label for="signupTown" style="font-weight:400; font-size:.7rem">町名</label>
+        <select id="signupTown">
+          <option value="">選択</option>
+          <option>三角町</option><option>不知火町</option><option>松橋町</option>
+          <option>小川町</option><option>豊野町</option>
+        </select></div>
+      <div><label for="signupSchool" style="font-weight:400; font-size:.7rem">校区名</label>
+        <input type="text" id="signupSchool" list="schoolList" placeholder="例: 豊福校区"></div>
+      <div><label for="signupWard" style="font-weight:400; font-size:.7rem">区名</label>
+        <input type="text" id="signupWard" list="wardList" placeholder="例: 豊福区"></div>
+    </div>
     <label for="signupPass" style="display:block; margin-top:8px">合言葉（6文字以上）</label>
     <input type="password" id="signupPass" autocomplete="new-password">
     <label for="signupPass2" style="display:block; margin-top:8px">合言葉（もう一度）</label>
@@ -342,6 +369,17 @@ function jstStamp(){
 function activeRules(){ return (data.rules || []).filter(r => r.is_active !== false); }
 function ruleName(id){ const r = (data.rules || []).find(x => x.id === id); return r ? r.name : id; }
 
+/* 地区名は「町名 校区名 区名」を空白区切りで1つの文字列として保存する */
+function composeName(town, school, ward){
+  return [town, school, ward].map(s => (s || "").trim()).filter(Boolean).join(" ");
+}
+function parseName(name){
+  const p = String(name || "").trim().split(/\s+/);
+  if (p.length >= 3) return { town: p[0], school: p[1], ward: p.slice(2).join(" ") };
+  if (p.length === 2) return { town: p[0], school: "", ward: p[1] };
+  return { town: p[0] || "", school: "", ward: "" };
+}
+
 /* 地区担当者は担当地区だけ編集できる（最終的な制限はサーバー側で強制される） */
 function canEditDistrict(name){
   return !scope || scope.type !== "district" || (scope.districts || []).includes(name);
@@ -352,10 +390,15 @@ function applyScope(){
   $("addDistrict").style.display = limited ? "none" : "";
   if (limited){
     const list = scope.districts || [];
-    if (list.length === 1 && !$("fDistrict").value) $("fDistrict").value = list[0];
+    if (list.length === 1 && !$("fWard").value){
+      const p = parseName(list[0]);
+      $("fTown").value = p.town;
+      $("fSchool").value = p.school;
+      $("fWard").value = p.ward;
+    }
     setStatus(`地区担当としてログイン中（担当: ${list.join("、") || "なし"}）。担当地区だけ登録・更新できます`, "ok");
   }
-  if (data){ renderDistricts(); loadDistrictToForm($("fDistrict").value, { keepStatus: true }); }
+  if (data){ renderDistricts(); loadDistrictToForm(currentFormName(), { keepStatus: true }); }
 }
 
 /* ---------- 認証（避難所ダッシュボードと同じ保存キーを共用） ---------- */
@@ -432,11 +475,14 @@ function intOrNull(id){
   const n = Math.max(0, Math.round(Number(v)));
   return Number.isFinite(n) ? n : null;
 }
+function currentFormName(){
+  return composeName($("fTown").value, $("fSchool").value, $("fWard").value);
+}
 function formDistrict(){
   const needs = {};
   Object.keys(formNeeds).forEach(k => { needs[k] = { note: formNeeds[k].note || "" }; });
   return {
-    name: $("fDistrict").value.trim(),
+    name: currentFormName(),
     site: $("fSite").value.trim(),
     report: {
       reporter_role: $("fRole").value,
@@ -451,7 +497,10 @@ function formDistrict(){
 function fillForm(d){
   const r = (d && d.report) || {};
   $("fRole").value = r.reporter_role || "区長";
-  $("fDistrict").value = (d && d.name) || "";
+  const p = parseName(d && d.name);
+  $("fTown").value = p.town;
+  $("fSchool").value = p.school;
+  $("fWard").value = p.ward;
   $("fSite").value = (d && d.site) || "";
   $("fHouseholds").value = r.households || "";
   $("fInfants").value = r.infants ?? "";
@@ -465,10 +514,15 @@ function fillForm(d){
 function resetForm(){
   fillForm(null);
   const list = scope && scope.type === "district" ? (scope.districts || []) : [];
-  if (list.length === 1) $("fDistrict").value = list[0];
+  if (list.length === 1){
+    const p = parseName(list[0]);
+    $("fTown").value = p.town;
+    $("fSchool").value = p.school;
+    $("fWard").value = p.ward;
+  }
   $("previewBox").style.display = "none";
 }
-/* 地区名を入れたとき、登録済みならその内容をフォームに読み込む */
+/* 町・校区・区がそろって登録済みの区と一致したら、その内容をフォームに読み込む */
 function loadDistrictToForm(name, opts){
   const d = districtOf(name);
   if (!d) return;
@@ -476,7 +530,8 @@ function loadDistrictToForm(name, opts){
   if (!(opts && opts.keepStatus) && d.report)
     setStatus(`「${name}」の登録内容を読み込みました。直して「この内容で登録する」を押してください`);
 }
-$("fDistrict").addEventListener("change", () => loadDistrictToForm($("fDistrict").value.trim()));
+["fTown","fSchool","fWard"].forEach(id =>
+  $(id).addEventListener("change", () => loadDistrictToForm(currentFormName())));
 
 /* ---------- 自動計算プレビュー ---------- */
 function updatePreview(){
@@ -507,10 +562,11 @@ function updatePreview(){
 /* ---------- 登録（区ごとに1件・上書き） ---------- */
 $("addBtn").addEventListener("click", () => {
   const d = formDistrict();
-  if (!d.name){ setStatus("地区名を入力してください", "err"); $("fDistrict").focus(); return; }
+  if (!$("fTown").value){ setStatus("町名を選択してください", "err"); $("fTown").focus(); return; }
+  if (!$("fWard").value.trim()){ setStatus("区名を入力してください", "err"); $("fWard").focus(); return; }
   if (!canEditDistrict(d.name)){
     setStatus(`担当外の地区「${d.name}」は登録できません（担当: ${(scope.districts || []).join("、")}）`, "err");
-    $("fDistrict").focus();
+    $("fWard").focus();
     return;
   }
   if (!d.report.households || d.report.households < 1){
@@ -536,13 +592,23 @@ $("cancelEditBtn").addEventListener("click", () => { resetForm(); setStatus("入
 
 /* ---------- 一覧 ---------- */
 function buildDistrictOptions(){
-  const dl = $("districtList");
-  dl.textContent = "";
   const names = (scope && scope.type === "district")
     ? (scope.districts || [])
     : (data.districts || []).map(d => d.name).filter(Boolean);
-  [...new Set(names)].sort((a, b) => a.localeCompare(b, "ja"))
-    .forEach(n => { const o = document.createElement("option"); o.value = n; dl.appendChild(o); });
+  const schools = new Set(), wards = new Set();
+  names.forEach(n => {
+    const p = parseName(n);
+    if (p.school) schools.add(p.school);
+    if (p.ward) wards.add(p.ward);
+  });
+  const fill = (id, set) => {
+    const dl = $(id);
+    dl.textContent = "";
+    [...set].sort((a, b) => a.localeCompare(b, "ja"))
+      .forEach(v => { const o = document.createElement("option"); o.value = v; dl.appendChild(o); });
+  };
+  fill("schoolList", schools);
+  fill("wardList", wards);
 }
 function renderDistricts(){
   const tbody = $("districtBody");
@@ -613,7 +679,7 @@ function renderDistricts(){
   });
 }
 $("addDistrict").addEventListener("click", () => {
-  const name = prompt("追加する地区名（例: 松橋町 豊福）");
+  const name = prompt("追加する地区名（「町名 校区名 区名」を空白区切りで。例: 松橋町 豊福校区 豊福区）");
   if (!name || !name.trim()) return;
   if (districtOf(name.trim())){ setStatus("その地区はすでにあります", "err"); return; }
   data.districts.push({ name: name.trim(), site: "" });
@@ -818,12 +884,13 @@ $("signupBtn").addEventListener("click", async () => {
   $("signupErr").style.display = "none";
   const code = $("signupCode").value.trim();
   const name = $("signupName").value.trim();
-  const district = $("signupDistrict").value.trim();
+  const district = composeName($("signupTown").value, $("signupSchool").value, $("signupWard").value);
   const pass = $("signupPass").value;
   const pass2 = $("signupPass2").value;
   if (!code){ showSignupErr("招待コードを入力してください"); return; }
   if (!name){ showSignupErr("名前を入力してください"); return; }
-  if (!district){ showSignupErr("担当地区を入力してください"); return; }
+  if (!$("signupTown").value){ showSignupErr("担当地区の町名を選択してください"); return; }
+  if (!$("signupWard").value.trim()){ showSignupErr("担当地区の区名を入力してください"); return; }
   if (pass.length < 6){ showSignupErr("合言葉は6文字以上にしてください"); return; }
   if (pass !== pass2){ showSignupErr("合言葉が一致しません。同じものを2回入力してください"); return; }
   $("signupBtn").disabled = true;
