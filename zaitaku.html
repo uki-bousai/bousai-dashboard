@@ -93,6 +93,7 @@ details.dcard[open] > summary::after{content:"▲"}
 .site{font-size:.95rem; font-weight:700; margin-top:4px; padding:8px 12px;
   background:var(--page); border:1px solid var(--border); border-radius:8px}
 .site.tbd{font-weight:400; color:var(--text-secondary)}
+.staffline{font-size:.8rem; font-weight:700; color:var(--text-secondary); margin-top:6px; padding:0 2px}
 /* 品目の一覧（表形式）: ラベルは列見出しに1回だけ */
 .ihead{display:flex; justify-content:space-between; gap:10px; margin-top:10px;
   font-size:.68rem; color:var(--text-muted); border-bottom:1px solid var(--grid); padding-bottom:4px}
@@ -275,6 +276,7 @@ function renderDistricts(){
     body.appendChild(g.site
       ? el("div", "site", `📍 集積場所: ${g.site}`)
       : el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）"));
+    if (g.staff) body.appendChild(el("div", "staffline", `🤝 物資を届ける担当: ${g.staff}`));
     if (!g.itemList.length){
       body.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
       box.appendChild(card);
@@ -365,7 +367,13 @@ function renderMap(groups){
       ? "必要: " + g.itemList.slice(0, 4).map(c => `${c.rule.name} ${ZCALC.fmtQty(c.need, c.rule.unit)}`).join("、")
         + (g.itemList.length > 4 ? " ほか" : "")
       : "現在、必要な物資の報告はありません";
-    box.append(title, site, items);
+    box.append(title, site);
+    if (g.staff){
+      const st = document.createElement("div");
+      st.textContent = `🤝 担当: ${g.staff}`;
+      box.append(st);
+    }
+    box.append(items);
     m.bindPopup(box);
   });
   mapObj.fitBounds(L.latLngBounds(pts.map(g => [g.lat, g.lng])).pad(0.2));
