@@ -73,6 +73,7 @@ const ZCALC = (() => {
         site: d.site || "",
         lat: Number.isFinite(Number(d.lat)) ? Number(d.lat) : null,
         lng: Number.isFinite(Number(d.lng)) ? Number(d.lng) : null,
+        staff: d.staff || "",
         households: Number(d.report.households) || 0,
         notes: d.report.notes || "",
         updatedAt: d.report.updatedAt || "",
