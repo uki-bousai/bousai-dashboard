@@ -63,12 +63,19 @@ header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:2px}
 @supports (backdrop-filter:blur(8px)){
   .secnav{background:color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter:blur(8px)}
 }
-.secnav-in{display:flex; flex-wrap:wrap; justify-content:center; gap:4px; padding:7px 8px}
+.secnav-in{display:flex; flex-direction:column; gap:4px; padding:6px 8px}
+.secnav-row{display:flex; justify-content:center; gap:4px}
 .secnav a{font-size:.7rem; font-weight:700; color:var(--text-secondary); text-decoration:none;
   background:var(--surface-1); border:1px solid var(--border); border-radius:99px;
   padding:5px 10px; white-space:nowrap}
 .secnav a:active{background:var(--accent); color:#fff; border-color:var(--accent)}
-.card[id], .townhead[id]{scroll-margin-top:56px}
+/* 町の段: 5町を折り返さず1行に等幅で並べ、色で区別する */
+.secnav-row.towns{flex-wrap:nowrap}
+.secnav-row.towns a{flex:1 1 0; min-width:0; text-align:center; padding:6px 2px;
+  overflow:hidden; text-overflow:ellipsis;
+  color:var(--accent); border-color:color-mix(in srgb, var(--accent) 55%, transparent);
+  background:color-mix(in srgb, var(--accent) 10%, var(--surface-1))}
+.card[id], .townhead[id]{scroll-margin-top:92px}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
 /* 区カード（折りたたみ）: 普段は1行、タップで詳細 */
@@ -304,20 +311,29 @@ function renderDistricts(){
   });
 }
 
-/* 上部のジャンプナビ（全体・地図・各町） */
+/* 上部のジャンプナビ。上段=全体・地図・合計、下段=各町（折り返さず1行） */
 function renderNav(groups){
   const inn = $("secnavIn");
   inn.textContent = "";
-  const add = (label, href) => {
+  const row = cls => {
+    const r = el("div", "secnav-row" + (cls ? " " + cls : ""));
+    inn.appendChild(r);
+    return r;
+  };
+  const add = (parent, label, href) => {
     const a = el("a", "", label);
     a.href = href;
-    inn.appendChild(a);
+    parent.appendChild(a);
   };
-  add("全体", "#summaryCard");
-  if ($("mapCard").style.display !== "none") add("地図", "#mapCard");
-  [...new Set(groups.map(g => splitDistrict(g.name)[0]))]
-    .forEach(t => add(t, "#town-" + t));
-  if ($("needCard").style.display !== "none") add("合計", "#needCard");
+  const fns = row("");
+  add(fns, "全体", "#summaryCard");
+  if ($("mapCard").style.display !== "none") add(fns, "地図", "#mapCard");
+  if ($("needCard").style.display !== "none") add(fns, "合計", "#needCard");
+  const towns = [...new Set(groups.map(g => splitDistrict(g.name)[0]))];
+  if (towns.length){
+    const tr = row("towns");
+    towns.forEach(t => add(tr, t, "#town-" + t));
+  }
   $("secnav").style.display = "";
 }
 
