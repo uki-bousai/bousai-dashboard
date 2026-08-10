@@ -153,8 +153,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       </div>
       <div class="field">
         <label for="fSchool">校区名</label>
-        <input type="text" id="fSchool" list="schoolList" placeholder="例: 豊福校区">
-        <datalist id="schoolList"></datalist>
+        <select id="fSchool"><option value="">町名を先に選択</option></select>
       </div>
       <div class="field">
         <label for="fWard">区名 <span style="color:var(--status-critical)">必須</span></label>
@@ -317,7 +316,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
           <option>小川町</option><option>豊野町</option>
         </select></div>
       <div><label for="signupSchool" style="font-weight:400; font-size:.7rem">校区名</label>
-        <input type="text" id="signupSchool" list="schoolList" placeholder="例: 豊福校区"></div>
+        <select id="signupSchool"><option value="">町名を先に選択</option></select></div>
       <div><label for="signupWard" style="font-weight:400; font-size:.7rem">区名</label>
         <input type="text" id="signupWard" list="wardList" placeholder="例: 豊福区"></div>
     </div>
@@ -369,6 +368,31 @@ function jstStamp(){
 function activeRules(){ return (data.rules || []).filter(r => r.is_active !== false); }
 function ruleName(id){ const r = (data.rules || []).find(x => x.id === id); return r ? r.name : id; }
 
+/* 町ごとの校区（宇城市の小学校区）。町を選ぶと校区のドロップダウンが切り替わる */
+const SCHOOL_DISTRICTS = {
+  "三角町":   ["三角校区", "青海校区"],
+  "不知火町": ["不知火校区"],
+  "松橋町":   ["松橋校区", "当尾校区", "豊福校区", "豊川校区"],
+  "小川町":   ["小野部田校区", "河江校区", "小川校区", "海東校区"],
+  "豊野町":   ["豊野校区"],
+};
+function populateSchoolOptions(sel, town, current){
+  const list = SCHOOL_DISTRICTS[town] || [];
+  sel.textContent = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = town ? "選択してください" : "町名を先に選択";
+  sel.appendChild(empty);
+  const opts = [...list];
+  if (current && !opts.includes(current)) opts.push(current);   // 旧データの校区名も表示できるように
+  opts.forEach(s => {
+    const o = document.createElement("option");
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+  sel.value = current && opts.includes(current) ? current : "";
+}
+
 /* 地区名は「町名 校区名 区名」を空白区切りで1つの文字列として保存する */
 function composeName(town, school, ward){
   return [town, school, ward].map(s => (s || "").trim()).filter(Boolean).join(" ");
@@ -392,9 +416,7 @@ function applyScope(){
     const list = scope.districts || [];
     if (list.length === 1 && !$("fWard").value){
       const p = parseName(list[0]);
-      $("fTown").value = p.town;
-      $("fSchool").value = p.school;
-      $("fWard").value = p.ward;
+      setDistrictFields(p.town, p.school, p.ward);
     }
     setStatus(`地区担当としてログイン中（担当: ${list.join("、") || "なし"}）。担当地区だけ登録・更新できます`, "ok");
   }
@@ -478,6 +500,11 @@ function intOrNull(id){
 function currentFormName(){
   return composeName($("fTown").value, $("fSchool").value, $("fWard").value);
 }
+function setDistrictFields(town, school, ward){
+  $("fTown").value = town || "";
+  populateSchoolOptions($("fSchool"), town || "", school || "");
+  $("fWard").value = ward || "";
+}
 function formDistrict(){
   const needs = {};
   Object.keys(formNeeds).forEach(k => { needs[k] = { note: formNeeds[k].note || "" }; });
@@ -498,9 +525,7 @@ function fillForm(d){
   const r = (d && d.report) || {};
   $("fRole").value = r.reporter_role || "区長";
   const p = parseName(d && d.name);
-  $("fTown").value = p.town;
-  $("fSchool").value = p.school;
-  $("fWard").value = p.ward;
+  setDistrictFields(p.town, p.school, p.ward);
   $("fSite").value = (d && d.site) || "";
   $("fHouseholds").value = r.households || "";
   $("fInfants").value = r.infants ?? "";
@@ -516,9 +541,7 @@ function resetForm(){
   const list = scope && scope.type === "district" ? (scope.districts || []) : [];
   if (list.length === 1){
     const p = parseName(list[0]);
-    $("fTown").value = p.town;
-    $("fSchool").value = p.school;
-    $("fWard").value = p.ward;
+    setDistrictFields(p.town, p.school, p.ward);
   }
   $("previewBox").style.display = "none";
 }
@@ -530,7 +553,11 @@ function loadDistrictToForm(name, opts){
   if (!(opts && opts.keepStatus) && d.report)
     setStatus(`「${name}」の登録内容を読み込みました。直して「この内容で登録する」を押してください`);
 }
-["fTown","fSchool","fWard"].forEach(id =>
+$("fTown").addEventListener("change", () => {
+  populateSchoolOptions($("fSchool"), $("fTown").value, $("fSchool").value);
+  loadDistrictToForm(currentFormName());
+});
+["fSchool","fWard"].forEach(id =>
   $(id).addEventListener("change", () => loadDistrictToForm(currentFormName())));
 
 /* ---------- 自動計算プレビュー ---------- */
@@ -595,20 +622,15 @@ function buildDistrictOptions(){
   const names = (scope && scope.type === "district")
     ? (scope.districts || [])
     : (data.districts || []).map(d => d.name).filter(Boolean);
-  const schools = new Set(), wards = new Set();
+  const wards = new Set();
   names.forEach(n => {
     const p = parseName(n);
-    if (p.school) schools.add(p.school);
     if (p.ward) wards.add(p.ward);
   });
-  const fill = (id, set) => {
-    const dl = $(id);
-    dl.textContent = "";
-    [...set].sort((a, b) => a.localeCompare(b, "ja"))
-      .forEach(v => { const o = document.createElement("option"); o.value = v; dl.appendChild(o); });
-  };
-  fill("schoolList", schools);
-  fill("wardList", wards);
+  const dl = $("wardList");
+  dl.textContent = "";
+  [...wards].sort((a, b) => a.localeCompare(b, "ja"))
+    .forEach(v => { const o = document.createElement("option"); o.value = v; dl.appendChild(o); });
 }
 function renderDistricts(){
   const tbody = $("districtBody");
@@ -875,6 +897,8 @@ $("showSignup").addEventListener("click", () => {
   $("loginBox").style.display = "none";
   $("signupBox").style.display = "";
 });
+$("signupTown").addEventListener("change", () =>
+  populateSchoolOptions($("signupSchool"), $("signupTown").value, $("signupSchool").value));
 $("backToLogin").addEventListener("click", () => {
   $("signupBox").style.display = "none";
   $("loginBox").style.display = "";
