@@ -14,6 +14,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>在宅避難の方に必要な物資 ─ 地区別の一覧 ─ 宇城市 生活支援情報</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <style>
 :root{
   color-scheme: light;
@@ -106,6 +108,12 @@ footer a{color:var(--accent)}
     <h2>必要な物資（全体）</h2>
     <p class="desc">必要としている世帯が<span id="bufferDaysLabel">3</span>日分を持つのに必要な量の合計です。お届け先は下の<b>地区ごとの集積場所</b>です。</p>
     <div id="needList"></div>
+  </div>
+
+  <div class="card" id="mapCard" style="display:none">
+    <h2>集積場所の地図</h2>
+    <p class="desc">物資のお届け先です。印をタップすると、その区で必要な物資が見られます。</p>
+    <div id="map" style="height:340px; border-radius:10px; border:1px solid var(--border)"></div>
   </div>
 
   <div id="districtCards"></div>
@@ -264,6 +272,41 @@ function renderDistricts(){
   });
 }
 
+/* 集積場所の地図（位置が設定された区だけ表示。地図が読み込めない環境では自動的に隠す） */
+let mapObj = null, markerLayer = null;
+function renderMap(groups){
+  const card = $("mapCard");
+  const pts = groups.filter(g => Number.isFinite(g.lat) && Number.isFinite(g.lng));
+  if (typeof L === "undefined" || !pts.length){ card.style.display = "none"; return; }
+  card.style.display = "";
+  if (!mapObj){
+    mapObj = L.map("map");
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
+      maxZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'
+    }).addTo(mapObj);
+    markerLayer = L.layerGroup().addTo(mapObj);
+  }
+  markerLayer.clearLayers();
+  pts.forEach(g => {
+    const m = L.marker([g.lat, g.lng]).addTo(markerLayer);
+    const box = document.createElement("div");
+    const title = document.createElement("b");
+    title.textContent = g.name;
+    const site = document.createElement("div");
+    site.textContent = `📍 ${g.site || "集積場所 調整中"}`;
+    const items = document.createElement("div");
+    items.style.cssText = "font-size:.85em; margin-top:4px";
+    items.textContent = g.itemList.length
+      ? "必要: " + g.itemList.slice(0, 4).map(c => `${c.rule.name} ${ZCALC.fmtQty(c.need, c.rule.unit)}`).join("、")
+        + (g.itemList.length > 4 ? " ほか" : "")
+      : "現在、必要な物資の報告はありません";
+    box.append(title, site, items);
+    m.bindPopup(box);
+  });
+  mapObj.fitBounds(L.latLngBounds(pts.map(g => [g.lat, g.lng])).pad(0.2));
+  setTimeout(() => mapObj.invalidateSize(), 100);
+}
+
 function renderSettingsInfo(){
   const s = DATA.settings || {};
   const parts = [];
@@ -276,13 +319,23 @@ function renderAll(){
   const has = (DATA.districts || []).some(d => d && d.report);
   $("emptyCard").style.display = has ? "none" : "";
   $("summaryCard").style.display = has ? "" : "none";
-  if (!has){ $("needCard").style.display = "none"; $("districtCards").textContent = ""; renderSettingsInfo(); return; }
+  if (!has){
+    $("needCard").style.display = "none";
+    $("mapCard").style.display = "none";
+    $("districtCards").textContent = "";
+    renderSettingsInfo();
+    return;
+  }
   const s = ZCALC.summary(DATA.districts, DATA.rules, DATA.settings);
   renderSummary(s);
   renderNeed(s);
+  renderMap(ZCALC.aggregate(DATA.districts, DATA.rules, DATA.settings));
   renderDistricts();
   renderSettingsInfo();
 }
+
+/* Leafletはdefer読み込みのため、読み込み完了後に地図を描き直す */
+addEventListener("load", () => { if (DATA) renderAll(); });
 
 async function load(){
   try {
