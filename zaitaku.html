@@ -130,12 +130,6 @@ footer a{color:var(--accent)}
     <p class="desc" style="margin:10px 0 0">「件」は 地区×品目 の数です。下の一覧には<b>必要と報告された物資だけ</b>を表示しています。世帯数は区長など地域の情報提供者の報告によるおおよその数です。</p>
   </div>
 
-  <div class="card" id="needCard" style="display:none">
-    <h2>必要な物資（全体）</h2>
-    <p class="desc">必要としている世帯が<span id="bufferDaysLabel">3</span>日分を持つのに必要な量の合計です。お届け先は下の<b>地区ごとの集積場所</b>です。</p>
-    <div id="needList"></div>
-  </div>
-
   <div class="card" id="mapCard" style="display:none">
     <h2>集積場所の地図</h2>
     <p class="desc">物資のお届け先です。印をタップすると、その区で必要な物資が見られます。</p>
@@ -143,6 +137,12 @@ footer a{color:var(--accent)}
   </div>
 
   <div id="districtCards"></div>
+
+  <div class="card" id="needCard" style="display:none">
+    <h2>必要な物資（全体の合計）</h2>
+    <p class="desc">全地区の合計です。必要としている世帯が<span id="bufferDaysLabel">3</span>日分を持つのに必要な量で、お届け先は上の<b>地区ごとの集積場所</b>です。</p>
+    <div id="needList"></div>
+  </div>
 
   <div class="card" id="emptyCard" style="display:none">
     <h2>まだ登録がありません</h2>
@@ -317,6 +317,7 @@ function renderNav(groups){
   if ($("mapCard").style.display !== "none") add("地図", "#mapCard");
   [...new Set(groups.map(g => splitDistrict(g.name)[0]))]
     .forEach(t => add(t, "#town-" + t));
+  if ($("needCard").style.display !== "none") add("合計", "#needCard");
   $("secnav").style.display = "";
 }
 
