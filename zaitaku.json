@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-10 15:51 更新",
+  "updatedAt": "2026-08-10 16:08 更新",
   "settings": {
     "buffer_days": 3,
     "avg_household_size": 2,
@@ -253,6 +253,50 @@
       ]
     }
   ],
-  "districts": [],
+  "districts": [
+    {
+      "name": "小川町 河江校区 本村区",
+      "site": "本村区公民館",
+      "report": {
+        "reporter_role": "民生委員",
+        "households": 10,
+        "infants": null,
+        "elderly": null,
+        "needs": {
+          "water": {
+            "note": ""
+          },
+          "rice_pack": {
+            "note": ""
+          },
+          "retort": {
+            "note": ""
+          },
+          "tea": {
+            "note": ""
+          },
+          "sports_drink": {
+            "note": ""
+          },
+          "snack": {
+            "note": ""
+          },
+          "toilet_paper": {
+            "note": ""
+          },
+          "baby_wipes": {
+            "note": ""
+          },
+          "body_wipes": {
+            "note": ""
+          }
+        },
+        "notes": "",
+        "updatedAt": "2026-08-10 16:08"
+      },
+      "lat": 32.60102065955734,
+      "lng": 130.69845914840698
+    }
+  ],
   "households": []
 }
