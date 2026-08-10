@@ -50,7 +50,9 @@ rules      … 計算基準マスター（supply_rules に相当）
              / buffer_days(空=共通設定) / is_active / packs（なじみのある単位への換算表。
              例: 36L →「2Lペットボトル 約18本」の補足表示に使う）
 districts  … 地区（行政区）ごとの登録 [{name, site, report}]。区ごとに1件。
-             site は集積場所（公民館など）。公開ページに「📍集積場所」として表示
+             name は「町名 校区名 区名」の空白区切り（例: 松橋町 豊福校区 豊福区。
+             校区は省略可）。公開ページは 町 → 校区 → 区 の階層で表示する。
+             site は集積場所（公民館など）。「📍集積場所」として表示
 report     … その区の報告 { reporter_role, households（在宅避難の世帯数・概数）,
              infants, elderly（任意・おむつやミルク用）, needs, notes, updatedAt }
 needs      … 必要な物資 { 品目id: { note: "Mサイズ 3人" } }（タップで選択。数量は持たない）
