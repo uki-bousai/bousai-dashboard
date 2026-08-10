@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-08-09 18:00 更新（仮データ）",
+ "updatedAt": "2026-08-10 11:58 更新",
  "settings": {
   "buffer_days": 3,
   "avg_household_size": 2,
@@ -645,6 +645,41 @@
    },
    "lat": 32.607,
    "lng": 130.771
+  },
+  {
+   "name": "松橋町 豊福校区 両仲間区",
+   "site": "",
+   "report": {
+    "reporter_role": "区長",
+    "households": 10,
+    "infants": 0,
+    "elderly": 8,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "tea": {
+      "note": ""
+     },
+     "sports_drink": {
+      "note": ""
+     },
+     "baby_wipes": {
+      "note": ""
+     },
+     "body_wipes": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     }
+    },
+    "notes": "",
+    "updatedAt": "2026-08-10 11:58"
+   }
   }
  ],
  "households": []

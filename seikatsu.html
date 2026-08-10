@@ -1152,6 +1152,10 @@ function buildTrendSvg(dates, series, boxWidth){
     t.textContent = dLabel;
     svg.appendChild(t);
   });
+  // 日数が増えると値ラベルが重なるので、入りきる分だけ間引く（最新の日は必ず出す）
+  const gapPx = dates.length > 1 ? (W - padL - padR) / (dates.length - 1) : W;
+  const labelEvery = Math.max(1, Math.ceil(42 / gapPx));
+  const labelAt = i => (dates.length - 1 - i) % labelEvery === 0;
   const drawSeries = ({ data, colorVar, color: rawColor, dashed, showLabels, dim, wide, onClick }) => {
     const color = rawColor || cssVar(colorVar);
     if (dates.length > 1){
@@ -1175,9 +1179,12 @@ function buildTrendSvg(dates, series, boxWidth){
       if (onClick){ c.style.cursor = "pointer"; c.addEventListener("click", onClick); }
       svg.appendChild(c);
       if (showLabels === false) return;   // 拠点ごと表示など、線が多いときは値を凡例側に出す
+      if (!labelAt(i)) return;
       // 破線（合計）のラベルは控えめな色。合計は拠点より上に来るため、どちらも点の上に置けば重ならない
+      // 左端の値は中央寄せだと目盛りの数字に重なるので、点から右へ伸ばす
       const t = mk("text", {
-        x: x(i), y: y(v) - 9, "text-anchor": "middle", "font-size": 11,
+        x: i === 0 ? x(i) - 10 : x(i), y: y(v) - 9,
+        "text-anchor": i === 0 ? "start" : "middle", "font-size": 11,
         "font-weight": dashed ? 400 : 700, fill: dashed ? "var(--text-muted)" : "var(--text-primary)"
       });
       t.textContent = fmt(v);
