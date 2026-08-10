@@ -1,258 +1,258 @@
 {
- "updatedAt": "",
- "settings": {
-  "buffer_days": 3,
-  "avg_household_size": 2,
-  "disaster_end_date": "",
-  "water_outage_end_date": ""
- },
- "rules": [
-  {
-   "id": "water",
-   "name": "飲料水",
-   "unit": "L",
-   "daily_amount_per_person": 3,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
+  "updatedAt": "2026-08-10 15:51 更新",
+  "settings": {
+    "buffer_days": 3,
+    "avg_household_size": 2,
+    "disaster_end_date": "",
+    "water_outage_end_date": ""
+  },
+  "rules": [
     {
-     "label": "2Lペット",
-     "unit": "本",
-     "factor": 2
+      "id": "water",
+      "name": "飲料水",
+      "unit": "L",
+      "daily_amount_per_person": 3,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "2Lペット",
+          "unit": "本",
+          "factor": 2
+        },
+        {
+          "label": "500mlペット",
+          "unit": "本",
+          "factor": 0.5
+        },
+        {
+          "label": "その他（L）",
+          "unit": "L",
+          "factor": 1
+        }
+      ]
     },
     {
-     "label": "500mlペット",
-     "unit": "本",
-     "factor": 0.5
+      "id": "rice_pack",
+      "name": "パックご飯",
+      "unit": "個",
+      "daily_amount_per_person": 3,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "個",
+          "unit": "個",
+          "factor": 1
+        },
+        {
+          "label": "3個パック",
+          "unit": "パック",
+          "factor": 3
+        }
+      ]
     },
     {
-     "label": "その他（L）",
-     "unit": "L",
-     "factor": 1
-    }
-   ]
-  },
-  {
-   "id": "rice_pack",
-   "name": "パックご飯",
-   "unit": "個",
-   "daily_amount_per_person": 3,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "個",
-     "unit": "個",
-     "factor": 1
+      "id": "retort",
+      "name": "レトルト食品",
+      "unit": "個",
+      "daily_amount_per_person": 3,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "個",
+          "unit": "個",
+          "factor": 1
+        }
+      ]
     },
     {
-     "label": "3個パック",
-     "unit": "パック",
-     "factor": 3
-    }
-   ]
-  },
-  {
-   "id": "retort",
-   "name": "レトルト食品",
-   "unit": "個",
-   "daily_amount_per_person": 3,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "個",
-     "unit": "個",
-     "factor": 1
-    }
-   ]
-  },
-  {
-   "id": "tea",
-   "name": "お茶",
-   "unit": "L",
-   "daily_amount_per_person": 0.5,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "500mlペット",
-     "unit": "本",
-     "factor": 0.5
+      "id": "tea",
+      "name": "お茶",
+      "unit": "L",
+      "daily_amount_per_person": 0.5,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "500mlペット",
+          "unit": "本",
+          "factor": 0.5
+        },
+        {
+          "label": "2Lペット",
+          "unit": "本",
+          "factor": 2
+        }
+      ]
     },
     {
-     "label": "2Lペット",
-     "unit": "本",
-     "factor": 2
-    }
-   ]
-  },
-  {
-   "id": "sports_drink",
-   "name": "スポーツドリンク（ポカリ等）",
-   "unit": "L",
-   "daily_amount_per_person": 0.5,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "500mlペット",
-     "unit": "本",
-     "factor": 0.5
+      "id": "sports_drink",
+      "name": "スポーツドリンク（ポカリ等）",
+      "unit": "L",
+      "daily_amount_per_person": 0.5,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "500mlペット",
+          "unit": "本",
+          "factor": 0.5
+        },
+        {
+          "label": "2Lペット",
+          "unit": "本",
+          "factor": 2
+        },
+        {
+          "label": "粉末（1L分）",
+          "unit": "袋",
+          "factor": 1
+        }
+      ]
     },
     {
-     "label": "2Lペット",
-     "unit": "本",
-     "factor": 2
+      "id": "snack",
+      "name": "お菓子",
+      "unit": "個",
+      "daily_amount_per_person": 1,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "個・袋",
+          "unit": "個",
+          "factor": 1
+        }
+      ]
     },
     {
-     "label": "粉末（1L分）",
-     "unit": "袋",
-     "factor": 1
-    }
-   ]
-  },
-  {
-   "id": "snack",
-   "name": "お菓子",
-   "unit": "個",
-   "daily_amount_per_person": 1,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "個・袋",
-     "unit": "個",
-     "factor": 1
-    }
-   ]
-  },
-  {
-   "id": "toilet_paper",
-   "name": "トイレットペーパー",
-   "unit": "ロール",
-   "daily_amount_per_person": 0.15,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "ロール",
-     "unit": "ロール",
-     "factor": 1
+      "id": "toilet_paper",
+      "name": "トイレットペーパー",
+      "unit": "ロール",
+      "daily_amount_per_person": 0.15,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "ロール",
+          "unit": "ロール",
+          "factor": 1
+        },
+        {
+          "label": "12ロールパック",
+          "unit": "パック",
+          "factor": 12
+        }
+      ]
     },
     {
-     "label": "12ロールパック",
-     "unit": "パック",
-     "factor": 12
-    }
-   ]
-  },
-  {
-   "id": "baby_wipes",
-   "name": "お尻拭き",
-   "unit": "枚",
-   "daily_amount_per_person": 30,
-   "target": "infant",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "枚",
-     "unit": "枚",
-     "factor": 1
+      "id": "baby_wipes",
+      "name": "お尻拭き",
+      "unit": "枚",
+      "daily_amount_per_person": 30,
+      "target": "infant",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "枚",
+          "unit": "枚",
+          "factor": 1
+        },
+        {
+          "label": "80枚パック",
+          "unit": "パック",
+          "factor": 80
+        }
+      ]
     },
     {
-     "label": "80枚パック",
-     "unit": "パック",
-     "factor": 80
-    }
-   ]
-  },
-  {
-   "id": "body_wipes",
-   "name": "身体を拭くシート",
-   "unit": "枚",
-   "daily_amount_per_person": 2,
-   "target": "all",
-   "buffer_days": null,
-   "is_active": true,
-   "packs": [
-    {
-     "label": "枚",
-     "unit": "枚",
-     "factor": 1
+      "id": "body_wipes",
+      "name": "身体を拭くシート",
+      "unit": "枚",
+      "daily_amount_per_person": 2,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "枚",
+          "unit": "枚",
+          "factor": 1
+        },
+        {
+          "label": "30枚パック",
+          "unit": "パック",
+          "factor": 30
+        }
+      ]
     },
     {
-     "label": "30枚パック",
-     "unit": "パック",
-     "factor": 30
-    }
-   ]
-  },
-  {
-   "id": "diaper_child",
-   "name": "子ども用紙おむつ",
-   "unit": "枚",
-   "daily_amount_per_person": 5,
-   "target": "infant",
-   "buffer_days": null,
-   "is_active": true,
-   "note_label": "サイズ",
-   "packs": [
-    {
-     "label": "枚",
-     "unit": "枚",
-     "factor": 1
-    }
-   ]
-  },
-  {
-   "id": "diaper_adult",
-   "name": "大人用紙おむつ",
-   "unit": "枚",
-   "daily_amount_per_person": 3,
-   "target": "elderly",
-   "buffer_days": null,
-   "is_active": true,
-   "note_label": "サイズ",
-   "packs": [
-    {
-     "label": "枚",
-     "unit": "枚",
-     "factor": 1
-    }
-   ]
-  },
-  {
-   "id": "milk",
-   "name": "ミルク",
-   "unit": "ml",
-   "daily_amount_per_person": 800,
-   "target": "infant",
-   "buffer_days": null,
-   "is_active": true,
-   "note_label": "銘柄・種類",
-   "packs": [
-    {
-     "label": "粉ミルク（g・出来上がり量に換算）",
-     "unit": "g",
-     "factor": 7.5
+      "id": "diaper_child",
+      "name": "子ども用紙おむつ",
+      "unit": "枚",
+      "daily_amount_per_person": 5,
+      "target": "infant",
+      "buffer_days": null,
+      "is_active": true,
+      "note_label": "サイズ",
+      "packs": [
+        {
+          "label": "枚",
+          "unit": "枚",
+          "factor": 1
+        }
+      ]
     },
     {
-     "label": "液体ミルク240ml",
-     "unit": "本",
-     "factor": 240
+      "id": "diaper_adult",
+      "name": "大人用紙おむつ",
+      "unit": "枚",
+      "daily_amount_per_person": 3,
+      "target": "elderly",
+      "buffer_days": null,
+      "is_active": true,
+      "note_label": "サイズ",
+      "packs": [
+        {
+          "label": "枚",
+          "unit": "枚",
+          "factor": 1
+        }
+      ]
+    },
+    {
+      "id": "milk",
+      "name": "ミルク",
+      "unit": "ml",
+      "daily_amount_per_person": 800,
+      "target": "infant",
+      "buffer_days": null,
+      "is_active": true,
+      "note_label": "銘柄・種類",
+      "packs": [
+        {
+          "label": "粉ミルク（g・出来上がり量に換算）",
+          "unit": "g",
+          "factor": 7.5
+        },
+        {
+          "label": "液体ミルク240ml",
+          "unit": "本",
+          "factor": 240
+        }
+      ]
     }
-   ]
-  }
- ],
- "districts": [],
- "households": []
+  ],
+  "districts": [],
+  "households": []
 }
