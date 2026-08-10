@@ -57,6 +57,30 @@ header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:2px}
   border-bottom:2px solid var(--border)}
 .townhead:first-child{margin-top:14px}
 .schoolhead{font-size:.92rem; font-weight:700; color:var(--text-secondary); margin:14px 2px 0}
+/* ページ内ジャンプ（スクロールしても上に残る） */
+.secnav{position:sticky; top:0; z-index:600; background:var(--page);
+  border-bottom:1px solid var(--border); margin:12px -20px 0; padding:0 6px}
+@supports (backdrop-filter:blur(8px)){
+  .secnav{background:color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter:blur(8px)}
+}
+.secnav-in{display:flex; flex-wrap:wrap; justify-content:center; gap:4px; padding:7px 8px}
+.secnav a{font-size:.7rem; font-weight:700; color:var(--text-secondary); text-decoration:none;
+  background:var(--surface-1); border:1px solid var(--border); border-radius:99px;
+  padding:5px 10px; white-space:nowrap}
+.secnav a:active{background:var(--accent); color:#fff; border-color:var(--accent)}
+.card[id], .townhead[id]{scroll-margin-top:56px}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+/* 区カード（折りたたみ）: 普段は1行、タップで詳細 */
+details.dcard{padding:0}
+details.dcard > summary{list-style:none; cursor:pointer; display:flex; justify-content:space-between;
+  align-items:baseline; gap:10px; padding:14px 16px; user-select:none}
+details.dcard > summary::-webkit-details-marker{display:none}
+details.dcard > summary::after{content:"▼"; font-size:.68rem; color:var(--text-muted); flex:none}
+details.dcard[open] > summary::after{content:"▲"}
+.dname{font-size:1.05rem; font-weight:700}
+.dmeta{font-size:.74rem; color:var(--text-secondary); text-align:right; margin-left:auto}
+.dbody{padding:0 16px 16px}
 .dhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
 .dhead .meta{font-size:.78rem; color:var(--text-secondary)}
 .site{font-size:.95rem; font-weight:700; margin-top:4px; padding:8px 12px;
@@ -80,7 +104,7 @@ footer a{color:var(--accent)}
 </head>
 <body>
 
-<div id="demoBanner" style="display:none; position:sticky; top:0; z-index:80; background:#6d28d9; color:#fff;
+<div id="demoBanner" style="display:none; background:#6d28d9; color:#fff;
   text-align:center; font-size:.8rem; font-weight:700; padding:8px 12px">
   🧪 検証環境（練習用）─ ここでの登録・保存は本番のデータに影響しません</div>
 
@@ -97,6 +121,8 @@ footer a{color:var(--accent)}
     🔒 このページに<b>個人がわかる情報は掲載していません</b>。世帯の場所は「地区」単位でのみ集計しています。
     在宅避難の状況の登録は、区長・自治会長・民生委員などの<a href="zaitaku-admin.html" data-envlink>入力ページ</a>から行えます。
   </div>
+
+  <nav class="secnav" id="secnav" style="display:none"><div class="secnav-in" id="secnavIn"></div></nav>
 
   <div class="card" id="summaryCard">
     <h2>全体の状況</h2>
@@ -216,10 +242,12 @@ function renderDistricts(){
   const groups = ZCALC.aggregate(DATA.districts, DATA.rules, DATA.settings);
   let curTown = null, curSchool = null;
   groups.forEach(g => {
-    // 町名 → 校区名 の見出しの下に、区ごとのカードを並べる
+    // 町名 → 校区名 の見出しの下に、区ごとの折りたたみカードを並べる
     const [town, school, ward] = splitDistrict(g.name);
     if (town !== curTown){
-      box.appendChild(el("div", "townhead", town));
+      const th = el("div", "townhead", town);
+      th.id = "town-" + town;
+      box.appendChild(th);
       curTown = town;
       curSchool = null;
     }
@@ -227,24 +255,28 @@ function renderDistricts(){
       box.appendChild(el("div", "schoolhead", school));
       curSchool = school;
     }
-    const card = el("div", "card");
-    const head = el("div", "dhead");
-    head.appendChild(el("h2", "", ward || school || town));
-    head.appendChild(el("span", "meta", `在宅避難 約${g.households}世帯`));
-    card.appendChild(head);
+    const card = document.createElement("details");
+    card.className = "card dcard";
+    const sum = document.createElement("summary");
+    sum.appendChild(el("span", "dname", ward || school || town));
+    sum.appendChild(el("span", "dmeta",
+      `約${g.households}世帯` + (g.itemList.length ? `・必要${g.itemList.length}品目` : "・必要品なし")));
+    card.appendChild(sum);
+    const body = el("div", "dbody");
+    card.appendChild(body);
     // 提供者が知りたいのは「どこへ届けるか」。地区ごとの集積場所を目立たせる
-    card.appendChild(g.site
+    body.appendChild(g.site
       ? el("div", "site", `📍 集積場所: ${g.site}`)
       : el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）"));
     if (!g.itemList.length){
-      card.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
+      body.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
       box.appendChild(card);
       return;
     }
     // 列見出し（「3日分の数量」はここに1回だけ）
     const ihead = el("div", "ihead");
     ihead.append(el("span", "", "必要な物資"), el("span", "", `${g.itemList[0].buffer}日分の数量`));
-    card.appendChild(ihead);
+    body.appendChild(ihead);
     g.itemList.forEach(it => {
       const row = el("div", "irow");
       const nm = el("div", "nm", it.rule.name);
@@ -266,10 +298,26 @@ function renderDistricts(){
         qt.appendChild(s);
       }
       row.append(nm, qt);
-      card.appendChild(row);
+      body.appendChild(row);
     });
     box.appendChild(card);
   });
+}
+
+/* 上部のジャンプナビ（全体・地図・各町） */
+function renderNav(groups){
+  const inn = $("secnavIn");
+  inn.textContent = "";
+  const add = (label, href) => {
+    const a = el("a", "", label);
+    a.href = href;
+    inn.appendChild(a);
+  };
+  add("全体", "#summaryCard");
+  if ($("mapCard").style.display !== "none") add("地図", "#mapCard");
+  [...new Set(groups.map(g => splitDistrict(g.name)[0]))]
+    .forEach(t => add(t, "#town-" + t));
+  $("secnav").style.display = "";
 }
 
 /* 集積場所の地図（位置が設定された区だけ表示。地図が読み込めない環境では自動的に隠す） */
@@ -322,15 +370,18 @@ function renderAll(){
   if (!has){
     $("needCard").style.display = "none";
     $("mapCard").style.display = "none";
+    $("secnav").style.display = "none";
     $("districtCards").textContent = "";
     renderSettingsInfo();
     return;
   }
   const s = ZCALC.summary(DATA.districts, DATA.rules, DATA.settings);
+  const groups = ZCALC.aggregate(DATA.districts, DATA.rules, DATA.settings);
   renderSummary(s);
   renderNeed(s);
-  renderMap(ZCALC.aggregate(DATA.districts, DATA.rules, DATA.settings));
+  renderMap(groups);
   renderDistricts();
+  renderNav(groups);
   renderSettingsInfo();
 }
 
