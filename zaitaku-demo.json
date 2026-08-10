@@ -1,662 +1,686 @@
 {
-  "updatedAt": "2026-08-10 11:58 更新",
-  "settings": {
-    "buffer_days": 3,
-    "avg_household_size": 2,
-    "disaster_end_date": "",
-    "water_outage_end_date": ""
+ "updatedAt": "2026-08-10 11:58 更新",
+ "settings": {
+  "buffer_days": 3,
+  "avg_household_size": 2,
+  "disaster_end_date": "",
+  "water_outage_end_date": ""
+ },
+ "rules": [
+  {
+   "id": "water",
+   "name": "飲料水",
+   "unit": "L",
+   "daily_amount_per_person": 3,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    {
+     "label": "2Lペット",
+     "unit": "本",
+     "factor": 2
+    },
+    {
+     "label": "500mlペット",
+     "unit": "本",
+     "factor": 0.5
+    },
+    {
+     "label": "その他（L）",
+     "unit": "L",
+     "factor": 1
+    }
+   ]
   },
-  "rules": [
+  {
+   "id": "rice_pack",
+   "name": "パックご飯",
+   "unit": "個",
+   "daily_amount_per_person": 3,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
     {
-      "id": "water",
-      "name": "飲料水",
-      "unit": "L",
-      "daily_amount_per_person": 3,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "2Lペット",
-          "unit": "本",
-          "factor": 2
-        },
-        {
-          "label": "500mlペット",
-          "unit": "本",
-          "factor": 0.5
-        },
-        {
-          "label": "その他（L）",
-          "unit": "L",
-          "factor": 1
-        }
-      ]
+     "label": "個",
+     "unit": "個",
+     "factor": 1
     },
     {
-      "id": "rice_pack",
-      "name": "パックご飯",
-      "unit": "個",
-      "daily_amount_per_person": 3,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "個",
-          "unit": "個",
-          "factor": 1
-        },
-        {
-          "label": "3個パック",
-          "unit": "パック",
-          "factor": 3
-        }
-      ]
-    },
-    {
-      "id": "retort",
-      "name": "レトルト食品",
-      "unit": "個",
-      "daily_amount_per_person": 3,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "個",
-          "unit": "個",
-          "factor": 1
-        }
-      ]
-    },
-    {
-      "id": "tea",
-      "name": "お茶",
-      "unit": "L",
-      "daily_amount_per_person": 0.5,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "500mlペット",
-          "unit": "本",
-          "factor": 0.5
-        },
-        {
-          "label": "2Lペット",
-          "unit": "本",
-          "factor": 2
-        }
-      ]
-    },
-    {
-      "id": "sports_drink",
-      "name": "スポーツドリンク（ポカリ等）",
-      "unit": "L",
-      "daily_amount_per_person": 0.5,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "500mlペット",
-          "unit": "本",
-          "factor": 0.5
-        },
-        {
-          "label": "2Lペット",
-          "unit": "本",
-          "factor": 2
-        },
-        {
-          "label": "粉末（1L分）",
-          "unit": "袋",
-          "factor": 1
-        }
-      ]
-    },
-    {
-      "id": "snack",
-      "name": "お菓子",
-      "unit": "個",
-      "daily_amount_per_person": 1,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "個・袋",
-          "unit": "個",
-          "factor": 1
-        }
-      ]
-    },
-    {
-      "id": "toilet_paper",
-      "name": "トイレットペーパー",
-      "unit": "ロール",
-      "daily_amount_per_person": 0.15,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "ロール",
-          "unit": "ロール",
-          "factor": 1
-        },
-        {
-          "label": "12ロールパック",
-          "unit": "パック",
-          "factor": 12
-        }
-      ]
-    },
-    {
-      "id": "baby_wipes",
-      "name": "お尻拭き",
-      "unit": "枚",
-      "daily_amount_per_person": 30,
-      "target": "infant",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "枚",
-          "unit": "枚",
-          "factor": 1
-        },
-        {
-          "label": "80枚パック",
-          "unit": "パック",
-          "factor": 80
-        }
-      ]
-    },
-    {
-      "id": "body_wipes",
-      "name": "身体を拭くシート",
-      "unit": "枚",
-      "daily_amount_per_person": 2,
-      "target": "all",
-      "buffer_days": null,
-      "is_active": true,
-      "packs": [
-        {
-          "label": "枚",
-          "unit": "枚",
-          "factor": 1
-        },
-        {
-          "label": "30枚パック",
-          "unit": "パック",
-          "factor": 30
-        }
-      ]
-    },
-    {
-      "id": "diaper_child",
-      "name": "子ども用紙おむつ",
-      "unit": "枚",
-      "daily_amount_per_person": 5,
-      "target": "infant",
-      "buffer_days": null,
-      "is_active": true,
-      "note_label": "サイズ",
-      "packs": [
-        {
-          "label": "枚",
-          "unit": "枚",
-          "factor": 1
-        }
-      ]
-    },
-    {
-      "id": "diaper_adult",
-      "name": "大人用紙おむつ",
-      "unit": "枚",
-      "daily_amount_per_person": 3,
-      "target": "elderly",
-      "buffer_days": null,
-      "is_active": true,
-      "note_label": "サイズ",
-      "packs": [
-        {
-          "label": "枚",
-          "unit": "枚",
-          "factor": 1
-        }
-      ]
-    },
-    {
-      "id": "milk",
-      "name": "ミルク",
-      "unit": "ml",
-      "daily_amount_per_person": 800,
-      "target": "infant",
-      "buffer_days": null,
-      "is_active": true,
-      "note_label": "銘柄・種類",
-      "packs": [
-        {
-          "label": "粉ミルク（g・出来上がり量に換算）",
-          "unit": "g",
-          "factor": 7.5
-        },
-        {
-          "label": "液体ミルク240ml",
-          "unit": "本",
-          "factor": 240
-        }
-      ]
+     "label": "3個パック",
+     "unit": "パック",
+     "factor": 3
     }
-  ],
-  "districts": [
+   ]
+  },
+  {
+   "id": "retort",
+   "name": "レトルト食品",
+   "unit": "個",
+   "daily_amount_per_person": 3,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
     {
-      "name": "三角町 三角校区 波多区",
-      "site": "波多公民館",
-      "report": {
-        "reporter_role": "区長",
-        "households": 9,
-        "infants": 1,
-        "elderly": 3,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "retort": {
-            "note": ""
-          },
-          "diaper_adult": {
-            "note": ""
-          },
-          "body_wipes": {
-            "note": ""
-          },
-          "snack": {
-            "note": ""
-          }
-        },
-        "notes": "高台で坂道が急",
-        "updatedAt": "2026-08-09 10:07"
-      }
-    },
-    {
-      "name": "三角町 青海校区 戸馳区",
-      "site": "",
-      "report": {
-        "reporter_role": "消防団",
-        "households": 5,
-        "infants": null,
-        "elderly": 1,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "tea": {
-            "note": ""
-          }
-        },
-        "notes": "橋が渋滞しやすい",
-        "updatedAt": "2026-08-09 11:14"
-      }
-    },
-    {
-      "name": "不知火町 不知火校区 高良区",
-      "site": "高良公民館",
-      "report": {
-        "reporter_role": "自治会長",
-        "households": 12,
-        "infants": 2,
-        "elderly": 2,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "retort": {
-            "note": ""
-          },
-          "diaper_child": {
-            "note": ""
-          },
-          "baby_wipes": {
-            "note": ""
-          },
-          "milk": {
-            "note": ""
-          },
-          "snack": {
-            "note": ""
-          },
-          "toilet_paper": {
-            "note": ""
-          }
-        },
-        "notes": "",
-        "updatedAt": "2026-08-09 12:21"
-      }
-    },
-    {
-      "name": "不知火町 不知火校区 松合区",
-      "site": "松合公民館",
-      "report": {
-        "reporter_role": "区長",
-        "households": 7,
-        "infants": null,
-        "elderly": 3,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "sports_drink": {
-            "note": ""
-          },
-          "diaper_adult": {
-            "note": ""
-          },
-          "body_wipes": {
-            "note": ""
-          }
-        },
-        "notes": "",
-        "updatedAt": "2026-08-09 13:28"
-      }
-    },
-    {
-      "name": "松橋町 豊福校区 豊福区",
-      "site": "豊福公民館",
-      "report": {
-        "reporter_role": "区長",
-        "households": 8,
-        "infants": 1,
-        "elderly": 1,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "retort": {
-            "note": ""
-          },
-          "diaper_child": {
-            "note": ""
-          },
-          "baby_wipes": {
-            "note": ""
-          },
-          "milk": {
-            "note": ""
-          },
-          "toilet_paper": {
-            "note": ""
-          }
-        },
-        "notes": "",
-        "updatedAt": "2026-08-09 14:35"
-      }
-    },
-    {
-      "name": "松橋町 当尾校区 久具区",
-      "site": "久具公民館",
-      "report": {
-        "reporter_role": "区長",
-        "households": 6,
-        "infants": null,
-        "elderly": 2,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "snack": {
-            "note": ""
-          },
-          "diaper_adult": {
-            "note": ""
-          },
-          "sports_drink": {
-            "note": ""
-          }
-        },
-        "notes": "",
-        "updatedAt": "2026-08-09 15:42"
-      }
-    },
-    {
-      "name": "松橋町 当尾校区 曲野区",
-      "site": "曲野公民館",
-      "report": {
-        "reporter_role": "自治会長",
-        "households": 10,
-        "infants": null,
-        "elderly": 1,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "retort": {
-            "note": ""
-          },
-          "tea": {
-            "note": ""
-          },
-          "snack": {
-            "note": ""
-          },
-          "toilet_paper": {
-            "note": ""
-          },
-          "body_wipes": {
-            "note": ""
-          }
-        },
-        "notes": "耳の遠い方が多い",
-        "updatedAt": "2026-08-09 16:49"
-      }
-    },
-    {
-      "name": "松橋町 豊川校区 砂川区",
-      "site": "",
-      "report": {
-        "reporter_role": "民生委員",
-        "households": 4,
-        "infants": 1,
-        "elderly": null,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "diaper_child": {
-            "note": ""
-          },
-          "baby_wipes": {
-            "note": ""
-          },
-          "milk": {
-            "note": ""
-          }
-        },
-        "notes": "",
-        "updatedAt": "2026-08-09 09:56"
-      }
-    },
-    {
-      "name": "小川町 小川校区 江頭区",
-      "site": "江頭公民館"
-    },
-    {
-      "name": "小川町 河江校区 河江区",
-      "site": "河江公民館",
-      "report": {
-        "reporter_role": "地域団体",
-        "households": 11,
-        "infants": 1,
-        "elderly": 2,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "retort": {
-            "note": ""
-          },
-          "diaper_child": {
-            "note": ""
-          },
-          "baby_wipes": {
-            "note": ""
-          },
-          "milk": {
-            "note": ""
-          },
-          "diaper_adult": {
-            "note": ""
-          },
-          "toilet_paper": {
-            "note": ""
-          }
-        },
-        "notes": "日中不在の世帯が多い",
-        "updatedAt": "2026-08-09 11:10"
-      }
-    },
-    {
-      "name": "豊野町 豊野校区 糸石区",
-      "site": "糸石公民館",
-      "report": {
-        "reporter_role": "自治会長",
-        "households": 8,
-        "infants": null,
-        "elderly": 2,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "sports_drink": {
-            "note": ""
-          },
-          "snack": {
-            "note": ""
-          },
-          "body_wipes": {
-            "note": ""
-          },
-          "diaper_adult": {
-            "note": ""
-          }
-        },
-        "notes": "道路が一部通行できない",
-        "updatedAt": "2026-08-09 12:17"
-      }
-    },
-    {
-      "name": "豊野町 豊野校区 山崎区",
-      "site": "山崎公民館",
-      "report": {
-        "reporter_role": "区長",
-        "households": 15,
-        "infants": 2,
-        "elderly": 4,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "retort": {
-            "note": ""
-          },
-          "diaper_child": {
-            "note": ""
-          },
-          "baby_wipes": {
-            "note": ""
-          },
-          "milk": {
-            "note": ""
-          },
-          "diaper_adult": {
-            "note": ""
-          },
-          "snack": {
-            "note": ""
-          },
-          "toilet_paper": {
-            "note": ""
-          },
-          "body_wipes": {
-            "note": ""
-          }
-        },
-        "notes": "地区内に3つの集落が点在",
-        "updatedAt": "2026-08-09 13:24"
-      }
-    },
-    {
-      "name": "松橋町 豊福校区 両仲間区",
-      "site": "",
-      "report": {
-        "reporter_role": "区長",
-        "households": 10,
-        "infants": 0,
-        "elderly": 8,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "tea": {
-            "note": ""
-          },
-          "sports_drink": {
-            "note": ""
-          },
-          "baby_wipes": {
-            "note": ""
-          },
-          "body_wipes": {
-            "note": ""
-          },
-          "diaper_adult": {
-            "note": ""
-          }
-        },
-        "notes": "",
-        "updatedAt": "2026-08-10 11:58"
-      }
+     "label": "個",
+     "unit": "個",
+     "factor": 1
     }
-  ],
-  "households": []
+   ]
+  },
+  {
+   "id": "tea",
+   "name": "お茶",
+   "unit": "L",
+   "daily_amount_per_person": 0.5,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    {
+     "label": "500mlペット",
+     "unit": "本",
+     "factor": 0.5
+    },
+    {
+     "label": "2Lペット",
+     "unit": "本",
+     "factor": 2
+    }
+   ]
+  },
+  {
+   "id": "sports_drink",
+   "name": "スポーツドリンク（ポカリ等）",
+   "unit": "L",
+   "daily_amount_per_person": 0.5,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    {
+     "label": "500mlペット",
+     "unit": "本",
+     "factor": 0.5
+    },
+    {
+     "label": "2Lペット",
+     "unit": "本",
+     "factor": 2
+    },
+    {
+     "label": "粉末（1L分）",
+     "unit": "袋",
+     "factor": 1
+    }
+   ]
+  },
+  {
+   "id": "snack",
+   "name": "お菓子",
+   "unit": "個",
+   "daily_amount_per_person": 1,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    {
+     "label": "個・袋",
+     "unit": "個",
+     "factor": 1
+    }
+   ]
+  },
+  {
+   "id": "toilet_paper",
+   "name": "トイレットペーパー",
+   "unit": "ロール",
+   "daily_amount_per_person": 0.15,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    {
+     "label": "ロール",
+     "unit": "ロール",
+     "factor": 1
+    },
+    {
+     "label": "12ロールパック",
+     "unit": "パック",
+     "factor": 12
+    }
+   ]
+  },
+  {
+   "id": "baby_wipes",
+   "name": "お尻拭き",
+   "unit": "枚",
+   "daily_amount_per_person": 30,
+   "target": "infant",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    },
+    {
+     "label": "80枚パック",
+     "unit": "パック",
+     "factor": 80
+    }
+   ]
+  },
+  {
+   "id": "body_wipes",
+   "name": "身体を拭くシート",
+   "unit": "枚",
+   "daily_amount_per_person": 2,
+   "target": "all",
+   "buffer_days": null,
+   "is_active": true,
+   "packs": [
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    },
+    {
+     "label": "30枚パック",
+     "unit": "パック",
+     "factor": 30
+    }
+   ]
+  },
+  {
+   "id": "diaper_child",
+   "name": "子ども用紙おむつ",
+   "unit": "枚",
+   "daily_amount_per_person": 5,
+   "target": "infant",
+   "buffer_days": null,
+   "is_active": true,
+   "note_label": "サイズ",
+   "packs": [
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    }
+   ]
+  },
+  {
+   "id": "diaper_adult",
+   "name": "大人用紙おむつ",
+   "unit": "枚",
+   "daily_amount_per_person": 3,
+   "target": "elderly",
+   "buffer_days": null,
+   "is_active": true,
+   "note_label": "サイズ",
+   "packs": [
+    {
+     "label": "枚",
+     "unit": "枚",
+     "factor": 1
+    }
+   ]
+  },
+  {
+   "id": "milk",
+   "name": "ミルク",
+   "unit": "ml",
+   "daily_amount_per_person": 800,
+   "target": "infant",
+   "buffer_days": null,
+   "is_active": true,
+   "note_label": "銘柄・種類",
+   "packs": [
+    {
+     "label": "粉ミルク（g・出来上がり量に換算）",
+     "unit": "g",
+     "factor": 7.5
+    },
+    {
+     "label": "液体ミルク240ml",
+     "unit": "本",
+     "factor": 240
+    }
+   ]
+  }
+ ],
+ "districts": [
+  {
+   "name": "三角町 三角校区 波多区",
+   "site": "波多公民館",
+   "report": {
+    "reporter_role": "区長",
+    "households": 9,
+    "infants": 1,
+    "elderly": 3,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "retort": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     },
+     "body_wipes": {
+      "note": ""
+     },
+     "snack": {
+      "note": ""
+     }
+    },
+    "notes": "高台で坂道が急",
+    "updatedAt": "2026-08-09 10:07"
+   },
+   "lat": 32.611,
+   "lng": 130.455
+  },
+  {
+   "name": "三角町 青海校区 戸馳区",
+   "site": "",
+   "report": {
+    "reporter_role": "消防団",
+    "households": 5,
+    "infants": null,
+    "elderly": 1,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "tea": {
+      "note": ""
+     }
+    },
+    "notes": "橋が渋滞しやすい",
+    "updatedAt": "2026-08-09 11:14"
+   },
+   "lat": 32.596,
+   "lng": 130.445
+  },
+  {
+   "name": "不知火町 不知火校区 高良区",
+   "site": "高良公民館",
+   "report": {
+    "reporter_role": "自治会長",
+    "households": 12,
+    "infants": 2,
+    "elderly": 2,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "retort": {
+      "note": ""
+     },
+     "diaper_child": {
+      "note": ""
+     },
+     "baby_wipes": {
+      "note": ""
+     },
+     "milk": {
+      "note": ""
+     },
+     "snack": {
+      "note": ""
+     },
+     "toilet_paper": {
+      "note": ""
+     }
+    },
+    "notes": "",
+    "updatedAt": "2026-08-09 12:21"
+   },
+   "lat": 32.655,
+   "lng": 130.615
+  },
+  {
+   "name": "不知火町 不知火校区 松合区",
+   "site": "松合公民館",
+   "report": {
+    "reporter_role": "区長",
+    "households": 7,
+    "infants": null,
+    "elderly": 3,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "sports_drink": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     },
+     "body_wipes": {
+      "note": ""
+     }
+    },
+    "notes": "",
+    "updatedAt": "2026-08-09 13:28"
+   },
+   "lat": 32.61,
+   "lng": 130.585
+  },
+  {
+   "name": "松橋町 豊福校区 豊福区",
+   "site": "豊福公民館",
+   "report": {
+    "reporter_role": "区長",
+    "households": 8,
+    "infants": 1,
+    "elderly": 1,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "retort": {
+      "note": ""
+     },
+     "diaper_child": {
+      "note": ""
+     },
+     "baby_wipes": {
+      "note": ""
+     },
+     "milk": {
+      "note": ""
+     },
+     "toilet_paper": {
+      "note": ""
+     }
+    },
+    "notes": "",
+    "updatedAt": "2026-08-09 14:35"
+   },
+   "lat": 32.633,
+   "lng": 130.67
+  },
+  {
+   "name": "松橋町 当尾校区 久具区",
+   "site": "久具公民館",
+   "report": {
+    "reporter_role": "区長",
+    "households": 6,
+    "infants": null,
+    "elderly": 2,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "snack": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     },
+     "sports_drink": {
+      "note": ""
+     }
+    },
+    "notes": "",
+    "updatedAt": "2026-08-09 15:42"
+   },
+   "lat": 32.653,
+   "lng": 130.659
+  },
+  {
+   "name": "松橋町 当尾校区 曲野区",
+   "site": "曲野公民館",
+   "report": {
+    "reporter_role": "自治会長",
+    "households": 10,
+    "infants": null,
+    "elderly": 1,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "retort": {
+      "note": ""
+     },
+     "tea": {
+      "note": ""
+     },
+     "snack": {
+      "note": ""
+     },
+     "toilet_paper": {
+      "note": ""
+     },
+     "body_wipes": {
+      "note": ""
+     }
+    },
+    "notes": "耳の遠い方が多い",
+    "updatedAt": "2026-08-09 16:49"
+   },
+   "lat": 32.66,
+   "lng": 130.68
+  },
+  {
+   "name": "松橋町 豊川校区 砂川区",
+   "site": "",
+   "report": {
+    "reporter_role": "民生委員",
+    "households": 4,
+    "infants": 1,
+    "elderly": null,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "diaper_child": {
+      "note": ""
+     },
+     "baby_wipes": {
+      "note": ""
+     },
+     "milk": {
+      "note": ""
+     }
+    },
+    "notes": "",
+    "updatedAt": "2026-08-09 09:56"
+   },
+   "lat": 32.626,
+   "lng": 130.696
+  },
+  {
+   "name": "小川町 小川校区 江頭区",
+   "site": "江頭公民館",
+   "lat": 32.591,
+   "lng": 130.703
+  },
+  {
+   "name": "小川町 河江校区 河江区",
+   "site": "河江公民館",
+   "report": {
+    "reporter_role": "地域団体",
+    "households": 11,
+    "infants": 1,
+    "elderly": 2,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "retort": {
+      "note": ""
+     },
+     "diaper_child": {
+      "note": ""
+     },
+     "baby_wipes": {
+      "note": ""
+     },
+     "milk": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     },
+     "toilet_paper": {
+      "note": ""
+     }
+    },
+    "notes": "日中不在の世帯が多い",
+    "updatedAt": "2026-08-09 11:10"
+   },
+   "lat": 32.601,
+   "lng": 130.688
+  },
+  {
+   "name": "豊野町 豊野校区 糸石区",
+   "site": "糸石公民館",
+   "report": {
+    "reporter_role": "自治会長",
+    "households": 8,
+    "infants": null,
+    "elderly": 2,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "sports_drink": {
+      "note": ""
+     },
+     "snack": {
+      "note": ""
+     },
+     "body_wipes": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     }
+    },
+    "notes": "道路が一部通行できない",
+    "updatedAt": "2026-08-09 12:17"
+   },
+   "lat": 32.626,
+   "lng": 130.756
+  },
+  {
+   "name": "豊野町 豊野校区 山崎区",
+   "site": "山崎公民館",
+   "report": {
+    "reporter_role": "区長",
+    "households": 15,
+    "infants": 2,
+    "elderly": 4,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "retort": {
+      "note": ""
+     },
+     "diaper_child": {
+      "note": ""
+     },
+     "baby_wipes": {
+      "note": ""
+     },
+     "milk": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     },
+     "snack": {
+      "note": ""
+     },
+     "toilet_paper": {
+      "note": ""
+     },
+     "body_wipes": {
+      "note": ""
+     }
+    },
+    "notes": "地区内に3つの集落が点在",
+    "updatedAt": "2026-08-09 13:24"
+   },
+   "lat": 32.607,
+   "lng": 130.771
+  },
+  {
+   "name": "松橋町 豊福校区 両仲間区",
+   "site": "",
+   "report": {
+    "reporter_role": "区長",
+    "households": 10,
+    "infants": 0,
+    "elderly": 8,
+    "needs": {
+     "water": {
+      "note": ""
+     },
+     "rice_pack": {
+      "note": ""
+     },
+     "tea": {
+      "note": ""
+     },
+     "sports_drink": {
+      "note": ""
+     },
+     "baby_wipes": {
+      "note": ""
+     },
+     "body_wipes": {
+      "note": ""
+     },
+     "diaper_adult": {
+      "note": ""
+     }
+    },
+    "notes": "",
+    "updatedAt": "2026-08-10 11:58"
+   }
+  }
+ ],
+ "households": []
 }
