@@ -157,8 +157,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       </div>
       <div class="field">
         <label for="fWard">区名 <span style="color:var(--status-critical)">必須</span></label>
-        <input type="text" id="fWard" list="wardList" placeholder="例: 豊福区">
-        <datalist id="wardList"></datalist>
+        <input type="text" id="fWard" placeholder="例: 豊福区">
       </div>
     </div>
     <div class="hint">登録・集計は<b>区単位</b>です。すでに登録済みの区を入れると内容を読み込んで上書き更新になります。</div>
@@ -318,7 +317,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       <div><label for="signupSchool" style="font-weight:400; font-size:.7rem">校区名</label>
         <select id="signupSchool"><option value="">町名を先に選択</option></select></div>
       <div><label for="signupWard" style="font-weight:400; font-size:.7rem">区名</label>
-        <input type="text" id="signupWard" list="wardList" placeholder="例: 豊福区"></div>
+        <input type="text" id="signupWard" placeholder="例: 豊福区"></div>
     </div>
     <label for="signupPass" style="display:block; margin-top:8px">合言葉（6文字以上）</label>
     <input type="password" id="signupPass" autocomplete="new-password">
@@ -611,27 +610,12 @@ $("addBtn").addEventListener("click", () => {
   }
   markDirty();
   renderDistricts();
-  buildDistrictOptions();
   resetForm();
   setStatus(`「${d.name}」を${cur && cur.report ? "更新" : "登録"}しました。最後に「保存して公開」を押してください`, "ok");
 });
 $("cancelEditBtn").addEventListener("click", () => { resetForm(); setStatus("入力をクリアしました"); });
 
 /* ---------- 一覧 ---------- */
-function buildDistrictOptions(){
-  const names = (scope && scope.type === "district")
-    ? (scope.districts || [])
-    : (data.districts || []).map(d => d.name).filter(Boolean);
-  const wards = new Set();
-  names.forEach(n => {
-    const p = parseName(n);
-    if (p.ward) wards.add(p.ward);
-  });
-  const dl = $("wardList");
-  dl.textContent = "";
-  [...wards].sort((a, b) => a.localeCompare(b, "ja"))
-    .forEach(v => { const o = document.createElement("option"); o.value = v; dl.appendChild(o); });
-}
 function renderDistricts(){
   const tbody = $("districtBody");
   tbody.textContent = "";
@@ -693,7 +677,6 @@ function renderDistricts(){
       data.districts = data.districts.filter(x => x !== d);
       markDirty();
       renderDistricts();
-      buildDistrictOptions();
     });
     del.appendChild(db);
     tr.appendChild(del);
@@ -707,7 +690,6 @@ $("addDistrict").addEventListener("click", () => {
   data.districts.push({ name: name.trim(), site: "" });
   markDirty();
   renderDistricts();
-  buildDistrictOptions();
 });
 
 /* ---------- 計算基準・設定 ---------- */
@@ -783,7 +765,6 @@ function renderSettings(){
 /* ---------- 読み込み・保存 ---------- */
 function renderAll(){
   normalizeDistricts();
-  buildDistrictOptions();
   renderRules();
   renderSettings();
   renderDistricts();
