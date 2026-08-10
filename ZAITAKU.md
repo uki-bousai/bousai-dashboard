@@ -121,12 +121,40 @@ households … 旧形式との互換用（現在は常に空配列）
 | 計算基準・設定の変更 | ○ | ✕ |
 | 避難所ダッシュボード等の保存 | ○ | ✕（zaitaku.json のみ） |
 
-- 地区担当者は Worker の Secret `ZAITAKU_USERS` に登録する:
-  `{"山田": {"password":"合言葉", "districts":["松橋町 豊福"]}, ...}`（複数地区も可）
+- 地区担当者のアカウントは2通りの作り方がある（権限はどちらも同じ）:
+  1. **自己登録（招待コード方式・推奨）**: 区の担当者がログイン画面の
+     「アカウントを作成する」から、招待コード＋名前＋合言葉＋担当地区を
+     入力して自分で作る。合言葉はハッシュ化してCloudflare KVに保存される
+  2. **運営が手動登録**: Worker の Secret `ZAITAKU_USERS` に記載:
+     `{"山田": {"password":"合言葉", "districts":["松橋町 豊福"]}, ...}`（複数地区も可）
 - 制限は**サーバー側（Worker）で強制**される。画面側の出し分けは補助で、
   改造したクライアントから送っても担当外の差分はWorkerが403で拒否する
 - 入力画面は /auth の応答（scope）に応じて、担当外の編集ボタンや
   計算基準カードを自動的に隠し、地区名も担当地区で固定する
+
+## アカウントの自己登録（招待コード方式）
+
+区の担当者が自分でアカウントを作れる仕組み。運営が承認する手間はない。
+
+**流れ**: 運営が招待コードを決めて区長会などで配る → 担当者はログイン画面の
+「アカウントを作成する」で 招待コード・名前・合言葉・担当地区 を入力 →
+すぐ使える（担当地区だけ編集可）。
+
+**有効にするための初期設定（Cloudflareダッシュボードで1回だけ）**:
+
+1. Storage & Databases → KV → Create namespace（名前は例: `bousai-users`）
+2. Workers & Pages → `bousai-relay` → Settings → Bindings → Add →
+   KV Namespace → Variable name を **`USERS_KV`** にして 1 のネームスペースを選択
+3. Settings → Variables and Secrets → Secret **`INVITE_CODE`** を追加
+   （値が招待コードそのもの。例: `uki-2026-bousai`）
+4. `worker/worker.js` を再デプロイ
+
+**運用**:
+
+- 招待コードが漏れた疑い → `INVITE_CODE` の値を変えるだけ（作成済みアカウントは影響なし）
+- アカウント削除 → KVダッシュボードで `user:<名前>` のキーを削除
+- 未設定のままでも既存のログインは正常動作（アカウント作成だけ「利用できません」と案内される）
+- 保存の記録（Gitコミット）に更新者名が残るため、名前は「地区名＋名字」を推奨
 
 ## セキュリティ
 
@@ -157,8 +185,9 @@ URLに `?env=demo` を付けると、本番とは別のデータ（`zaitaku-demo
 1. **Cloudflare Worker の更新**: `worker/worker.js` を再デプロイしてください
    （`zaitaku.json` への保存許可と地区担当者の権限チェックを追加したため。
    未更新だと入力画面の保存が「データの形式が不正です」エラーになります）
-2. **地区担当者を追加する場合**: Workers の Settings → Variables and Secrets に
-   `ZAITAKU_USERS` を追加（形式は worker.js 冒頭のコメント参照）。
+2. **地区担当者の自己登録を使う場合**: KVバインディング `USERS_KV` と
+   Secret `INVITE_CODE` を設定（上の「アカウントの自己登録」参照）。
+   手動で足す場合は Secret `ZAITAKU_USERS`（形式は worker.js 冒頭のコメント参照）。
    運営スタッフは従来どおり `ADMIN_USERS` のままでよい
 3. 動作確認: `zaitaku-admin.html` でログイン → テスト世帯を登録 → 保存 →
    1〜2分後に `zaitaku.html` に反映されることを確認

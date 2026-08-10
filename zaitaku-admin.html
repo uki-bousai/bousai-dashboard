@@ -37,8 +37,8 @@ header a{color:var(--text-secondary)}
 .card .desc{font-size:.76rem; color:var(--text-secondary); margin-bottom:10px; line-height:1.7}
 label{font-size:.78rem; font-weight:700; color:var(--text-secondary)}
 .field{margin-top:12px}
-.field .hint{font-size:.7rem; color:var(--text-muted); margin-top:2px; line-height:1.6}
-input[type="text"], input[type="number"], input[type="date"], select, textarea{
+.hint{font-size:.7rem; color:var(--text-muted); margin-top:2px; line-height:1.6}
+input[type="text"], input[type="number"], input[type="date"], input[type="password"], select, textarea{
   font:inherit; font-size:1rem; color:var(--text-primary); width:100%;
   background:var(--page); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:4px}
 textarea{min-height:70px}
@@ -263,9 +263,9 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 </div>
 
 <div id="loginOverlay">
-  <div class="loginbox card">
+  <div class="loginbox card" id="loginBox">
     <h2>ログイン</h2>
-    <p class="desc">管理責任者から受け取った名前と合言葉を入力してください（避難所ダッシュボードと共通）。</p>
+    <p class="desc">お持ちの名前と合言葉を入力してください（運営スタッフは避難所ダッシュボードと共通）。</p>
     <label for="loginName">名前</label>
     <input type="text" id="loginName" autocomplete="username">
     <label for="loginPass" style="display:block; margin-top:8px">合言葉</label>
@@ -278,6 +278,30 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
     <div style="display:flex; gap:12px; margin-top:16px; align-items:center">
       <button class="primary" id="loginBtn">ログイン</button>
       <button id="loginSkip" style="border:none; background:none; color:var(--text-muted); font-size:.74rem; font-weight:400">閲覧のみで開く</button>
+    </div>
+    <div class="notice" style="margin-top:14px">はじめての区の担当者の方は、運営から伝えられた<b>招待コード</b>でアカウントを作れます。<br>
+      <button id="showSignup" style="border:none; background:none; color:var(--accent); font-size:.8rem; font-weight:700; padding:6px 0 0">→ アカウントを作成する</button>
+    </div>
+  </div>
+
+  <div class="loginbox card" id="signupBox" style="display:none">
+    <h2>アカウント作成（区の担当者）</h2>
+    <p class="desc">運営から伝えられた<b>招待コード</b>が必要です。作成したアカウントは、選んだ担当地区だけ登録・更新できます。</p>
+    <label for="signupCode">招待コード</label>
+    <input type="text" id="signupCode" autocomplete="off">
+    <label for="signupName" style="display:block; margin-top:8px">名前</label>
+    <input type="text" id="signupName" autocomplete="username" placeholder="例: 豊福・山田">
+    <div class="hint">運営が誰か分かる名前にしてください（地区名＋名字がおすすめ）。更新の記録に残ります。</div>
+    <label for="signupDistrict" style="display:block; margin-top:8px">担当地区</label>
+    <input type="text" id="signupDistrict" list="districtList" placeholder="例: 松橋町 豊福">
+    <label for="signupPass" style="display:block; margin-top:8px">合言葉（6文字以上）</label>
+    <input type="password" id="signupPass" autocomplete="new-password">
+    <label for="signupPass2" style="display:block; margin-top:8px">合言葉（もう一度）</label>
+    <input type="password" id="signupPass2" autocomplete="new-password">
+    <div id="signupErr" style="display:none; color:var(--status-critical); font-size:.76rem; font-weight:700; margin-top:8px"></div>
+    <div style="display:flex; gap:12px; margin-top:16px; align-items:center">
+      <button class="primary" id="signupBtn">作成してはじめる</button>
+      <button id="backToLogin" style="border:none; background:none; color:var(--text-muted); font-size:.74rem; font-weight:400">← ログインに戻る</button>
     </div>
   </div>
 </div>
@@ -779,6 +803,51 @@ $("loginBtn").addEventListener("click", async () => {
 });
 $("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
 $("loginSkip").addEventListener("click", closeLogin);
+
+/* ---------- アカウント作成（招待コード方式） ---------- */
+$("showSignup").addEventListener("click", () => {
+  $("loginBox").style.display = "none";
+  $("signupBox").style.display = "";
+});
+$("backToLogin").addEventListener("click", () => {
+  $("signupBox").style.display = "none";
+  $("loginBox").style.display = "";
+});
+function showSignupErr(msg){ const el = $("signupErr"); el.textContent = msg; el.style.display = "block"; }
+$("signupBtn").addEventListener("click", async () => {
+  $("signupErr").style.display = "none";
+  const code = $("signupCode").value.trim();
+  const name = $("signupName").value.trim();
+  const district = $("signupDistrict").value.trim();
+  const pass = $("signupPass").value;
+  const pass2 = $("signupPass2").value;
+  if (!code){ showSignupErr("招待コードを入力してください"); return; }
+  if (!name){ showSignupErr("名前を入力してください"); return; }
+  if (!district){ showSignupErr("担当地区を入力してください"); return; }
+  if (pass.length < 6){ showSignupErr("合言葉は6文字以上にしてください"); return; }
+  if (pass !== pass2){ showSignupErr("合言葉が一致しません。同じものを2回入力してください"); return; }
+  $("signupBtn").disabled = true;
+  try {
+    const { res, body } = await workerPost("/signup", { code, name, password: pass, districts: [district] });
+    if (!res.ok){
+      showSignupErr((body && body.error) || "アカウントを作成できませんでした（HTTP " + res.status + "）");
+      return;
+    }
+    // 作成成功 → そのままログイン状態にする
+    $("adminName").value = name;
+    $("adminPass").value = pass;
+    $("saveAuth").checked = true;
+    persistAuth();
+    scope = (body && body.scope) || { type: "district", districts: [district] };
+    closeLogin();
+    applyScope();
+    setStatus(`アカウントを作成しました（担当: ${district}）。区の状況を入力して「保存して公開」を押してください`, "ok");
+  } catch (e) {
+    showSignupErr("中継サーバーに接続できませんでした。通信環境を確認してください");
+  } finally {
+    $("signupBtn").disabled = false;
+  }
+});
 
 addEventListener("beforeunload", e => { if (dirty){ e.preventDefault(); e.returnValue = ""; } });
 
