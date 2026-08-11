@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>在宅避難の状況入力 ─ 区ごとに世帯数と必要な物資を選ぶだけ</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <style>
 :root{
   color-scheme: light;
@@ -152,27 +154,44 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
         </select>
       </div>
       <div class="field">
-        <label for="fSchool">校区名</label>
+        <label for="fSchool">校区・地区名</label>
         <select id="fSchool"><option value="">町名を先に選択</option></select>
       </div>
       <div class="field">
         <label for="fWard">区名 <span style="color:var(--status-critical)">必須</span></label>
-        <input type="text" id="fWard" placeholder="例: 豊福区">
+        <select id="fWard"><option value="">町名を先に選択</option></select>
+        <input type="text" id="fWardOther" placeholder="区名を入力" style="display:none; margin-top:6px">
       </div>
     </div>
-    <div class="hint">登録・集計は<b>区単位</b>です。すでに登録済みの区を入れると内容を読み込んで上書き更新になります。</div>
+    <div class="hint">登録・集計は<b>区単位</b>です。区名が一覧にないときは「その他（手入力）」を選んで入力してください。すでに登録済みの区を選ぶと内容を読み込んで上書き更新になります。</div>
 
     <div class="cols">
       <div class="field">
         <label for="fSite">集積場所（公民館など）</label>
         <input type="text" id="fSite" placeholder="例: 豊福公民館">
         <div class="hint">支援物資を受け取る場所。公開ページに表示されます。</div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px">
+          <button type="button" class="small" id="siteGeo">📍名前から場所を検索</button>
+          <button type="button" class="small" id="siteMap">🗺地図で指定</button>
+          <button type="button" class="small" id="siteClear" style="display:none">位置をクリア</button>
+          <span class="hint" id="siteCoord" style="margin-top:0"></span>
+        </div>
+        <div class="hint">場所を設定すると、公開ページの地図に印が表示されます。</div>
+        <label for="fSiteHours" style="display:block; margin-top:10px">受付時間（任意）</label>
+        <input type="text" id="fSiteHours" placeholder="例: 9:00〜17:00">
+        <div class="hint">公民館で物資を受け取れる時間。公開ページに表示されます。</div>
       </div>
       <div class="field">
         <label for="fHouseholds">在宅避難の世帯数 <span style="color:var(--status-critical)">必須</span></label>
         <input type="number" id="fHouseholds" min="1" step="1" inputmode="numeric" placeholder="例: 8">
         <div class="hint">おおよそで構いません。数量は「世帯数 × 平均<span id="avgLabel">2</span>人」で概算します。</div>
       </div>
+    </div>
+
+    <div class="field">
+      <label for="fStaff">物資を届ける担当（任意）</label>
+      <input type="text" id="fStaff" placeholder="例: 木村議員・杉田議員">
+      <div class="hint">この区へ物資を届ける市議会議員ペアなどが決まっていれば入力してください。公開ページに表示されます。<b>お名前のみ</b>（電話番号・住所は書かないでください）。</div>
     </div>
 
     <details class="adv field">
@@ -314,10 +333,11 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
           <option>三角町</option><option>不知火町</option><option>松橋町</option>
           <option>小川町</option><option>豊野町</option>
         </select></div>
-      <div><label for="signupSchool" style="font-weight:400; font-size:.7rem">校区名</label>
+      <div><label for="signupSchool" style="font-weight:400; font-size:.7rem">校区・地区名</label>
         <select id="signupSchool"><option value="">町名を先に選択</option></select></div>
       <div><label for="signupWard" style="font-weight:400; font-size:.7rem">区名</label>
-        <input type="text" id="signupWard" placeholder="例: 豊福区"></div>
+        <select id="signupWard"><option value="">町名を先に選択</option></select>
+        <input type="text" id="signupWardOther" placeholder="区名を入力" style="display:none; margin-top:6px"></div>
     </div>
     <label for="signupPass" style="display:block; margin-top:8px">合言葉（6文字以上）</label>
     <input type="password" id="signupPass" autocomplete="new-password">
@@ -338,6 +358,9 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
    設定（避難所ダッシュボードの admin.html と同じ中継サーバーを使用）
    ============================================================ */
 const WORKER_URL = "https://bousai-relay.a-sawada813.workers.dev";
+const AREA_NAME = "熊本県";
+const AREA_CITY = "宇城市";
+const AREA_BOX  = { minLat: 32.0, maxLat: 33.3, minLng: 129.9, maxLng: 131.4 };
 /* 検証環境: URLに ?env=demo を付けると zaitaku-demo.json（練習用）に読み書きする。
    本番の zaitaku.json には一切影響しない */
 const IS_DEMO = new URLSearchParams(location.search).get("env") === "demo";
@@ -367,20 +390,22 @@ function jstStamp(){
 function activeRules(){ return (data.rules || []).filter(r => r.is_active !== false); }
 function ruleName(id){ const r = (data.rules || []).find(x => x.id === id); return r ? r.name : id; }
 
-/* 町ごとの校区（宇城市の小学校区）。町を選ぶと校区のドロップダウンが切り替わる */
+/* 町ごとの校区・地区（宇城市の行政区一覧より）。町を選ぶとドロップダウンが切り替わる。
+   三角町は「校区」でなく5つの「地区」、豊野町は校区の区分なし */
 const SCHOOL_DISTRICTS = {
-  "三角町":   ["三角校区", "青海校区"],
-  "不知火町": ["不知火校区"],
-  "松橋町":   ["松橋校区", "当尾校区", "豊福校区", "豊川校区"],
-  "小川町":   ["小野部田校区", "河江校区", "小川校区", "海東校区"],
-  "豊野町":   ["豊野校区"],
+  "三角町":   ["三角地区", "みなと地区", "戸馳地区", "郡浦地区", "大岳地区"],
+  "不知火町": ["不知火校区", "松合校区"],
+  "松橋町":   ["松橋校区", "豊川校区", "当尾校区", "豊福校区"],
+  "小川町":   ["海東校区", "小川校区", "小野部田校区", "河江校区"],
+  "豊野町":   [],
 };
 function populateSchoolOptions(sel, town, current){
   const list = SCHOOL_DISTRICTS[town] || [];
   sel.textContent = "";
   const empty = document.createElement("option");
   empty.value = "";
-  empty.textContent = town ? "選択してください" : "町名を先に選択";
+  empty.textContent = !town ? "町名を先に選択"
+    : (list.length ? "選択してください" : "（校区の区分なし）");
   sel.appendChild(empty);
   const opts = [...list];
   if (current && !opts.includes(current)) opts.push(current);   // 旧データの校区名も表示できるように
@@ -390,6 +415,60 @@ function populateSchoolOptions(sel, town, current){
     sel.appendChild(o);
   });
   sel.value = current && opts.includes(current) ? current : "";
+}
+
+/* 校区・地区ごとの行政区（宇城市の行政区一覧より）。キーは「町名|校区名」 */
+const WARDS = {
+  "三角町|三角地区":   ["大田尾区","際崎区","古氷区","宮崎区","塩屋区","赤岩区","黒崎区","浦区","向山区","石打区","小田良区"],
+  "三角町|みなと地区": ["西港一","西港二","本町","東港一","東港二","東港三","東港四","東港五","有働団地","古氷団地区"],
+  "三角町|戸馳地区":   ["三角本村","田井浦","内潟","片島","野崎"],
+  "三角町|郡浦地区":   ["山田","千房","馬場","矢崎","船津","打越","上中村","上本庄","下本庄","新地","前越","金桁","八柳","開拓"],
+  "三角町|大岳地区":   ["大口","手場","底江","三角御船","古場","里浦"],
+  "不知火町|不知火校区": ["桂原","塩屋浦","亀崎","長崎一","長崎二","鴨籠","新村","浦上","亀尾","松崎","塩浜","十五社一","十五社二","雇用促進住宅","浜田","高良","御領本","御領四","御領五","御領六","柏原","小曽部","塚原東","塚原西","塚原南"],
+  "不知火町|松合校区":   ["永尾一","永尾二","古屋敷","山須浦","仲","松合西","上","和田","救の浦","大見"],
+  "松橋町|松橋校区": ["2","3","4","5","6","7","8","9","10","南11","北11","12"],
+  "松橋町|豊川校区": ["東松崎","豊崎","南豊崎","松橋御船","浅川","砂川","沖塘","八枚戸"],
+  "松橋町|当尾校区": ["曲野南","曲野北","古保山","海ノ平","六地蔵","北萩尾","南萩尾","浦川内","久具","大野"],
+  "松橋町|豊福校区": ["内田","竹崎","豊福","両仲間南","両仲間北","松橋本村","島"],
+  "小川町|海東校区":     ["舞鴫","弦巻","田中","小園","野添","宮園","小川西","大岩","平野"],
+  "小川町|小川校区":     ["引上・長迫・楫屋林","西山境尾","蓮仏","稲川樋渡","表南小川","日岳町","納野","蛭子町","寺町","上町","中町","新町","出来町","亀之町","井手口","西小川","益南"],
+  "小川町|小野部田校区": ["南部田","北部田","耕地","南小野","中小野","北小野"],
+  "小川町|河江校区":     ["河江","三ツ丸","小川本村","江頭","仲之江","川尻","南新田","新田","上住吉","下住吉","南出村","北出村","宇土割","不知火"],
+  "豊野町|": ["上糸石","下糸石","上巣林","下巣林","下安見","上安見","北山崎","南山崎","下郷","中間","下上郷","上上郷"],
+};
+const WARD_OTHER = "__other";   // 「その他（手入力）」を選んだときの select の値
+function wardList(town, school){ return WARDS[(town || "") + "|" + (school || "")] || []; }
+
+/* 区名ドロップダウンを町・校区に合わせて作り直す。
+   current が公式一覧にない名前（旧データ・手入力）なら「その他」を選んで手入力欄に出す */
+function populateWardOptions(sel, otherInp, town, school, current){
+  const list = wardList(town, school);
+  sel.textContent = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = town ? "選択してください" : "町名を先に選択";
+  sel.appendChild(empty);
+  list.forEach(w => {
+    const o = document.createElement("option");
+    o.value = w; o.textContent = w;
+    sel.appendChild(o);
+  });
+  const other = document.createElement("option");
+  other.value = WARD_OTHER; other.textContent = "その他（手入力）";
+  sel.appendChild(other);
+  if (current && list.includes(current)){
+    sel.value = current;
+    otherInp.style.display = "none"; otherInp.value = "";
+  } else if (current){
+    sel.value = WARD_OTHER;
+    otherInp.style.display = ""; otherInp.value = current;
+  } else {
+    sel.value = "";
+    otherInp.style.display = "none"; otherInp.value = "";
+  }
+}
+function wardValue(sel, otherInp){
+  return sel.value === WARD_OTHER ? otherInp.value.trim() : sel.value;
 }
 
 /* 地区名は「町名 校区名 区名」を空白区切りで1つの文字列として保存する */
@@ -413,7 +492,7 @@ function applyScope(){
   $("addDistrict").style.display = limited ? "none" : "";
   if (limited){
     const list = scope.districts || [];
-    if (list.length === 1 && !$("fWard").value){
+    if (list.length === 1 && !wardValue($("fWard"), $("fWardOther"))){
       const p = parseName(list[0]);
       setDistrictFields(p.town, p.school, p.ward);
     }
@@ -489,6 +568,150 @@ function renderNeedChips(){
   });
 }
 
+/* ---------- 集積場所の位置（緯度経度） ---------- */
+let formLat = null, formLng = null;
+
+function setCoord(lat, lng){
+  formLat = Number.isFinite(lat) ? lat : null;
+  formLng = Number.isFinite(lng) ? lng : null;
+  renderCoord();
+}
+function renderCoord(){
+  const has = Number.isFinite(formLat) && Number.isFinite(formLng);
+  $("siteCoord").textContent = has ? "✓ 地図の位置: 設定済み" : "地図の位置: 未設定";
+  $("siteClear").style.display = has ? "" : "none";
+}
+$("siteClear").addEventListener("click", () => setCoord(null, null));
+
+/* 座標検索（避難所ダッシュボード・生活支援情報と同じ仕組み） */
+const inArea = c => c.lat >= AREA_BOX.minLat && c.lat <= AREA_BOX.maxLat &&
+                    c.lng >= AREA_BOX.minLng && c.lng <= AREA_BOX.maxLng;
+async function searchGSI(q){
+  const res = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q));
+  if (!res.ok) return [];
+  const json = await res.json();
+  return (Array.isArray(json) ? json : []).slice(0, 5).map(x => ({
+    label: x.properties.title, source: "国土地理院",
+    lat: x.geometry.coordinates[1], lng: x.geometry.coordinates[0]
+  }));
+}
+async function searchOSM(q){
+  const viewbox = `${AREA_BOX.minLng},${AREA_BOX.maxLat},${AREA_BOX.maxLng},${AREA_BOX.minLat}`;
+  const res = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=ja&countrycodes=jp" +
+    `&viewbox=${viewbox}&bounded=1&q=` + encodeURIComponent(q));
+  if (!res.ok) return [];
+  const json = await res.json();
+  return (Array.isArray(json) ? json : []).map(x => ({
+    label: x.display_name, source: "OpenStreetMap", lat: parseFloat(x.lat), lng: parseFloat(x.lon)
+  }));
+}
+$("siteGeo").addEventListener("click", async () => {
+  const name = $("fSite").value.trim();
+  if (!name){ setStatus("先に集積場所の名前を入力してから「📍検索」を押してください", "err"); $("fSite").focus(); return; }
+  setStatus(`「${name}」の場所を検索中…（${AREA_NAME}内）`);
+  const queries = [...new Set([name, `${AREA_CITY} ${name}`])];
+  const found = [], seen = new Set();
+  for (const q of queries){
+    const results = await Promise.allSettled([searchGSI(q), searchOSM(q)]);
+    results.forEach(r => {
+      if (r.status !== "fulfilled") return;
+      r.value.forEach(c => {
+        if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng) || !inArea(c)) return;
+        const key = c.lat.toFixed(3) + "," + c.lng.toFixed(3);
+        if (!seen.has(key)){ seen.add(key); found.push(c); }
+      });
+    });
+    if (found.length >= 5) break;
+  }
+  if (!found.length){
+    setStatus(`${AREA_NAME}内で場所が見つかりませんでした。「🗺地図で指定」でタップして設定してください`, "err");
+    return;
+  }
+  setStatus("候補が見つかりました。正しい場所を選んでください");
+  showGeoChooser(name, found.slice(0, 6), c => {
+    setCoord(c.lat, c.lng);
+    setStatus(`「${name}」の場所を設定しました。「この内容で登録する」→「保存して公開」を忘れずに`, "ok");
+  });
+});
+function showGeoChooser(name, candidates, onPick){
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px";
+  const box = document.createElement("div");
+  box.className = "card";
+  box.style.cssText = "width:100%; max-width:480px; max-height:80vh; overflow-y:auto";
+  const h = document.createElement("h2"); h.textContent = `「${name}」の場所の候補`;
+  box.appendChild(h);
+  candidates.forEach(c => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; font-weight:400; line-height:1.5";
+    const t = document.createElement("div"); t.style.fontWeight = "700"; t.textContent = c.label;
+    const s = document.createElement("div");
+    s.style.cssText = "font-size:.72rem; color:var(--text-secondary)";
+    s.textContent = `${c.source} ／ 緯度 ${c.lat.toFixed(5)}, 経度 ${c.lng.toFixed(5)}`;
+    b.append(t, s);
+    b.addEventListener("click", () => { overlay.remove(); onPick(c); });
+    box.appendChild(b);
+  });
+  const cancel = document.createElement("button");
+  cancel.type = "button"; cancel.textContent = "キャンセル"; cancel.style.cssText = "margin-top:12px";
+  cancel.addEventListener("click", () => overlay.remove());
+  box.appendChild(cancel);
+  overlay.appendChild(box);
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+$("siteMap").addEventListener("click", () => {
+  if (typeof L === "undefined"){
+    setStatus("地図を読み込めませんでした。通信環境を確認して再読み込みしてください", "err");
+    return;
+  }
+  const name = $("fSite").value.trim() || "集積場所";
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:14px";
+  const box = document.createElement("div");
+  box.className = "card";
+  box.style.cssText = "width:100%; max-width:640px";
+  const h = document.createElement("h2"); h.textContent = `「${name}」の場所を地図でタップ`;
+  const mapDiv = document.createElement("div");
+  mapDiv.style.cssText = "height:min(55vh,420px); border-radius:10px; overflow:hidden; border:1px solid var(--border); margin-top:8px";
+  const coords = document.createElement("div"); coords.className = "notice"; coords.textContent = "まだ場所が選ばれていません";
+  const btnRow = document.createElement("div");
+  btnRow.style.cssText = "display:flex; gap:10px; margin-top:12px; align-items:center";
+  const okBtn = document.createElement("button"); okBtn.className = "primary"; okBtn.type = "button";
+  okBtn.textContent = "この場所に決定"; okBtn.disabled = true;
+  const cancel = document.createElement("button"); cancel.type = "button"; cancel.textContent = "キャンセル";
+  btnRow.append(okBtn, cancel);
+  box.append(h, mapDiv, coords, btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  const map = L.map(mapDiv);
+  L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
+    maxZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'
+  }).addTo(map);
+  let marker = null, picked = null;
+  const setPick = ll => {
+    picked = ll;
+    if (!marker) marker = L.marker(ll).addTo(map); else marker.setLatLng(ll);
+    coords.textContent = `選択中: 緯度 ${ll.lat.toFixed(6)}, 経度 ${ll.lng.toFixed(6)}`;
+    okBtn.disabled = false;
+  };
+  if (Number.isFinite(formLat) && Number.isFinite(formLng)){
+    map.setView([formLat, formLng], 16); setPick({ lat: formLat, lng: formLng });
+  } else {
+    map.setView([32.647, 130.674], 12);   // 宇城市中心部
+  }
+  map.on("click", e => setPick(e.latlng));
+  setTimeout(() => map.invalidateSize(), 100);
+  const close = () => { map.remove(); overlay.remove(); };
+  okBtn.addEventListener("click", () => {
+    setCoord(picked.lat, picked.lng);
+    close();
+    setStatus(`「${name}」の場所を地図から設定しました。「この内容で登録する」→「保存して公開」を忘れずに`, "ok");
+  });
+  cancel.addEventListener("click", close);
+});
+
 /* ---------- フォーム ⇔ 地区オブジェクト ---------- */
 function intOrNull(id){
   const v = $(id).value.trim();
@@ -497,28 +720,35 @@ function intOrNull(id){
   return Number.isFinite(n) ? n : null;
 }
 function currentFormName(){
-  return composeName($("fTown").value, $("fSchool").value, $("fWard").value);
+  return composeName($("fTown").value, $("fSchool").value, wardValue($("fWard"), $("fWardOther")));
 }
 function setDistrictFields(town, school, ward){
   $("fTown").value = town || "";
   populateSchoolOptions($("fSchool"), town || "", school || "");
-  $("fWard").value = ward || "";
+  populateWardOptions($("fWard"), $("fWardOther"), town || "", $("fSchool").value, ward || "");
 }
 function formDistrict(){
   const needs = {};
   Object.keys(formNeeds).forEach(k => { needs[k] = { note: formNeeds[k].note || "" }; });
-  return {
+  const d = {
     name: currentFormName(),
     site: $("fSite").value.trim(),
-    report: {
+    report: null,
+  };
+  const staff = $("fStaff").value.trim();
+  if (staff) d.staff = staff;
+  const hours = $("fSiteHours").value.trim();
+  if (hours) d.site_hours = hours;
+  if (Number.isFinite(formLat) && Number.isFinite(formLng)){ d.lat = formLat; d.lng = formLng; }
+  d.report = {
       reporter_role: $("fRole").value,
       households: Math.round(Number($("fHouseholds").value)) || 0,
       infants: intOrNull("fInfants"),
       elderly: intOrNull("fElderly"),
       needs,
       notes: $("fNotes").value.trim(),
-    },
   };
+  return d;
 }
 function fillForm(d){
   const r = (d && d.report) || {};
@@ -526,6 +756,9 @@ function fillForm(d){
   const p = parseName(d && d.name);
   setDistrictFields(p.town, p.school, p.ward);
   $("fSite").value = (d && d.site) || "";
+  $("fSiteHours").value = (d && d.site_hours) || "";
+  $("fStaff").value = (d && d.staff) || "";
+  setCoord(d ? Number(d.lat) : null, d ? Number(d.lng) : null);
   $("fHouseholds").value = r.households || "";
   $("fInfants").value = r.infants ?? "";
   $("fElderly").value = r.elderly ?? "";
@@ -554,10 +787,20 @@ function loadDistrictToForm(name, opts){
 }
 $("fTown").addEventListener("change", () => {
   populateSchoolOptions($("fSchool"), $("fTown").value, $("fSchool").value);
+  populateWardOptions($("fWard"), $("fWardOther"), $("fTown").value, $("fSchool").value, "");
   loadDistrictToForm(currentFormName());
 });
-["fSchool","fWard"].forEach(id =>
-  $(id).addEventListener("change", () => loadDistrictToForm(currentFormName())));
+$("fSchool").addEventListener("change", () => {
+  populateWardOptions($("fWard"), $("fWardOther"), $("fTown").value, $("fSchool").value, "");
+  loadDistrictToForm(currentFormName());
+});
+$("fWard").addEventListener("change", () => {
+  const other = $("fWard").value === WARD_OTHER;
+  $("fWardOther").style.display = other ? "" : "none";
+  if (other){ $("fWardOther").focus(); return; }   // 手入力が済んでから読み込む
+  loadDistrictToForm(currentFormName());
+});
+$("fWardOther").addEventListener("change", () => loadDistrictToForm(currentFormName()));
 
 /* ---------- 自動計算プレビュー ---------- */
 function updatePreview(){
@@ -589,7 +832,11 @@ function updatePreview(){
 $("addBtn").addEventListener("click", () => {
   const d = formDistrict();
   if (!$("fTown").value){ setStatus("町名を選択してください", "err"); $("fTown").focus(); return; }
-  if (!$("fWard").value.trim()){ setStatus("区名を入力してください", "err"); $("fWard").focus(); return; }
+  if (!wardValue($("fWard"), $("fWardOther"))){
+    setStatus("区名を選択してください（一覧にないときは「その他（手入力）」）", "err");
+    ($("fWard").value === WARD_OTHER ? $("fWardOther") : $("fWard")).focus();
+    return;
+  }
   if (!canEditDistrict(d.name)){
     setStatus(`担当外の地区「${d.name}」は登録できません（担当: ${(scope.districts || []).join("、")}）`, "err");
     $("fWard").focus();
@@ -605,6 +852,10 @@ $("addBtn").addEventListener("click", () => {
   if (cur){
     cur.site = d.site;
     cur.report = d.report;
+    if ("staff" in d) cur.staff = d.staff; else delete cur.staff;
+    if ("site_hours" in d) cur.site_hours = d.site_hours; else delete cur.site_hours;
+    if ("lat" in d){ cur.lat = d.lat; cur.lng = d.lng; }
+    else { delete cur.lat; delete cur.lng; }
   } else {
     data.districts.push(d);
   }
@@ -655,7 +906,7 @@ function renderDistricts(){
     });
     chips.appendChild(wrap);
     tr.appendChild(chips);
-    tr.append(td(d.site || "調整中"), td(r ? (r.updatedAt || "") : ""));
+    tr.append(td((d.site || "調整中") + (Number.isFinite(Number(d.lat)) ? " 📍" : "")), td(r ? (r.updatedAt || "") : ""));
     const edit = document.createElement("td");
     const eb = document.createElement("button");
     eb.className = "small"; eb.type = "button"; eb.textContent = "編集";
@@ -878,8 +1129,17 @@ $("showSignup").addEventListener("click", () => {
   $("loginBox").style.display = "none";
   $("signupBox").style.display = "";
 });
-$("signupTown").addEventListener("change", () =>
-  populateSchoolOptions($("signupSchool"), $("signupTown").value, $("signupSchool").value));
+$("signupTown").addEventListener("change", () => {
+  populateSchoolOptions($("signupSchool"), $("signupTown").value, $("signupSchool").value);
+  populateWardOptions($("signupWard"), $("signupWardOther"), $("signupTown").value, $("signupSchool").value, "");
+});
+$("signupSchool").addEventListener("change", () =>
+  populateWardOptions($("signupWard"), $("signupWardOther"), $("signupTown").value, $("signupSchool").value, ""));
+$("signupWard").addEventListener("change", () => {
+  const other = $("signupWard").value === WARD_OTHER;
+  $("signupWardOther").style.display = other ? "" : "none";
+  if (other) $("signupWardOther").focus();
+});
 $("backToLogin").addEventListener("click", () => {
   $("signupBox").style.display = "none";
   $("loginBox").style.display = "";
@@ -889,13 +1149,14 @@ $("signupBtn").addEventListener("click", async () => {
   $("signupErr").style.display = "none";
   const code = $("signupCode").value.trim();
   const name = $("signupName").value.trim();
-  const district = composeName($("signupTown").value, $("signupSchool").value, $("signupWard").value);
+  const district = composeName($("signupTown").value, $("signupSchool").value,
+    wardValue($("signupWard"), $("signupWardOther")));
   const pass = $("signupPass").value;
   const pass2 = $("signupPass2").value;
   if (!code){ showSignupErr("招待コードを入力してください"); return; }
   if (!name){ showSignupErr("名前を入力してください"); return; }
   if (!$("signupTown").value){ showSignupErr("担当地区の町名を選択してください"); return; }
-  if (!$("signupWard").value.trim()){ showSignupErr("担当地区の区名を入力してください"); return; }
+  if (!wardValue($("signupWard"), $("signupWardOther"))){ showSignupErr("担当地区の区名を選択してください（一覧にないときは「その他（手入力）」）"); return; }
   if (pass.length < 6){ showSignupErr("合言葉は6文字以上にしてください"); return; }
   if (pass !== pass2){ showSignupErr("合言葉が一致しません。同じものを2回入力してください"); return; }
   $("signupBtn").disabled = true;
