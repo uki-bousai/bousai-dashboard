@@ -337,6 +337,9 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   .shrow .top .val{display:block; margin-top:3px}
 }
 /* 現地の様子は畳んでおく。一覧の比較を邪魔しないため */
+.shrow .carstay{margin-left:6px; font-size:.7rem; font-weight:700; color:#41556b;
+  background:#eef1f4; border:1px solid #cdd6de; border-radius:99px; padding:2px 8px;
+  white-space:nowrap; display:inline-block}
 .shrow .rep{margin-top:6px}
 .shrow .rep > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
   font-size:.7rem; font-weight:700; color:#1a5f8a; background:#eaf3fa;
@@ -395,6 +398,7 @@ footer a{color:var(--accent)}
   </div>
 </nav>
 
+<div class="notice warn hidden" id="countNotice"></div>
 <div class="notice hidden" id="provisionalNotice"><div><b>ℹ 仮設トイレ・配布物資の情報は、現在集めています。</b>確認でき次第、順次このページに掲載します。避難所の避難者数と給水情報は市の公表資料、受入可能数は市の地域防災計画に基づきます。</div></div>
 
 <div class="container">
@@ -428,7 +432,7 @@ footer a{color:var(--accent)}
   <section class="card hidden" id="shelterCard">
     <h2>避難所別 受入状況</h2>
     <p class="desc" id="shelterDesc">避難者数は市の公表資料、受入可能数は市の地域防災計画にある指定避難所の収容者数（3㎡／1人）です。利用率の高い順</p>
-    <p class="desc" style="margin-top:-4px"><span class="srcbadge via" style="margin:0 5px 0 0">🙋 市民からの情報提供</span>松橋中学校 武道場を除き、<b>各避難所にエアコンがある</b>とのことです。バッジには、その避難所ならではの設備だけを出しています。</p>
+    <p class="desc" style="margin-top:-4px"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジと車中泊の台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の物資や現地の様子は、市民の方に教えていただいた内容です。</p>
     <p class="desc" style="margin-top:-4px"><b>⚠ 受入可能数は被災前の想定です。</b>建物が被災して使えない部屋がある避難所では、実際に入れる人数はこれより少なくなります。利用率が低くても余裕があるとは限りません。</p>
     <div id="shelterList"></div>
   </section>
@@ -551,6 +555,7 @@ footer a{color:var(--accent)}
 let DATA = { water: [], toilets: [], haves: [] };
 let SHELTERS = [];   // data.json（避難所ダッシュボードのデータ）から読む
 let TREND = null;    // data.json の推移（避難者数・世帯数）
+let COUNT_NOTE = "";  // 市の数え方が変わったときの説明
 let SHELTERS_UPDATED = "";  // data.json 側の更新時刻
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -621,7 +626,9 @@ const FACILITY_ICONS = {
   "キッズスペース": "🧸", "バリアフリー": "♿", "充電スペース": "🔌", "Wi-Fi": "📶",
   "シャワー": "🚿", "段ボールベッド": "🛏", "ペット可": "🐾", "車中泊可": "🚗", "炊き出し": "🍚",
   "生活用水": "💧", "施設内トイレ": "🚻", "薬の処方": "💊", "間仕切り": "🧱",
-  "電子レンジ": "🍲", "布団": "🛌", "畳": "🟩"
+  "電子レンジ": "🍲", "布団": "🛌", "畳": "🟩",
+  "エアコン・テレビ・冷蔵庫": "❄", "ポット・電子レンジ・洗濯機": "🍲",
+  "トイレカー": "🚽", "デジタルサイネージ": "📺"
 };
 const facilityLabel = f => (FACILITY_ICONS[f] || "") + f;
 const SERVICE_ICONS = { "入浴":"🛁", "シャワー":"🚿", "給水":"💧", "充電":"🔌",
@@ -730,6 +737,12 @@ function renderShelters(){
     const b = document.createElement("b"); b.textContent = fmt(s.occupants);
     val.appendChild(b);
     val.appendChild(document.createTextNode(` / ${fmt(s.capacity)}人（${s.capacity ? Math.round(r*100) : "—"}%）`));
+    /* 車中泊は市が8月10日夜から公表を始めた項目。建物の中の人数とは別に出す */
+    if (typeof s.carStay === "number" && s.carStay > 0){
+      const cs = document.createElement("span"); cs.className = "carstay";
+      cs.textContent = `🚗 車中泊 ${s.carStay}台`;
+      val.appendChild(cs);
+    }
     if (st.cls){
       const f = document.createElement("span"); f.className = "flag " + st.cls; f.textContent = " " + st.label;
       val.appendChild(f);
@@ -1178,28 +1191,47 @@ function buildTrendSvg(dates, series, boxWidth){
     t.textContent = fmt(v);
     svg.appendChild(t);
   }
-  dates.forEach((dLabel, i) => {
-    const t = mk("text", { x: x(i), y: H - 8, "text-anchor": "middle", "font-size": 11, fill: "var(--text-muted)" });
-    t.textContent = dLabel;
-    svg.appendChild(t);
-  });
   // 日数が増えると値ラベルが重なるので、入りきる分だけ間引く（最新の日は必ず出す）
   const gapPx = dates.length > 1 ? (W - padL - padR) / (dates.length - 1) : W;
   const labelEvery = Math.max(1, Math.ceil(42 / gapPx));
   const labelAt = i => (dates.length - 1 - i) % labelEvery === 0;
+  dates.forEach((dLabel, i) => {
+    if (!labelAt(i)) return;
+    const t = mk("text", { x: x(i), y: H - 8, "text-anchor": "middle", "font-size": 11, fill: "var(--text-muted)" });
+    t.textContent = dLabel;
+    svg.appendChild(t);
+  });
+  // 集計方法が変わった位置。ここで線を切り、縦の点線で区切る
+  const breakIdx = TREND && TREND.breakAt ? dates.indexOf(TREND.breakAt) : -1;
+  if (breakIdx > 0){
+    const bx = (x(breakIdx) + x(breakIdx - 1)) / 2;
+    svg.appendChild(mk("line", { x1: bx, x2: bx, y1: padT - 6, y2: H - padB,
+      stroke: "var(--text-muted)", "stroke-width": 1, "stroke-dasharray": "4 4" }));
+    const bt = mk("text", { x: bx, y: padT - 12, "text-anchor": "middle", "font-size": 10.5,
+      fill: "var(--text-muted)" });
+    bt.textContent = "数え方が変わりました";
+    svg.appendChild(bt);
+  }
+
+  const placed = [];
   const drawSeries = ({ data, colorVar, color: rawColor, dashed, showLabels, dim, wide, onClick }) => {
     const color = rawColor || cssVar(colorVar);
     if (dates.length > 1){
-      const attrs = {
-        points: data.map((v, i) => `${x(i)},${y(v)}`).join(" "),
-        fill: "none", stroke: color, "stroke-width": wide ? 3.5 : 2,
-        "stroke-linejoin": "round", "stroke-linecap": "round"
-      };
-      if (dashed){ attrs["stroke-dasharray"] = "6 5"; attrs["stroke-opacity"] = .75; }
-      if (dim) attrs["stroke-opacity"] = .25;
-      const line = mk("polyline", attrs);
-      if (onClick){ line.style.cursor = "pointer"; line.style.pointerEvents = "stroke"; line.addEventListener("click", onClick); }
-      svg.appendChild(line);
+      // 数え方が変わった日の前後は別ものなので、線をつながない
+      const segs = breakIdx > 0 ? [[0, breakIdx], [breakIdx, data.length]] : [[0, data.length]];
+      segs.forEach(([a, b]) => {
+        const pts = data.slice(a, b).map((v, i) => `${x(a + i)},${y(v)}`).join(" ");
+        if (b - a < 2) return;
+        const attrs = {
+          points: pts, fill: "none", stroke: color, "stroke-width": wide ? 3.5 : 2,
+          "stroke-linejoin": "round", "stroke-linecap": "round"
+        };
+        if (dashed){ attrs["stroke-dasharray"] = "6 5"; attrs["stroke-opacity"] = .75; }
+        if (dim) attrs["stroke-opacity"] = .25;
+        const line = mk("polyline", attrs);
+        if (onClick){ line.style.cursor = "pointer"; line.style.pointerEvents = "stroke"; line.addEventListener("click", onClick); }
+        svg.appendChild(line);
+      });
     }
     data.forEach((v, i) => {
       const c = mk("circle", {
@@ -1212,9 +1244,14 @@ function buildTrendSvg(dates, series, boxWidth){
       if (showLabels === false) return;   // 拠点ごと表示など、線が多いときは値を凡例側に出す
       if (!labelAt(i)) return;
       // 破線（合計）のラベルは控えめな色。合計は拠点より上に来るため、どちらも点の上に置けば重ならない
-      // 左端の値は中央寄せだと目盛りの数字に重なるので、点から右へ伸ばす
+      // 左端の値は中央寄せだと目盛りの数字に重なるので、点から右へ伸ばす。
+      // 系列どうしの値が近い日は、あとの系列を点の下に逃がす
+      const lx = i === 0 ? x(i) - 10 : x(i);
+      let ly = y(v) - 9;
+      if (placed.some(p => Math.abs(p.x - lx) < 36 && Math.abs(p.y - ly) < 14)) ly = y(v) + 17;
+      placed.push({ x: lx, y: ly });
       const t = mk("text", {
-        x: i === 0 ? x(i) - 10 : x(i), y: y(v) - 9,
+        x: lx, y: ly,
         "text-anchor": i === 0 ? "start" : "middle", "font-size": 11,
         "font-weight": dashed ? 400 : 700, fill: dashed ? "var(--text-muted)" : "var(--text-primary)"
       });
@@ -1362,6 +1399,7 @@ async function loadData(){
       SHELTERS = d2.shelters || [];
       TREND = d2.trend || null;
       SHELTERS_UPDATED = d2.updatedAt || "";
+      COUNT_NOTE = d2.countNote || "";
       const desc = document.getElementById("shelterDesc");
       if (d2.updatedAt) desc.textContent =
         `避難者数は市の公表資料（${d2.updatedAt}）、受入可能数は市の地域防災計画にある`
@@ -1369,6 +1407,14 @@ async function loadData(){
     }
   } catch (e) { /* 前回の表示を維持 */ }
   document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
+  const cn = document.getElementById("countNotice");
+  cn.classList.toggle("hidden", !COUNT_NOTE);
+  if (COUNT_NOTE){
+    cn.textContent = "";
+    const b = document.createElement("b"); b.textContent = "ℹ 避難者数の数え方が変わりました　";
+    const d = document.createElement("div"); d.append(b, document.createTextNode(COUNT_NOTE));
+    cn.appendChild(d);
+  }
   rebuildFilter();
   renderAll();
 }
