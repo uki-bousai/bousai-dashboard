@@ -259,6 +259,30 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .deliv .tel{white-space:nowrap; display:inline-block}
 .deliv .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
 
+/* こどもショートステイ（無料・宿泊預かり） */
+.kids{margin-top:2px; border:1.5px solid #e8b6c8; border-radius:14px; padding:14px 16px;
+  background:#fdf5f8}
+.kids .kh{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.kids .kh .tt{font-size:1rem; font-weight:700}
+.kids .kh .pv{font-size:.68rem; font-weight:700; color:#a8447a; background:#fff;
+  border:1px solid #e8b6c8; border-radius:99px; padding:3px 9px}
+.kids .free{margin-top:10px; display:flex; align-items:center; justify-content:space-between;
+  gap:10px; background:#fff; border:1.5px solid #a8447a; border-radius:11px; padding:10px 14px}
+.kids .free .fl{font-size:.78rem; font-weight:700; color:#a8447a; line-height:1.5}
+.kids .free .fv{font-size:1.35rem; font-weight:700; color:#a8447a; white-space:nowrap}
+.kids .kv{margin-top:10px; font-size:.8rem; line-height:1.9; color:var(--text-secondary)}
+.kids .kv .k{font-weight:700; color:#a8447a}
+.kids .kv b{color:var(--text-primary)}
+.kids .pl{margin-top:10px}
+.kids .pl .pt{font-size:.78rem; font-weight:700; color:#a8447a}
+.kids .pl ul{list-style:none; margin:5px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
+.kids .pl li{font-size:.74rem; font-weight:700; color:#a8447a; background:#fff;
+  border:1px solid #e8b6c8; border-radius:99px; padding:4px 10px}
+.kids .nb{margin-top:10px; background:#fff; border:1px solid var(--border); border-radius:10px;
+  padding:9px 13px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
+.kids .tel{white-space:nowrap; display:inline-block}
+.kids .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
+
 /* 防災井戸（飲用不可） */
 .wells{margin-top:14px; background:#eef5fb; border:1px solid #b6d4e8; border-radius:12px;
   padding:13px 15px}
@@ -358,6 +382,7 @@ footer a{color:var(--accent)}
     <a href="#mapCard">🗺 地図</a>
     <a href="#secHaves">📦 物資</a>
     <a href="#secDeliv">🚚 お届け</a>
+    <a href="#kidsCard">👶 子どもの預かり</a>
     <a href="#repairCard">🔨 住宅修理</a>
     <a href="#hotelCard">🏨 住まい</a>
     <a href="#refreshCard">🏞 南阿蘇</a>
@@ -456,6 +481,12 @@ footer a{color:var(--accent)}
     <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
     <a class="hbtn line2" href="https://www.instagram.com/akiyo_8/" target="_blank" rel="noopener">＠akiyo_8 を開く</a>
     <p class="desc" style="margin:12px 0 0">いただいた情報は、内容を確認したうえで <span class="srcbadge via" style="margin:0 3px">🙋 市民からの情報提供で掲載</span> と分かる形で載せます。掲載してほしくない場合はその旨をお書き添えください。</p>
+  </section>
+
+  <section class="card hidden" id="kidsCard">
+    <h2><span class="dot" style="background:#a8447a"></span>こどもショートステイ（無料の宿泊預かり）</h2>
+    <p class="desc">片づけや手続きに追われて、<b>お子さんを見る手が足りない</b>——そんなご家庭のために、<b>人吉市がお子さんを泊まりで預かってくれる制度</b>です。宇城市の窓口からも申し込めます。</p>
+    <div id="kidsBody"></div>
   </section>
 
   <section class="card hidden" id="repairCard">
@@ -1626,6 +1657,65 @@ function renderDelivery(){
   });
 }
 
+/* こどもショートステイ：無料であることを最初に出す。お金の心配で相談をやめてしまわないように */
+function renderKids(){
+  const card = document.getElementById("kidsCard");
+  const box = document.getElementById("kidsBody");
+  const k = DATA.childcare;
+  box.textContent = "";
+  card.classList.toggle("hidden", !k);
+  if (!k) return;
+
+  const c = document.createElement("div"); c.className = "kids";
+
+  const kh = document.createElement("div"); kh.className = "kh";
+  const tt = document.createElement("span"); tt.className = "tt"; tt.textContent = k.title || "";
+  kh.appendChild(tt);
+  if (k.provider){ const pv = document.createElement("span"); pv.className = "pv"; pv.textContent = k.provider + "が実施"; kh.appendChild(pv); }
+  c.appendChild(kh);
+
+  if (k.lead){ const p = document.createElement("p"); p.className = "desc"; p.style.margin = "8px 0 0"; p.textContent = k.lead; c.appendChild(p); }
+
+  if (k.cost){
+    const f = document.createElement("div"); f.className = "free";
+    const fl = document.createElement("div"); fl.className = "fl"; fl.textContent = k.costNote || "利用料";
+    const fv = document.createElement("div"); fv.className = "fv"; fv.textContent = k.cost;
+    f.append(fl, fv); c.appendChild(f);
+  }
+
+  const kv = document.createElement("div"); kv.className = "kv";
+  [["対象", k.target], ["預かれる期間", k.period], ["送迎", k.transport]].forEach(([key, v]) => {
+    if (!v) return;
+    const line = document.createElement("div");
+    const ks = document.createElement("span"); ks.className = "k"; ks.textContent = key + "：";
+    line.append(ks, document.createTextNode(v));
+    kv.appendChild(line);
+  });
+  c.appendChild(kv);
+
+  if ((k.places || []).length){
+    const pl = document.createElement("div"); pl.className = "pl";
+    const pt = document.createElement("div"); pt.className = "pt"; pt.textContent = "🏠 預かり先（人吉市が委託している施設）";
+    const ul = document.createElement("ul");
+    k.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+    pl.append(pt, ul); c.appendChild(pl);
+  }
+
+  if (k.note){ const n = document.createElement("div"); n.className = "nb"; n.textContent = k.note; c.appendChild(n); }
+
+  (k.contacts || []).forEach((ct, i) => {
+    const a = document.createElement("a"); a.className = "hbtn" + (i ? " line2" : "");
+    a.href = "tel:" + String(ct.tel).replace(/-/g, "");
+    const num = document.createElement("span"); num.className = "tel"; num.textContent = ct.tel;
+    a.append(document.createTextNode(`📞 ${ct.name}　`), num);
+    c.appendChild(a);
+    if (ct.note){ const n = document.createElement("p"); n.className = "desc"; n.style.margin = "5px 0 0"; n.textContent = ct.note; c.appendChild(n); }
+  });
+
+  if (k.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = k.source; c.appendChild(s); }
+  box.appendChild(c);
+}
+
 /* 住宅の緊急修理：上限額 → 受付 → 対象 → 注意 の順。工事の前に見積もりが要る点がいちばん大事 */
 function renderRepair(){
   const card = document.getElementById("repairCard");
@@ -1757,6 +1847,7 @@ function renderAll(){
   renderKPIs();
   renderShelters();
   renderTrendCard();
+  renderKids();
   renderRepair();
   renderHotel();
   renderHousing();
