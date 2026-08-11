@@ -49,7 +49,9 @@ rules      … 計算基準マスター（supply_rules に相当）
              id / name / unit / daily_amount_per_person / target(all|infant|elderly|…)
              / buffer_days(空=共通設定) / is_active / packs（なじみのある単位への換算表。
              例: 36L →「2Lペットボトル 約18本」の補足表示に使う）
-districts  … 地区（行政区）ごとの登録 [{name, site, staff?, report}]。区ごとに1件。
+districts  … 地区（行政区）ごとの登録 [{name, site, site_hours?, staff?, report}]。区ごとに1件。
+             site_hours は集積場所の受付時間（任意・自由記述。例「9:00〜17:00」）。
+             公開ページでは集積場所の下に「🕐受付時間」として表示
              name は「町名 校区名 区名」の空白区切り（例: 松橋町 豊福校区 豊福区。
              校区は省略可 ─ 豊野町は校区の区分がないため「豊野町 上糸石」の2語になる）。
              公開ページは 町 → 校区 → 区 の階層で表示する。
