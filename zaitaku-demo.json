@@ -118,6 +118,44 @@
       ]
     },
     {
+      "id": "veg_juice",
+      "name": "野菜ジュース",
+      "unit": "本",
+      "daily_amount_per_person": 1,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "packs": [
+        {
+          "label": "200ml紙パック",
+          "unit": "本",
+          "factor": 1
+        },
+        {
+          "label": "ケース（24本入）",
+          "unit": "ケース",
+          "factor": 24
+        }
+      ]
+    },
+    {
+      "id": "supplement",
+      "name": "サプリメント（ビタミン等）",
+      "unit": "回分",
+      "daily_amount_per_person": 1,
+      "target": "all",
+      "buffer_days": null,
+      "is_active": true,
+      "note_label": "種類",
+      "packs": [
+        {
+          "label": "回分",
+          "unit": "回分",
+          "factor": 1
+        }
+      ]
+    },
+    {
       "id": "snack",
       "name": "お菓子",
       "unit": "個",

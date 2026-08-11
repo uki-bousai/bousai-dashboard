@@ -106,10 +106,14 @@ td input[type="number"]{text-align:right; width:5.5em}
 #status.err{color:var(--status-critical); font-weight:700}
 #dirtyMark{display:none; font-size:.72rem; font-weight:700; color:var(--status-warning)}
 #dirtyMark.show{display:inline}
+/* 画面より縦に長いフォーム（アカウント作成）でもスクロールできるようにする。
+   align-items:center だとはみ出した上下が切れてスクロールできないため、
+   子要素の margin:auto で中央寄せする */
 #loginOverlay{position:fixed; inset:0; z-index:60; background:var(--page); display:none;
-  align-items:center; justify-content:center; padding:20px}
+  justify-content:center; padding:20px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain}
 #loginOverlay.show{display:flex}
-#loginOverlay .loginbox{width:100%; max-width:400px}
+#loginOverlay .loginbox{width:100%; max-width:400px; margin:auto}
 #loginErr{display:none; color:var(--status-critical); font-size:.76rem; font-weight:700; margin-top:4px}
 #loginErr.show{display:block}
 details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding:4px 0}
