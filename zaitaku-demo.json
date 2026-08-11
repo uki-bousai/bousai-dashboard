@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-11 13:19 更新",
+  "updatedAt": "2026-08-12 08:25 更新",
   "settings": {
     "buffer_days": 3,
     "avg_household_size": 2,
@@ -794,6 +794,45 @@
       },
       "lat": 32.5987313093076,
       "lng": 130.68867176901165
+    },
+    {
+      "name": "豊野町 北山崎・南山崎",
+      "site": "北山崎公民館",
+      "site_hours": "9:00〜17:00",
+      "report": {
+        "reporter_role": "区長",
+        "households": 150,
+        "infants": 3,
+        "elderly": 3,
+        "needs": {
+          "water": {
+            "note": ""
+          },
+          "rice_pack": {
+            "note": ""
+          },
+          "retort": {
+            "note": ""
+          },
+          "veg_juice": {
+            "note": "栄養がとれるものの要望"
+          },
+          "supplement": {
+            "note": "栄養がとれるものの要望"
+          },
+          "snack": {
+            "note": ""
+          },
+          "toilet_paper": {
+            "note": ""
+          },
+          "body_wipes": {
+            "note": ""
+          }
+        },
+        "notes": "南山崎公民館が被災し使用できないため、北山崎公民館に集約している（世帯数も両区の合計）。区長・民生委員による報告。栄養がとれるもの（野菜ジュース・サプリメント等）の要望あり。",
+        "updatedAt": "2026-08-12 08:25"
+      }
     }
   ],
   "households": []
