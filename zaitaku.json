@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-10 16:08 更新",
+  "updatedAt": "2026-08-11 13:17 更新",
   "settings": {
     "buffer_days": 3,
     "avg_household_size": 2,
@@ -296,6 +296,32 @@
       },
       "lat": 32.60102065955734,
       "lng": 130.69845914840698
+    },
+    {
+      "name": "小川町 河江校区 川尻",
+      "site": "川尻構造改善センター",
+      "report": {
+        "reporter_role": "その他",
+        "households": 14,
+        "infants": null,
+        "elderly": null,
+        "needs": {
+          "water": {
+            "note": "断水世帯あり・生活用水も必要"
+          },
+          "retort": {
+            "note": ""
+          },
+          "baby_wipes": {
+            "note": "高齢の方の介護用"
+          },
+          "body_wipes": {
+            "note": ""
+          }
+        },
+        "notes": "区全体は約370世帯。断水している世帯がある。8/11から、避難できない高齢者14世帯へ区長・民生委員さんを中心に物資配給を行っている。",
+        "updatedAt": "2026-08-11 13:17"
+      }
     }
   ],
   "households": []
