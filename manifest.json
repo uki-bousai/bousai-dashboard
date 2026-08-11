@@ -1,15 +1,25 @@
 {
-  "name": "宇城市 生活支援情報",
-  "short_name": "生活支援情報",
-  "description": "宇城市の避難者数・避難所の受入状況、給水・無料入浴などの生活支援情報。圏外でも最後に取得した情報を表示できます。",
+  "name": "宇城市 在宅避難の物資情報",
+  "short_name": "在宅避難の物資",
+  "description": "避難所へ行くことが難しい在宅避難の方に必要な物資を、地区ごとに公開しています。給水・入浴などの生活支援情報も見られます。",
   "lang": "ja",
-  "start_url": "seikatsu.html",
+  "start_url": "zaitaku.html",
   "scope": ".",
   "display": "standalone",
   "background_color": "#f9f9f7",
   "theme_color": "#2a78d6",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
