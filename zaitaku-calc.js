@@ -74,6 +74,7 @@ const ZCALC = (() => {
         lat: Number.isFinite(Number(d.lat)) ? Number(d.lat) : null,
         lng: Number.isFinite(Number(d.lng)) ? Number(d.lng) : null,
         staff: d.staff || "",
+        site_hours: d.site_hours || "",
         households: Number(d.report.households) || 0,
         notes: d.report.notes || "",
         updatedAt: d.report.updatedAt || "",

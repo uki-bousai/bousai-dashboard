@@ -93,6 +93,7 @@ details.dcard[open] > summary::after{content:"▲"}
 .site{font-size:.95rem; font-weight:700; margin-top:4px; padding:8px 12px;
   background:var(--page); border:1px solid var(--border); border-radius:8px}
 .site.tbd{font-weight:400; color:var(--text-secondary)}
+.site small{display:block; font-size:.72rem; font-weight:400; color:var(--text-secondary); margin-top:2px}
 .staffline{font-size:.8rem; font-weight:700; color:var(--text-secondary); margin-top:6px; padding:0 2px}
 /* 品目の一覧（表形式）: ラベルは列見出しに1回だけ */
 .ihead{display:flex; justify-content:space-between; gap:10px; margin-top:10px;
@@ -273,9 +274,15 @@ function renderDistricts(){
     const body = el("div", "dbody");
     card.appendChild(body);
     // 提供者が知りたいのは「どこへ届けるか」。地区ごとの集積場所を目立たせる
-    body.appendChild(g.site
+    const siteBox = g.site
       ? el("div", "site", `📍 集積場所: ${g.site}`)
-      : el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）"));
+      : el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）");
+    if (g.site_hours){
+      const sm = document.createElement("small");
+      sm.textContent = `🕐 受付時間: ${g.site_hours}`;
+      siteBox.appendChild(sm);
+    }
+    body.appendChild(siteBox);
     if (g.staff) body.appendChild(el("div", "staffline", `🤝 物資を届ける担当: ${g.staff}`));
     if (!g.itemList.length){
       body.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
@@ -360,7 +367,8 @@ function renderMap(groups){
     const title = document.createElement("b");
     title.textContent = g.name;
     const site = document.createElement("div");
-    site.textContent = `📍 ${g.site || "集積場所 調整中"}`;
+    site.textContent = `📍 ${g.site || "集積場所 調整中"}`
+      + (g.site_hours ? `（受付 ${g.site_hours}）` : "");
     const items = document.createElement("div");
     items.style.cssText = "font-size:.85em; margin-top:4px";
     items.textContent = g.itemList.length

@@ -177,6 +177,9 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
           <span class="hint" id="siteCoord" style="margin-top:0"></span>
         </div>
         <div class="hint">場所を設定すると、公開ページの地図に印が表示されます。</div>
+        <label for="fSiteHours" style="display:block; margin-top:10px">受付時間（任意）</label>
+        <input type="text" id="fSiteHours" placeholder="例: 9:00〜17:00">
+        <div class="hint">公民館で物資を受け取れる時間。公開ページに表示されます。</div>
       </div>
       <div class="field">
         <label for="fHouseholds">在宅避難の世帯数 <span style="color:var(--status-critical)">必須</span></label>
@@ -734,6 +737,8 @@ function formDistrict(){
   };
   const staff = $("fStaff").value.trim();
   if (staff) d.staff = staff;
+  const hours = $("fSiteHours").value.trim();
+  if (hours) d.site_hours = hours;
   if (Number.isFinite(formLat) && Number.isFinite(formLng)){ d.lat = formLat; d.lng = formLng; }
   d.report = {
       reporter_role: $("fRole").value,
@@ -751,6 +756,7 @@ function fillForm(d){
   const p = parseName(d && d.name);
   setDistrictFields(p.town, p.school, p.ward);
   $("fSite").value = (d && d.site) || "";
+  $("fSiteHours").value = (d && d.site_hours) || "";
   $("fStaff").value = (d && d.staff) || "";
   setCoord(d ? Number(d.lat) : null, d ? Number(d.lng) : null);
   $("fHouseholds").value = r.households || "";
@@ -847,6 +853,7 @@ $("addBtn").addEventListener("click", () => {
     cur.site = d.site;
     cur.report = d.report;
     if ("staff" in d) cur.staff = d.staff; else delete cur.staff;
+    if ("site_hours" in d) cur.site_hours = d.site_hours; else delete cur.site_hours;
     if ("lat" in d){ cur.lat = d.lat; cur.lng = d.lng; }
     else { delete cur.lat; delete cur.lng; }
   } else {
