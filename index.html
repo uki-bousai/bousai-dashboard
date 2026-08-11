@@ -89,7 +89,7 @@ header .sub{font-size:.8rem; color:var(--text-secondary); margin-top:4px}
   border-radius:10px; padding:10px 14px; font-size:.8rem; color:var(--text-secondary);
   text-decoration:none; line-height:1.5}
 .recruitbanner b{color:var(--text-primary)}
-.recruitbanner .go{margin-left:auto; color:var(--accent); font-weight:700; white-space:nowrap}
+.recruitbanner .go{margin-left:auto; color:var(--series-1); font-weight:700; white-space:nowrap}
 .recruitbanner:hover{background:var(--page)}
 .legend{display:flex; gap:16px; font-size:.72rem; color:var(--text-secondary); margin:8px 0 12px; flex-wrap:wrap}
 .legend .key{display:inline-flex; align-items:center; gap:6px}
@@ -190,6 +190,16 @@ footer a{color:var(--text-secondary)}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .tile .value.hero{font-size:2.3rem}
 }
+
+/* 在宅避難のページへの案内 */
+.zbanner{display:flex; align-items:center; gap:12px; max-width:860px;
+  width:calc(100% - 40px); margin:12px auto 0; padding:13px 16px;
+  text-decoration:none; background:var(--series-1); color:#fff; border-radius:14px}
+.zbanner .zi{font-size:1.5rem; line-height:1}
+.zbanner .zt{flex:1; font-size:.95rem; line-height:1.45}
+.zbanner .zt small{display:block; margin-top:2px; font-size:.75rem; opacity:.9; font-weight:400}
+.zbanner .za{font-size:1.4rem; opacity:.8}
+.zbanner:active{filter:brightness(.92)}
 </style>
 </head>
 <body>
@@ -198,6 +208,13 @@ footer a{color:var(--text-secondary)}
   <h1>避難所・物資 状況ダッシュボード<span class="badge hidden" id="sampleBadge">サンプルデータ</span></h1>
   <p class="sub">避難所の受入可能数（指定避難所の収容者数・3㎡／1人）・避難者数と、物資の調達状況</p>
 </header>
+
+<a class="zbanner" href="zaitaku.html">
+  <span class="zi">🏠</span>
+  <span class="zt"><b>在宅避難の方に必要な物資</b>
+    <small>家にいる方の分を、地区ごとに一覧にしています</small></span>
+  <span class="za">›</span>
+</a>
 
 <div class="notice hidden" id="fetchNotice"><div>⚠ 最新データを取得できなかったため、ページに内蔵のサンプルデータを表示しています。通信環境を確認して再読み込みしてください。</div></div>
 
