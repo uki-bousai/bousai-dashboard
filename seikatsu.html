@@ -256,6 +256,9 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .deliv .who.get .wt{color:#15794f}
 .deliv .who .ws{margin-top:4px; font-size:.8rem; line-height:1.8; color:var(--text-secondary)}
 .deliv .who .ws b{color:var(--text-primary)}
+.deliv .cautionbox{margin-top:11px; background:#fdf3f3; border:1.5px solid #e8b2b2;
+  border-radius:11px; padding:10px 13px; font-size:.79rem; line-height:1.8;
+  color:var(--text-secondary)}
 .deliv .tel{white-space:nowrap; display:inline-block}
 .deliv .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
 
@@ -455,7 +458,7 @@ footer a{color:var(--accent)}
 
   <section class="card hidden" id="secDeliv">
     <h2><span class="dot" style="background:#c07a1f"></span>避難所に行けない方へ、物資を届ける動き</h2>
-    <p class="desc">避難所には物資があっても、<b>そこまで行けない方には届きません</b>。地域の有志の方が、区長さんや民生委員さんと連携して、<b>家にいる方へ物資を配る取り組み</b>を始めています。<br><b>お願い：物資を直接持って行かないでください。</b>知らない方が突然訪ねると不審に思われてしまいます。まずご連絡いただければ、届け先をお伝えします。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 活動されている方からの情報提供</span></p>
+    <p class="desc">避難所には物資があっても、<b>そこまで行けない方には届きません</b>。地域の有志の方が、<b>家にいる方へ物資を配る取り組み</b>を始めています。<br><b>お願い：物資を直接持って行かないでください。</b>知らない方が突然訪ねると不審に思われてしまいます。まずご連絡いただければ、届け先をお伝えします。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 活動されている方からの情報提供</span></p>
     <div id="delivList"></div>
   </section>
 
@@ -1652,6 +1655,13 @@ function renderDelivery(){
       c.appendChild(ul);
     }
 
+    /* 制度として行われているものと誤解されると、区長さんたちに問い合わせが行ってしまう */
+    const addCaution = () => {
+      if (!d.caution) return;
+      const w = document.createElement("div"); w.className = "cautionbox";
+      w.textContent = "⚠ " + d.caution;
+      c.appendChild(w);
+    };
     [["give", d.givers], ["get", d.residents]].forEach(([cls, w]) => {
       if (!w) return;
       const b = document.createElement("div"); b.className = "who " + cls;
@@ -1660,6 +1670,7 @@ function renderDelivery(){
       b.append(t, s);
       c.appendChild(b);
     });
+    addCaution();
 
     /* いま足りていないもの。在宅の方は遠慮されるので、注記まで含めて出す */
     if ((d.needs || []).length){
