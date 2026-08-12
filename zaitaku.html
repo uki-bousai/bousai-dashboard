@@ -219,6 +219,10 @@ function renderSummary(s){
     note.textContent = `※ ${s.supportUnknown}地区は要支援の世帯数が未報告のため、その区の数量は在宅避難の全世帯ぶんで計算しています。`;
     note.style.display = "";
   } else note.style.display = "none";
+  if (s.householdsUnknown){
+    note.textContent += `${s.householdsUnknown}地区は在宅避難の世帯数が未報告で、要支援の世帯数だけで計算しています。`;
+    note.style.display = "";
+  }
 }
 
 function renderNeed(s){
@@ -297,8 +301,10 @@ function renderDistricts(){
     const sum = document.createElement("summary");
     sum.appendChild(el("span", "dname", ward || school || town));
     // 在宅避難の世帯数と、実際に物資を届ける「要支援」の世帯数を分けて示す
-    const hasSup = Number.isFinite(g.support) && g.support !== g.households;
-    const hh = hasSup
+    const hasSup = g.householdsKnown && Number.isFinite(g.support) && g.support !== g.households;
+    const hh = !g.householdsKnown
+      ? `要支援 ${g.support}世帯（在宅避難の世帯数は未報告）`
+      : hasSup
       ? `在宅避難 約${g.households}世帯・うち要支援 ${g.support}世帯`
       : Number.isFinite(g.support)
       ? `在宅避難 約${g.households}世帯（全世帯が要支援）`
@@ -340,7 +346,7 @@ function renderDistricts(){
     const ihead = el("div", "ihead");
     const both = hasSup;
     ihead.append(el("span", "", "必要な物資"),
-      el("span", "", hasSup
+      el("span", "", hasSup || !g.householdsKnown
         ? `要支援${g.support}世帯ぶん（${g.itemList[0].buffer}日分）`
         : `在宅避難${g.households}世帯ぶん（${g.itemList[0].buffer}日分）`));
     body.appendChild(ihead);

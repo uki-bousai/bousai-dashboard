@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-12 14:28 更新",
+  "updatedAt": "2026-08-12 15:02 更新",
   "settings": {
     "buffer_days": 3,
     "avg_household_size": 2,
@@ -368,7 +368,7 @@
       "site": "本村区公民館",
       "report": {
         "reporter_role": "民生委員",
-        "households": 10,
+        "households": 0,
         "infants": null,
         "elderly": null,
         "needs": {
@@ -401,7 +401,7 @@
           }
         },
         "notes": "",
-        "updatedAt": "2026-08-12 14:28",
+        "updatedAt": "2026-08-12 15:02",
         "support_households": 10
       },
       "lat": 32.60102065955734,
