@@ -166,13 +166,17 @@ function stable(v){
 /* 地区担当者の保存内容チェック。
    担当地区（allowed）の世帯・集積場所だけ変更でき、計算基準・設定・
    他地区のデータに差分があればエラー文字列を返す。 */
+/* 町の統括担当者として指定できる町名。ここに無い文字列は前方一致せず、
+   完全一致した区だけの担当になる（緩い前方一致が生まれないようにする） */
+export const TOWNS = ["三角町", "不知火町", "松橋町", "小川町", "豊野町"];
+
 /* 担当範囲の判定。
      「豊野町 下安見」のように区まで指定 → その区だけ
      「豊野町」のように町名だけ指定     → その町のすべての区（町の統括担当者）
    町名だけの指定は運営が ZAITAKU_USERS で作る場合のみ（自己登録では不可）。 */
 export function districtInScope(allowed, name){
   return (allowed || []).some(a =>
-    a && (a === name || (!a.includes(" ") && String(name).startsWith(a + " "))));
+    a && (a === name || (TOWNS.includes(a) && String(name).startsWith(a + " "))));
 }
 
 export function zaitakuScopeError(oldData, newData, allowed){
