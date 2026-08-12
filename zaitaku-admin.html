@@ -854,7 +854,7 @@ function updatePreview(){
     const rf = document.createElement("span"); rf.className = "pref";
     rf.textContent = c.rule.target && c.rule.target !== "all"
       ? `${ZCALC.targetLabel(c.rule)}${c.people}人 × ${c.buffer}日分`
-      : `${ZCALC.targetHouseholds(d.report)}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
+      : `在宅避難${d.report.households}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
     line.append(nm, q, rf);
     // 優先して届ける「要支援の世帯」ぶんも出す
     if (c.needSupport < c.need){
