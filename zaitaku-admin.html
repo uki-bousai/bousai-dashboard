@@ -188,11 +188,13 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       <div class="field">
         <label for="fHouseholds">在宅避難の世帯数 <span style="color:var(--status-critical)">必須</span></label>
         <input type="number" id="fHouseholds" min="1" step="1" inputmode="numeric" placeholder="例: 150">
-        <div class="hint">避難所へ行かず自宅で過ごしている世帯の数。おおよそで構いません。</div>
-        <label for="fSupport" style="display:block; margin-top:10px">うち、物資が必要な世帯数（要支援）</label>
+        <div class="hint">避難所へ行かず自宅で過ごしている世帯の数。おおよそで構いません。
+          <b>物資の数量はこの世帯数で計算します</b>（「世帯数 × 平均<span id="avgLabel2">2</span>人 × 3日分」）。</div>
+        <label for="fSupport" style="display:block; margin-top:10px">うち 要支援の世帯数</label>
         <input type="number" id="fSupport" min="0" step="1" inputmode="numeric" placeholder="例: 14">
-        <div class="hint"><b>数量はこの世帯数で計算します</b>（「世帯数 × 平均<span id="avgLabel">2</span>人 × 3日分」）。
-          全世帯に届ける場合は空のままで構いません（在宅避難の世帯数で計算します）。</div>
+        <div class="hint">高齢・介助が必要などで、支援の手が要る世帯の数（任意）。
+          物資はどの世帯にも必要なので、<b>数量は在宅避難の世帯数で計算</b>します。
+          こちらは<b>優先して届ける分</b>の目安として併記されます。</div>
       </div>
     </div>
 
@@ -854,10 +856,10 @@ function updatePreview(){
       ? `${ZCALC.targetLabel(c.rule)}${c.people}人 × ${c.buffer}日分`
       : `${ZCALC.targetHouseholds(d.report)}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
     line.append(nm, q, rf);
-    // 在宅避難の全世帯に配る場合の数量も出す
-    if (c.needAll > c.need){
+    // 優先して届ける「要支援の世帯」ぶんも出す
+    if (c.needSupport < c.need){
       const q2 = document.createElement("span"); q2.className = "pref";
-      q2.textContent = `（在宅避難${d.report.households}世帯なら ${ZCALC.fmtQtyWithPack(c.rule, c.needAll)}）`;
+      q2.textContent = `（うち要支援${d.report.support_households}世帯ぶん ${ZCALC.fmtQtyWithPack(c.rule, c.needSupport)}）`;
       line.append(q2);
     }
     lines.appendChild(line);
