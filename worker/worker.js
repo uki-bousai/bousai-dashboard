@@ -123,6 +123,10 @@ export function validateSignup(body){
   if (!districts.length) return { error: "担当地区を入力してください" };
   if (districts.length > 3) return { error: "担当地区は3つまでです" };
   if (districts.some(d => d.length > 40)) return { error: "地区名が長すぎます" };
+  // 「豊野町」のように町名だけの指定はその町全体を担当できてしまうため、
+  // 自己登録では認めない（町の統括担当者は運営が ZAITAKU_USERS で作る）
+  if (districts.some(d => !d.includes(" ")))
+    return { error: "担当地区は町名と区名を選んでください" };
   return { code, name, password, districts };
 }
 
@@ -162,8 +166,17 @@ function stable(v){
 /* 地区担当者の保存内容チェック。
    担当地区（allowed）の世帯・集積場所だけ変更でき、計算基準・設定・
    他地区のデータに差分があればエラー文字列を返す。 */
+/* 担当範囲の判定。
+     「豊野町 下安見」のように区まで指定 → その区だけ
+     「豊野町」のように町名だけ指定     → その町のすべての区（町の統括担当者）
+   町名だけの指定は運営が ZAITAKU_USERS で作る場合のみ（自己登録では不可）。 */
+export function districtInScope(allowed, name){
+  return (allowed || []).some(a =>
+    a && (a === name || (!a.includes(" ") && String(name).startsWith(a + " "))));
+}
+
 export function zaitakuScopeError(oldData, newData, allowed){
-  const inScope = name => allowed.includes(name);
+  const inScope = name => districtInScope(allowed, name);
   if (stable(oldData.rules) !== stable(newData.rules))
     return "計算基準は運営スタッフのみ変更できます";
   if (stable(oldData.settings) !== stable(newData.settings))
