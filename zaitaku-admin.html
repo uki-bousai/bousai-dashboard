@@ -187,8 +187,12 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
       </div>
       <div class="field">
         <label for="fHouseholds">在宅避難の世帯数 <span style="color:var(--status-critical)">必須</span></label>
-        <input type="number" id="fHouseholds" min="1" step="1" inputmode="numeric" placeholder="例: 8">
-        <div class="hint">おおよそで構いません。数量は「世帯数 × 平均<span id="avgLabel">2</span>人」で概算します。</div>
+        <input type="number" id="fHouseholds" min="1" step="1" inputmode="numeric" placeholder="例: 150">
+        <div class="hint">避難所へ行かず自宅で過ごしている世帯の数。おおよそで構いません。</div>
+        <label for="fSupport" style="display:block; margin-top:10px">うち、物資が必要な世帯数（要支援）</label>
+        <input type="number" id="fSupport" min="0" step="1" inputmode="numeric" placeholder="例: 14">
+        <div class="hint"><b>数量はこの世帯数で計算します</b>（「世帯数 × 平均<span id="avgLabel">2</span>人 × 3日分」）。
+          全世帯に届ける場合は空のままで構いません（在宅避難の世帯数で計算します）。</div>
       </div>
     </div>
 
@@ -765,6 +769,7 @@ function formDistrict(){
   d.report = {
       reporter_role: $("fRole").value,
       households: Math.round(Number($("fHouseholds").value)) || 0,
+      support_households: intOrNull("fSupport"),
       infants: intOrNull("fInfants"),
       elderly: intOrNull("fElderly"),
       needs,
@@ -782,6 +787,7 @@ function fillForm(d){
   $("fStaff").value = (d && d.staff) || "";
   setCoord(d ? Number(d.lat) : null, d ? Number(d.lng) : null);
   $("fHouseholds").value = r.households || "";
+  $("fSupport").value = r.support_households ?? "";
   $("fInfants").value = r.infants ?? "";
   $("fElderly").value = r.elderly ?? "";
   $("fNotes").value = r.notes || "";
@@ -841,13 +847,13 @@ function updatePreview(){
     const rf = document.createElement("span"); rf.className = "pref";
     rf.textContent = c.rule.target && c.rule.target !== "all"
       ? `${ZCALC.targetLabel(c.rule)}${c.people}人 × ${c.buffer}日分`
-      : `${d.report.households}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
+      : `${ZCALC.targetHouseholds(d.report)}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
     line.append(nm, q, rf);
     lines.appendChild(line);
   });
   $("previewBox").style.display = results.length ? "" : "none";
 }
-["fHouseholds","fInfants","fElderly"].forEach(id =>
+["fHouseholds","fSupport","fInfants","fElderly"].forEach(id =>
   $(id).addEventListener("input", updatePreview));
 
 /* ---------- 登録（区ごとに1件・上書き） ---------- */
