@@ -136,6 +136,11 @@ html{scroll-behavior:smooth}
   text-decoration:none; white-space:nowrap; margin-left:10px;
   border:1px solid var(--border); border-radius:99px; padding:3px 10px}
 .gmap:active{opacity:.7}
+.okbox{margin-top:12px; background:#f0faf5; border:1.5px solid #8ccfae; border-radius:11px;
+  padding:11px 14px}
+.okbox .okt{font-size:.88rem; font-weight:700; color:#15794f}
+.okbox .oks{margin-top:4px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
+.okbox .oks b{color:var(--text-primary)}
 .bring{background:var(--page); border:1px solid var(--border); border-radius:10px;
   padding:10px 14px; margin:4px 0 12px}
 .hstep{display:flex; gap:10px; font-size:.84rem; line-height:1.85; padding:9px 0;
@@ -563,6 +568,10 @@ footer a{color:var(--accent)}
   <section class="card" id="secBath">
     <h2><span class="dot" style="background:#d97a26"></span>無料の入浴・シャワー</h2>
     <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。<b>エリア名をタップすると、その地域の施設が開きます</b>。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月4日時点）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
+    <div class="okbox">
+      <div class="okt">◯ 熊本市の施設は、市外の方も対象です</div>
+      <div class="oks">熊本市の「無料入浴支援事業」は、<b>宇城市など市外で被災した方も利用できます</b>（熊本市に確認済み）。受付で住所・氏名を確認できるものの提示を求められます。</div>
+    </div>
     <div class="bring">
       <div class="bring-title">🎒 持っていくもの</div>
       <ul>
