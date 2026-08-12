@@ -285,9 +285,10 @@ function renderDistricts(){
     const sum = document.createElement("summary");
     sum.appendChild(el("span", "dname", ward || school || town));
     // 在宅避難の世帯数と、実際に物資を届ける「要支援」の世帯数を分けて示す
-    const hh = g.support === null || g.support === g.households
-      ? `在宅避難 約${g.households}世帯`
-      : `在宅避難 約${g.households}世帯・うち要支援 ${g.support}世帯`;
+    const hasSup = Number.isFinite(g.support) && g.support !== g.households;
+    const hh = hasSup
+      ? `在宅避難 約${g.households}世帯・うち要支援 ${g.support}世帯`
+      : `在宅避難 約${g.households}世帯`;
     sum.appendChild(el("span", "dmeta",
       hh + (g.itemList.length ? `・必要${g.itemList.length}品目` : "・必要品なし")));
     card.appendChild(sum);
@@ -323,7 +324,7 @@ function renderDistricts(){
     }
     // 列見出し（「3日分の数量」はここに1回だけ）
     const ihead = el("div", "ihead");
-    const both = g.support !== null && g.support !== g.households;
+    const both = hasSup;
     ihead.append(el("span", "", "必要な物資"),
       el("span", "", `在宅避難${g.households}世帯ぶん（${g.itemList[0].buffer}日分）`));
     body.appendChild(ihead);
