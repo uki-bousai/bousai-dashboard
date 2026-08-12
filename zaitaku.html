@@ -209,7 +209,8 @@ function renderSummary(s){
     tiles.appendChild(t);
   };
   add(s.districts, "登録地区");
-  add(s.households, "対象世帯（概数）");
+  add(s.households, "在宅避難の世帯（概数）");
+  add(s.support, "物資を届ける世帯（要支援）");
   add(s.needCount, "必要とされている物資（件）");
 }
 
@@ -226,7 +227,7 @@ function renderNeed(s){
     const row = el("div", "irow");
     const nm = el("div", "nm", r.rule.name);
     const s2 = document.createElement("small");
-    s2.textContent = `${r.districts}地区・約${r.households}世帯`;
+    s2.textContent = `${r.districts}地区・対象 約${r.households}世帯`;
     nm.appendChild(s2);
     const qt = el("div", "qt");
     qt.appendChild(el("b", "", ZCALC.fmtQty(r.need, r.rule.unit)));
@@ -282,8 +283,12 @@ function renderDistricts(){
     card.className = "card dcard";
     const sum = document.createElement("summary");
     sum.appendChild(el("span", "dname", ward || school || town));
+    // 在宅避難の世帯数と、実際に物資を届ける「要支援」の世帯数を分けて示す
+    const hh = g.support === null ? `約${g.households}世帯`
+      : g.support === g.households ? `約${g.households}世帯（全世帯が要支援）`
+      : `在宅避難 約${g.households}世帯・要支援 ${g.support}世帯`;
     sum.appendChild(el("span", "dmeta",
-      `約${g.households}世帯` + (g.itemList.length ? `・必要${g.itemList.length}品目` : "・必要品なし")));
+      hh + (g.itemList.length ? `・必要${g.itemList.length}品目` : "・必要品なし")));
     card.appendChild(sum);
     const body = el("div", "dbody");
     card.appendChild(body);

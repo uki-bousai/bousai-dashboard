@@ -29,13 +29,23 @@ const ZCALC = (() => {
   const TARGET_LABEL = { all: "全員", adult: "大人", child: "子ども", infant: "乳幼児", elderly: "高齢者" };
   const TARGET_FIELD = { infant: "infants", elderly: "elderly" };
 
+  /* 数量の計算に使う世帯数。
+     物資を届けるのは「要支援の世帯」なので、入力があればそちらを使う。
+     未入力なら在宅避難の世帯数（＝全世帯に届ける前提）で計算する。 */
+  function targetHouseholds(report){
+    const s = report ? report.support_households : null;
+    if (s !== null && s !== undefined && s !== "" && Number.isFinite(Number(s)))
+      return Math.max(0, Number(s));
+    return Number(report && report.households) || 0;
+  }
+
   /* 対象人数の解決:
-       all    → 世帯数 × 1世帯あたり平均人数（概算）
+       all    → 要支援の世帯数 × 1世帯あたり平均人数（概算）
        infant / elderly → 地区の報告人数。未入力なら1人とみなす
                           （必要と報告された=対象者がいる、という扱い） */
   function peopleFor(rule, report, settings){
     if (!rule.target || rule.target === "all")
-      return (Number(report.households) || 0) * setting(settings, "avg_household_size");
+      return targetHouseholds(report) * setting(settings, "avg_household_size");
     const raw = report[TARGET_FIELD[rule.target]];
     if (raw !== null && raw !== undefined && raw !== "" && Number.isFinite(Number(raw)))
       return Math.max(0, Number(raw));
@@ -76,6 +86,10 @@ const ZCALC = (() => {
         staff: d.staff || "",
         site_hours: d.site_hours || "",
         households: Number(d.report.households) || 0,
+        support: Number.isFinite(Number(d.report.support_households))
+          && d.report.support_households !== null && d.report.support_households !== ""
+          ? Math.max(0, Number(d.report.support_households)) : null,
+        targetHouseholds: targetHouseholds(d.report),
         notes: d.report.notes || "",
         updatedAt: d.report.updatedAt || "",
         itemList: calcDistrict(d, rules, settings),
@@ -85,17 +99,18 @@ const ZCALC = (() => {
 
   /* 全体サマリー（「件」は 地区×品目 の数え方） */
   function summary(districts, rules, settings){
-    const s = { districts: 0, households: 0, needCount: 0, items: {} };
+    const s = { districts: 0, households: 0, support: 0, needCount: 0, items: {} };
     aggregate(districts, rules, settings).forEach(g => {
       s.districts++;
       s.households += g.households;
+      s.support += g.targetHouseholds;      // 物資を届ける対象の世帯数
       g.itemList.forEach(c => {
         s.needCount++;
         const r = s.items[c.rule.id] || (s.items[c.rule.id] = {
           rule: c.rule, districts: 0, households: 0, need: 0, buffer: c.buffer,
         });
         r.districts++;
-        r.households += g.households;
+        r.households += g.targetHouseholds;
         r.need += c.need;
       });
     });
@@ -134,7 +149,7 @@ const ZCALC = (() => {
   function targetLabel(rule){ return TARGET_LABEL[rule.target || "all"] || "全員"; }
 
   return {
-    DEFAULT_SETTINGS, setting, peopleFor,
+    DEFAULT_SETTINGS, setting, peopleFor, targetHouseholds,
     calcItem, calcDistrict, aggregate, summary,
     fmtQty, packHint, fmtQtyWithPack, targetLabel,
   };
