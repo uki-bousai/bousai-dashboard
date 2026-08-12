@@ -327,9 +327,14 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 
   <div class="loginbox card" id="signupBox" style="display:none">
     <h2>アカウント作成（区の担当者）</h2>
-    <p class="desc">運営から伝えられた<b>招待コード</b>が必要です。作成したアカウントは、選んだ担当地区だけ登録・更新できます。</p>
-    <label for="signupCode">招待コード</label>
-    <input type="text" id="signupCode" autocomplete="off">
+    <p class="desc" id="signupDesc">作成したアカウントは、選んだ担当地区だけ登録・更新できます。</p>
+    <div id="signupCodeField">
+      <label for="signupCode">招待コード</label>
+      <input type="text" id="signupCode" autocomplete="off">
+    </div>
+    <div id="signupNoCode" class="hint" style="display:none">
+      いまは<b>招待コードなし</b>で作れます。名前と合言葉、担当地区を入れてください。
+    </div>
     <label for="signupName" style="display:block; margin-top:8px">名前</label>
     <input type="text" id="signupName" autocomplete="username" placeholder="例: 豊福・山田">
     <div class="hint">運営が誰か分かる名前にしてください（区名＋名字がおすすめ）。更新の記録に残ります。</div>
@@ -849,6 +854,12 @@ function updatePreview(){
       ? `${ZCALC.targetLabel(c.rule)}${c.people}人 × ${c.buffer}日分`
       : `${ZCALC.targetHouseholds(d.report)}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
     line.append(nm, q, rf);
+    // 在宅避難の全世帯に配る場合の数量も出す
+    if (c.needAll > c.need){
+      const q2 = document.createElement("span"); q2.className = "pref";
+      q2.textContent = `（在宅避難${d.report.households}世帯なら ${ZCALC.fmtQtyWithPack(c.rule, c.needAll)}）`;
+      line.append(q2);
+    }
     lines.appendChild(line);
   });
   $("previewBox").style.display = results.length ? "" : "none";
@@ -1153,9 +1164,22 @@ $("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") $("logi
 $("loginSkip").addEventListener("click", closeLogin);
 
 /* ---------- アカウント作成（招待コード方式） ---------- */
+/* 招待コードが要るかどうかをサーバーに聞いて、欄を出し分ける
+   （災害初動で SIGNUP_OPEN=1 のときはコードなしで作れる） */
+let signupNeedsCode = true;
+async function refreshSignupMode(){
+  try {
+    const { res, body } = await workerPost("/signup-info", {});
+    if (!res.ok || !body) return;
+    signupNeedsCode = !body.open;
+  } catch (e) { return; }
+  $("signupCodeField").style.display = signupNeedsCode ? "" : "none";
+  $("signupNoCode").style.display = signupNeedsCode ? "none" : "";
+}
 $("showSignup").addEventListener("click", () => {
   $("loginBox").style.display = "none";
   $("signupBox").style.display = "";
+  refreshSignupMode();
 });
 $("signupTown").addEventListener("change", () => {
   populateSchoolOptions($("signupSchool"), $("signupTown").value, $("signupSchool").value);
@@ -1181,7 +1205,7 @@ $("signupBtn").addEventListener("click", async () => {
     wardValue($("signupWard"), $("signupWardOther")));
   const pass = $("signupPass").value;
   const pass2 = $("signupPass2").value;
-  if (!code){ showSignupErr("招待コードを入力してください"); return; }
+  if (signupNeedsCode && !code){ showSignupErr("招待コードを入力してください"); return; }
   if (!name){ showSignupErr("名前を入力してください"); return; }
   if (!$("signupTown").value){ showSignupErr("担当地区の町名を選択してください"); return; }
   if (!wardValue($("signupWard"), $("signupWardOther"))){ showSignupErr("担当地区の区名を選択してください（一覧にないときは「その他（手入力）」）"); return; }

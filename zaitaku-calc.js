@@ -43,9 +43,13 @@ const ZCALC = (() => {
        all    → 要支援の世帯数 × 1世帯あたり平均人数（概算）
        infant / elderly → 地区の報告人数。未入力なら1人とみなす
                           （必要と報告された=対象者がいる、という扱い） */
-  function peopleFor(rule, report, settings){
-    if (!rule.target || rule.target === "all")
-      return targetHouseholds(report) * setting(settings, "avg_household_size");
+  function peopleFor(rule, report, settings, useAllHouseholds){
+    if (!rule.target || rule.target === "all"){
+      const hh = useAllHouseholds
+        ? (Number(report && report.households) || 0)
+        : targetHouseholds(report);
+      return hh * setting(settings, "avg_household_size");
+    }
     const raw = report[TARGET_FIELD[rule.target]];
     if (raw !== null && raw !== undefined && raw !== "" && Number.isFinite(Number(raw)))
       return Math.max(0, Number(raw));
@@ -63,9 +67,13 @@ const ZCALC = (() => {
     const daily = (Number(rule.daily_amount_per_person) || 0) * people;
     if (daily <= 0) return null;
     const buffer = Number(rule.buffer_days) > 0 ? Number(rule.buffer_days) : setting(settings, "buffer_days");
+    // 在宅避難の全世帯に配る場合の数量も出す（要支援だけに配る場合との比較用）
+    const peopleAll = peopleFor(rule, report, settings, true);
+    const needAll = (Number(rule.daily_amount_per_person) || 0) * peopleAll * buffer;
     return {
-      rule, people, daily, buffer,
-      need: daily * buffer,                 // 目標日数分の数量
+      rule, people, daily, buffer, peopleAll,
+      need: daily * buffer,                 // 目標日数分の数量（要支援ぶん）
+      needAll,                              // 在宅避難の全世帯ぶん
       note: entry && entry.note ? String(entry.note) : "",
     };
   }
@@ -107,11 +115,12 @@ const ZCALC = (() => {
       g.itemList.forEach(c => {
         s.needCount++;
         const r = s.items[c.rule.id] || (s.items[c.rule.id] = {
-          rule: c.rule, districts: 0, households: 0, need: 0, buffer: c.buffer,
+          rule: c.rule, districts: 0, households: 0, need: 0, needAll: 0, buffer: c.buffer,
         });
         r.districts++;
         r.households += g.targetHouseholds;
         r.need += c.need;
+        r.needAll += c.needAll;
       });
     });
     s.itemList = Object.values(s.items)
