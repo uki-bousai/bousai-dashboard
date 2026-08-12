@@ -27,6 +27,9 @@
      INVITE_CODE  : Secret。招待コード（例: uki-2026-bousai）。
                     区長会などで配り、漏れた疑いがあればこの値を変えるだけでよい
                     （作成済みアカウントはそのまま使える）
+     SIGNUP_OPEN  : 任意。値を 1 にすると招待コードなしで誰でもアカウントを
+                    作れるようになる（災害初動などで急いで人を増やしたいとき用）。
+                    変数を消すか 1 以外にすれば、すぐ招待コード方式に戻る
      USERS_KV     : KVバインディング。Storage & Databases → KV で
                     ネームスペースを作成し、Worker の Settings → Bindings で
                     変数名 USERS_KV としてバインドする。
@@ -108,14 +111,15 @@ export async function checkAuth(env, name, password){
 }
 
 /* ---------- アカウント自己登録（招待コード方式） ---------- */
-export function validateSignup(body){
+export function validateSignup(body, opts){
+  const requireCode = !opts || opts.requireCode !== false;
   if (!body || typeof body !== "object") return { error: "リクエストが不正です" };
   const code = typeof body.code === "string" ? body.code.trim() : "";
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
   let districts = Array.isArray(body.districts) ? body.districts : [];
   districts = districts.map(d => typeof d === "string" ? d.trim() : "").filter(Boolean);
-  if (!code) return { error: "招待コードを入力してください" };
+  if (requireCode && !code) return { error: "招待コードを入力してください" };
   if (!name) return { error: "名前を入力してください" };
   if (name.length > 30) return { error: "名前は30文字以内にしてください" };
   if (password.length < 6) return { error: "合言葉は6文字以上にしてください" };
@@ -130,14 +134,18 @@ export function validateSignup(body){
   return { code, name, password, districts };
 }
 
+/* SIGNUP_OPEN=1 のときは招待コードなしで登録できる（災害初動の緊急運用） */
+export function signupOpen(env){ return String(env && env.SIGNUP_OPEN || "") === "1"; }
+
 async function handleSignup(env, body, cors){
-  const v = validateSignup(body);
+  const open = signupOpen(env);
+  const v = validateSignup(body, { requireCode: !open });
   if (v.error) return json({ error: v.error }, 400, cors);
-  if (!env.INVITE_CODE)
+  if (!open && !env.INVITE_CODE)
     return json({ error: "アカウント作成は現在利用できません（招待コードが未設定です）。運営にご連絡ください" }, 500, cors);
   if (!env.USERS_KV)
     return json({ error: "アカウント作成は現在利用できません（保存領域が未設定です）。運営にご連絡ください" }, 500, cors);
-  if (v.code !== env.INVITE_CODE){
+  if (!open && v.code !== env.INVITE_CODE){
     await new Promise(r => setTimeout(r, 800));   // 総当たり対策の遅延
     return json({ error: "招待コードが違います。運営から伝えられたコードを確認してください" }, 403, cors);
   }
@@ -258,6 +266,10 @@ export default {
     catch { return json({ error: "リクエストが不正です" }, 400, cors); }
 
     const path = new URL(request.url).pathname;
+
+    // アカウント作成に招待コードが要るかどうか（入力画面が欄の出し分けに使う）
+    if (path === "/signup-info")
+      return json({ ok: true, open: signupOpen(env), enabled: !!env.USERS_KV }, 200, cors);
 
     // アカウント自己登録（認証前に処理する）
     if (path === "/signup") return handleSignup(env, body, cors);

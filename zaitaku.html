@@ -111,6 +111,7 @@ details.dcard[open] > summary::after{content:"▲"}
 .irow .qt{text-align:right; flex:none; max-width:55%}
 .irow .qt b{font-size:1.05rem; font-weight:800; font-variant-numeric:tabular-nums}
 .irow .qt small{display:block; font-size:.7rem; color:var(--text-secondary)}
+.irow .qt small.qall{color:var(--text-muted); margin-top:2px}
 .empty{color:var(--text-muted); font-size:.82rem; padding:10px 0}
 footer{max-width:860px; margin:24px auto 0; padding:0 20px; font-size:.72rem; color:var(--text-muted); line-height:1.8}
 footer a{color:var(--accent)}
@@ -322,7 +323,11 @@ function renderDistricts(){
     }
     // 列見出し（「3日分の数量」はここに1回だけ）
     const ihead = el("div", "ihead");
-    ihead.append(el("span", "", "必要な物資"), el("span", "", `${g.itemList[0].buffer}日分の数量`));
+    const both = g.support !== null && g.support !== g.households;
+    ihead.append(el("span", "", "必要な物資"),
+      el("span", "", both
+        ? `要支援${g.support}世帯ぶん（${g.itemList[0].buffer}日分）`
+        : `${g.targetHouseholds}世帯ぶん（${g.itemList[0].buffer}日分）`));
     body.appendChild(ihead);
     g.itemList.forEach(it => {
       const row = el("div", "irow");
@@ -343,6 +348,13 @@ function renderDistricts(){
         const s = document.createElement("small");
         s.textContent = hint;
         qt.appendChild(s);
+      }
+      // 在宅避難の全世帯に配る場合の数量も併記（要支援だけの数量と違うときだけ）
+      if (both && it.needAll > it.need){
+        const s2 = document.createElement("small");
+        s2.className = "qall";
+        s2.textContent = `全${g.households}世帯なら ${ZCALC.fmtQty(it.needAll, it.rule.unit)}`;
+        qt.appendChild(s2);
       }
       row.append(nm, qt);
       body.appendChild(row);
