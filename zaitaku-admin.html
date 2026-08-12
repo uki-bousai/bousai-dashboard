@@ -489,8 +489,9 @@ function parseName(name){
 /* 地区担当者は担当地区だけ編集できる（最終的な制限はサーバー側で強制される）。
    担当が「豊野町」のように町名だけの場合は、その町のすべての区を担当できる（町の統括担当者） */
 function inChargeOf(name){
+  const towns = Object.keys(SCHOOL_DISTRICTS);   // 統括担当にできるのは町名のみ
   return (scope.districts || []).some(a =>
-    a && (a === name || (!a.includes(" ") && String(name).startsWith(a + " "))));
+    a && (a === name || (towns.includes(a) && String(name).startsWith(a + " "))));
 }
 function canEditDistrict(name){
   return !scope || scope.type !== "district" || inChargeOf(name);
@@ -498,7 +499,7 @@ function canEditDistrict(name){
 /* 担当が町名だけ（区の指定なし）なら、その町の統括担当者 */
 function townScope(){
   const list = (scope && scope.districts) || [];
-  return list.length === 1 && !list[0].includes(" ") ? list[0] : null;
+  return list.length === 1 && Object.keys(SCHOOL_DISTRICTS).includes(list[0]) ? list[0] : null;
 }
 function applyScope(){
   const limited = scope && scope.type === "district";
