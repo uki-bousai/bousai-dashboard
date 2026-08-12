@@ -494,7 +494,9 @@ function inChargeOf(name){
     a && (a === name || (towns.includes(a) && String(name).startsWith(a + " "))));
 }
 function canEditDistrict(name){
-  return !scope || scope.type !== "district" || inChargeOf(name);
+  if (!scope || scope.type !== "district") return true;
+  if (!(scope.districts || []).length) return true;   // 担当地区の指定なし＝全地区を編集できる
+  return inChargeOf(name);
 }
 /* 担当が町名だけ（区の指定なし）なら、その町の統括担当者 */
 function townScope(){
@@ -502,7 +504,7 @@ function townScope(){
   return list.length === 1 && Object.keys(SCHOOL_DISTRICTS).includes(list[0]) ? list[0] : null;
 }
 function applyScope(){
-  const limited = scope && scope.type === "district";
+  const limited = scope && scope.type === "district" && (scope.districts || []).length > 0;
   $("rulesCard").style.display = limited ? "none" : "";
   $("addDistrict").style.display = limited ? "none" : "";
   if (limited){
@@ -515,6 +517,8 @@ function applyScope(){
     setStatus(town
       ? `${town}の統括担当としてログイン中。${town}のすべての区を登録・更新できます（区名を選んでから入力してください）`
       : `地区担当としてログイン中（担当: ${list.join("、") || "なし"}）。担当地区だけ登録・更新できます`, "ok");
+  } else if (scope && scope.type === "district"){
+    setStatus("在宅避難データの全体担当としてログイン中。すべての区を登録・更新できます", "ok");
   }
   if (data){ renderDistricts(); loadDistrictToForm(currentFormName(), { keepStatus: true }); }
 }

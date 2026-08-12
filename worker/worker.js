@@ -180,6 +180,9 @@ export function districtInScope(allowed, name){
 }
 
 export function zaitakuScopeError(oldData, newData, allowed){
+  // 担当地区を書かずに登録したアカウントは、在宅避難のデータを全部編集できる
+  // （運営が ZAITAKU_USERS で明示的に作った場合のみ。自己登録では担当地区が必須）
+  if (!allowed || !allowed.length) return null;
   const inScope = name => districtInScope(allowed, name);
   if (stable(oldData.rules) !== stable(newData.rules))
     return "計算基準は運営スタッフのみ変更できます";
