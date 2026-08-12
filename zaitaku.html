@@ -97,6 +97,9 @@ details.dcard[open] > summary::after{content:"▲"}
 .site .maphint{font-size:.7rem; font-weight:400; color:var(--text-muted); margin-left:6px; white-space:nowrap}
 .site small{display:block; font-size:.72rem; font-weight:400; color:var(--text-secondary); margin-top:2px}
 .staffline{font-size:.8rem; font-weight:700; color:var(--text-secondary); margin-top:6px; padding:0 2px}
+.dnote{font-size:.82rem; line-height:1.7; margin-top:8px; padding:8px 12px;
+  background:color-mix(in srgb, var(--accent) 7%, var(--page)); border-radius:8px;
+  border-left:3px solid color-mix(in srgb, var(--accent) 55%, transparent)}
 /* 品目の一覧（表形式）: ラベルは列見出しに1回だけ */
 .ihead{display:flex; justify-content:space-between; gap:10px; margin-top:10px;
   font-size:.68rem; color:var(--text-muted); border-bottom:1px solid var(--grid); padding-bottom:4px}
@@ -305,6 +308,8 @@ function renderDistricts(){
     }
     body.appendChild(siteBox);
     if (g.staff) body.appendChild(el("div", "staffline", `🤝 物資を届ける担当: ${g.staff}`));
+    // 区からの伝言（断水している・近くに店がない など。届ける側に必要な情報）
+    if (g.notes) body.appendChild(el("div", "dnote", `📝 区からの情報: ${g.notes}`));
     if (!g.itemList.length){
       body.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
       box.appendChild(card);

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-12 09:03 更新",
+  "updatedAt": "2026-08-12 09:07 更新",
   "settings": {
     "buffer_days": 3,
     "avg_household_size": 2,
@@ -446,6 +446,32 @@
       },
       "lat": 32.60102065955734,
       "lng": 130.69845914840698
+    },
+    {
+      "name": "豊野町 下安見",
+      "site": "下安見公民館",
+      "report": {
+        "reporter_role": "区長",
+        "households": 80,
+        "infants": null,
+        "elderly": null,
+        "needs": {
+          "rice_pack": {
+            "note": ""
+          },
+          "retort": {
+            "note": ""
+          },
+          "supplement": {
+            "note": "栄養補助食品（バランス栄養食など）"
+          },
+          "body_wipes": {
+            "note": ""
+          }
+        },
+        "notes": "家の片付けや倉庫などの復旧作業に追われて食事もままならないため、レトルト食品や栄養補助食品が大変助かります。近くにお店やレストランもありません。",
+        "updatedAt": "2026-08-12 09:07"
+      }
     }
   ],
   "households": []
