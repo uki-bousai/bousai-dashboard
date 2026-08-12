@@ -107,11 +107,13 @@ const ZCALC = (() => {
 
   /* 全体サマリー（「件」は 地区×品目 の数え方） */
   function summary(districts, rules, settings){
-    const s = { districts: 0, households: 0, support: 0, needCount: 0, items: {} };
+    const s = { districts: 0, households: 0, support: 0, supportUnknown: 0, needCount: 0, items: {} };
     aggregate(districts, rules, settings).forEach(g => {
       s.districts++;
       s.households += g.households;
-      s.support += g.targetHouseholds;      // うち要支援の世帯数
+      // 要支援は「報告があった区」だけ合計する。未報告の区は数に入れず件数だけ数える
+      if (g.support === null) s.supportUnknown++;
+      else s.support += g.support;
       g.itemList.forEach(c => {
         s.needCount++;
         const r = s.items[c.rule.id] || (s.items[c.rule.id] = {
