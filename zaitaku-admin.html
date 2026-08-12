@@ -186,10 +186,11 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
         <div class="hint">公民館で物資を受け取れる時間。公開ページに表示されます。</div>
       </div>
       <div class="field">
-        <label for="fHouseholds">在宅避難の世帯数 <span style="color:var(--status-critical)">必須</span></label>
+        <label for="fHouseholds">在宅避難の世帯数</label>
         <input type="number" id="fHouseholds" min="1" step="1" inputmode="numeric" placeholder="例: 150">
         <div class="hint">避難所へ行かず自宅で過ごしている世帯の数。おおよそで構いません。
-          <b>物資の数量はこの世帯数で計算します</b>（「世帯数 × 平均<span id="avgLabel">2</span>人 × 3日分」）。</div>
+          <b>物資の数量はこの世帯数で計算します</b>（「世帯数 × 平均<span id="avgLabel">2</span>人 × 3日分」）。
+          分からなければ空のままで構いません（下の要支援の世帯数で計算します）。</div>
         <label for="fSupport" style="display:block; margin-top:10px">うち 要支援の世帯数</label>
         <input type="number" id="fSupport" min="0" step="1" inputmode="numeric" placeholder="例: 14">
         <div class="hint">高齢・介助が必要などで、支援の手が要る世帯の数（任意）。
@@ -843,7 +844,7 @@ function updatePreview(){
   const d = formDistrict();
   const lines = $("previewLines");
   lines.textContent = "";
-  if (!d.report.households){ $("previewBox").style.display = "none"; return; }
+  if (!ZCALC.baseHouseholds(d.report)){ $("previewBox").style.display = "none"; return; }
   const results = ZCALC.calcDistrict(d, data.rules, data.settings);
   results.forEach(c => {
     const line = document.createElement("div");
@@ -857,7 +858,7 @@ function updatePreview(){
     const avg = ZCALC.setting(data.settings, "avg_household_size");
     rf.textContent = c.rule.target && c.rule.target !== "all"
       ? `${ZCALC.targetLabel(c.rule)}${c.people}人 × ${c.buffer}日分`
-      : both
+      : both || !d.report.households
       ? `要支援${d.report.support_households}世帯 × 平均${avg}人 × ${c.buffer}日分`
       : `在宅避難${d.report.households}世帯 × 平均${avg}人 × ${c.buffer}日分`;
     line.append(nm, q, rf);
@@ -888,8 +889,9 @@ $("addBtn").addEventListener("click", () => {
     $("fWard").focus();
     return;
   }
-  if (!d.report.households || d.report.households < 1){
-    setStatus("在宅避難の世帯数を入力してください", "err");
+  if ((!d.report.households || d.report.households < 1) &&
+      !(d.report.support_households > 0)){
+    setStatus("在宅避難の世帯数か、要支援の世帯数のどちらかを入力してください", "err");
     $("fHouseholds").focus();
     return;
   }
