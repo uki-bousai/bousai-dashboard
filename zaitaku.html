@@ -222,7 +222,7 @@ function renderNeed(s){
   const buffer = ZCALC.setting(DATA.settings, "buffer_days");
   $("bufferDaysLabel").textContent = buffer;
   const ihead = el("div", "ihead");
-  ihead.append(el("span", "", "必要な物資"), el("span", "", `${buffer}日分の数量`));
+  ihead.append(el("span", "", "必要な物資"), el("span", "", `まず届ける分（${buffer}日分）`));
   list.appendChild(ihead);
   s.itemList.forEach(r => {
     const row = el("div", "irow");
@@ -231,12 +231,18 @@ function renderNeed(s){
     s2.textContent = `${r.districts}地区・在宅避難 約${r.households}世帯`;
     nm.appendChild(s2);
     const qt = el("div", "qt");
-    qt.appendChild(el("b", "", ZCALC.fmtQty(r.need, r.rule.unit)));
-    const hint = ZCALC.packHint(r.rule, r.need);
+    qt.appendChild(el("b", "", ZCALC.fmtQty(r.needSupport, r.rule.unit)));
+    const hint = ZCALC.packHint(r.rule, r.needSupport);
     if (hint){
       const s3 = document.createElement("small");
       s3.textContent = hint;
       qt.appendChild(s3);
+    }
+    if (r.needSupport < r.need){
+      const s4 = document.createElement("small");
+      s4.className = "qall";
+      s4.textContent = `在宅避難の全世帯なら ${ZCALC.fmtQty(r.need, r.rule.unit)}`;
+      qt.appendChild(s4);
     }
     row.append(nm, qt);
     list.appendChild(row);
@@ -326,7 +332,9 @@ function renderDistricts(){
     const ihead = el("div", "ihead");
     const both = hasSup;
     ihead.append(el("span", "", "必要な物資"),
-      el("span", "", `在宅避難${g.households}世帯ぶん（${g.itemList[0].buffer}日分）`));
+      el("span", "", hasSup
+        ? `要支援${g.support}世帯ぶん（${g.itemList[0].buffer}日分）`
+        : `在宅避難${g.households}世帯ぶん（${g.itemList[0].buffer}日分）`));
     body.appendChild(ihead);
     g.itemList.forEach(it => {
       const row = el("div", "irow");
@@ -340,19 +348,20 @@ function renderDistricts(){
         s.textContent = sub.join(" ／ ");
         nm.appendChild(s);
       }
+      // まず届ける「要支援の世帯」ぶんを主に出し、在宅避難の全世帯ぶんを補足に
+      const main = both ? it.needSupport : it.need;
       const qt = el("div", "qt");
-      qt.appendChild(el("b", "", ZCALC.fmtQty(it.need, it.rule.unit)));
-      const hint = ZCALC.packHint(it.rule, it.need);
+      qt.appendChild(el("b", "", ZCALC.fmtQty(main, it.rule.unit)));
+      const hint = ZCALC.packHint(it.rule, main);
       if (hint){
         const s = document.createElement("small");
         s.textContent = hint;
         qt.appendChild(s);
       }
-      // 優先して届ける「要支援の世帯」ぶんの数量も併記
-      if (both && it.needSupport < it.need){
+      if (both){
         const s2 = document.createElement("small");
         s2.className = "qall";
-        s2.textContent = `うち要支援${g.support}世帯ぶん ${ZCALC.fmtQty(it.needSupport, it.rule.unit)}`;
+        s2.textContent = `在宅避難${g.households}世帯ぶんなら ${ZCALC.fmtQty(it.need, it.rule.unit)}`;
         qt.appendChild(s2);
       }
       row.append(nm, qt);

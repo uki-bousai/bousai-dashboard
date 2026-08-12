@@ -849,17 +849,22 @@ function updatePreview(){
     const line = document.createElement("div");
     line.className = "pline";
     const nm = document.createElement("span"); nm.className = "pname"; nm.textContent = c.rule.name;
+    const both = c.needSupport < c.need;
+    const main = both ? c.needSupport : c.need;
     const q = document.createElement("span"); q.className = "pqty";
-    q.textContent = ZCALC.fmtQtyWithPack(c.rule, c.need);
+    q.textContent = ZCALC.fmtQtyWithPack(c.rule, main);
     const rf = document.createElement("span"); rf.className = "pref";
+    const avg = ZCALC.setting(data.settings, "avg_household_size");
     rf.textContent = c.rule.target && c.rule.target !== "all"
       ? `${ZCALC.targetLabel(c.rule)}${c.people}人 × ${c.buffer}日分`
-      : `在宅避難${d.report.households}世帯 × 平均${ZCALC.setting(data.settings, "avg_household_size")}人 × ${c.buffer}日分`;
+      : both
+      ? `要支援${d.report.support_households}世帯 × 平均${avg}人 × ${c.buffer}日分`
+      : `在宅避難${d.report.households}世帯 × 平均${avg}人 × ${c.buffer}日分`;
     line.append(nm, q, rf);
-    // 優先して届ける「要支援の世帯」ぶんも出す
-    if (c.needSupport < c.need){
+    // 在宅避難の全世帯に配る場合の数量も出す
+    if (both){
       const q2 = document.createElement("span"); q2.className = "pref";
-      q2.textContent = `（うち要支援${d.report.support_households}世帯ぶん ${ZCALC.fmtQtyWithPack(c.rule, c.needSupport)}）`;
+      q2.textContent = `（在宅避難${d.report.households}世帯ぶんなら ${ZCALC.fmtQtyWithPack(c.rule, c.need)}）`;
       line.append(q2);
     }
     lines.appendChild(line);
