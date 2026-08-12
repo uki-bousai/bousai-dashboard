@@ -93,8 +93,13 @@ details.dcard[open] > summary::after{content:"▲"}
 .site{font-size:.95rem; font-weight:700; margin-top:4px; padding:8px 12px;
   background:var(--page); border:1px solid var(--border); border-radius:8px}
 .site.tbd{font-weight:400; color:var(--text-secondary)}
+.site a{color:var(--accent); text-decoration:underline; text-underline-offset:3px}
+.site .maphint{font-size:.7rem; font-weight:400; color:var(--text-muted); margin-left:6px; white-space:nowrap}
 .site small{display:block; font-size:.72rem; font-weight:400; color:var(--text-secondary); margin-top:2px}
 .staffline{font-size:.8rem; font-weight:700; color:var(--text-secondary); margin-top:6px; padding:0 2px}
+.dnote{font-size:.82rem; line-height:1.7; margin-top:8px; padding:8px 12px;
+  background:color-mix(in srgb, var(--accent) 7%, var(--page)); border-radius:8px;
+  border-left:3px solid color-mix(in srgb, var(--accent) 55%, transparent)}
 /* 品目の一覧（表形式）: ラベルは列見出しに1回だけ */
 .ihead{display:flex; justify-content:space-between; gap:10px; margin-top:10px;
   font-size:.68rem; color:var(--text-muted); border-bottom:1px solid var(--grid); padding-bottom:4px}
@@ -245,6 +250,15 @@ function splitDistrict(name){
   return [p[0] || "", "", ""];
 }
 
+/* 集積場所のGoogleマップリンク。位置設定済みなら正確な座標へ、
+   なければ「宇城市＋施設名」の検索へ飛ばす */
+function mapsUrl(g){
+  const q = Number.isFinite(g.lat) && Number.isFinite(g.lng)
+    ? `${g.lat},${g.lng}`
+    : `宇城市 ${g.site}`;
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+}
+
 function renderDistricts(){
   const box = $("districtCards");
   box.textContent = "";
@@ -274,9 +288,19 @@ function renderDistricts(){
     const body = el("div", "dbody");
     card.appendChild(body);
     // 提供者が知りたいのは「どこへ届けるか」。地区ごとの集積場所を目立たせる
-    const siteBox = g.site
-      ? el("div", "site", `📍 集積場所: ${g.site}`)
-      : el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）");
+    let siteBox;
+    if (g.site){
+      siteBox = el("div", "site", "📍 集積場所: ");
+      const a = document.createElement("a");
+      a.href = mapsUrl(g);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = g.site;
+      siteBox.appendChild(a);
+      siteBox.appendChild(el("span", "maphint", "（押すと地図が開きます）"));
+    } else {
+      siteBox = el("div", "site tbd", "📍 集積場所: 調整中（決まり次第ここに掲載します）");
+    }
     if (g.site_hours){
       const sm = document.createElement("small");
       sm.textContent = `🕐 受付時間: ${g.site_hours}`;
@@ -284,6 +308,8 @@ function renderDistricts(){
     }
     body.appendChild(siteBox);
     if (g.staff) body.appendChild(el("div", "staffline", `🤝 物資を届ける担当: ${g.staff}`));
+    // 区からの伝言（断水している・近くに店がない など。届ける側に必要な情報）
+    if (g.notes) body.appendChild(el("div", "dnote", `📝 区からの情報: ${g.notes}`));
     if (!g.itemList.length){
       body.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
       box.appendChild(card);
@@ -382,6 +408,15 @@ function renderMap(groups){
       box.append(st);
     }
     box.append(items);
+    if (g.site){
+      const gm = document.createElement("a");
+      gm.href = mapsUrl(g);
+      gm.target = "_blank";
+      gm.rel = "noopener";
+      gm.textContent = "Googleマップで開く →";
+      gm.style.cssText = "display:inline-block; margin-top:6px; font-weight:700";
+      box.append(gm);
+    }
     m.bindPopup(box);
   });
   mapObj.fitBounds(L.latLngBounds(pts.map(g => [g.lat, g.lng])).pad(0.2));
