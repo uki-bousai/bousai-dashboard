@@ -80,13 +80,22 @@ html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
 /* 区カード（折りたたみ）: 普段は1行、タップで詳細 */
 details.dcard{padding:0}
-details.dcard > summary{list-style:none; cursor:pointer; display:flex; justify-content:space-between;
-  align-items:baseline; gap:10px; padding:14px 16px; user-select:none}
+details.dcard > summary{list-style:none; cursor:pointer; display:block; position:relative;
+  padding:12px 34px 12px 16px; user-select:none}
 details.dcard > summary::-webkit-details-marker{display:none}
-details.dcard > summary::after{content:"▼"; font-size:.68rem; color:var(--text-muted); flex:none}
+details.dcard > summary::after{content:"▼"; position:absolute; right:14px; top:14px;
+  font-size:.68rem; color:var(--text-muted)}
 details.dcard[open] > summary::after{content:"▲"}
-.dname{font-size:1.05rem; font-weight:700}
-.dmeta{font-size:.74rem; color:var(--text-secondary); text-align:right; margin-left:auto}
+.dname{font-size:1.05rem; font-weight:700; line-height:1.35}
+/* 数字は小さなラベルにして折り返しても崩れないようにする */
+.dmeta{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+.dmeta span{font-size:.7rem; line-height:1.5; color:var(--text-secondary);
+  background:var(--page); border:1px solid var(--border); border-radius:99px;
+  padding:2px 9px; white-space:nowrap}
+.dmeta span.sup{color:var(--accent); font-weight:700;
+  border-color:color-mix(in srgb, var(--accent) 45%, transparent);
+  background:color-mix(in srgb, var(--accent) 8%, var(--page))}
+.dmeta span.itm{font-weight:700; color:var(--text-primary)}
 .dbody{padding:0 16px 16px}
 .dhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
 .dhead .meta{font-size:.78rem; color:var(--text-secondary)}
@@ -111,6 +120,7 @@ details.dcard[open] > summary::after{content:"▲"}
 .irow .qt{text-align:right; flex:none; max-width:55%}
 .irow .qt b{font-size:1.05rem; font-weight:800; font-variant-numeric:tabular-nums}
 .irow .qt small{display:block; font-size:.7rem; color:var(--text-secondary)}
+.irow .qt small.qall{color:var(--text-muted); margin-top:2px}
 .empty{color:var(--text-muted); font-size:.82rem; padding:10px 0}
 footer{max-width:860px; margin:24px auto 0; padding:0 20px; font-size:.72rem; color:var(--text-muted); line-height:1.8}
 footer a{color:var(--accent)}
@@ -141,7 +151,8 @@ footer a{color:var(--accent)}
   <div class="card" id="summaryCard">
     <h2>全体の状況</h2>
     <div class="tiles" id="summaryTiles"></div>
-    <p class="desc" style="margin:10px 0 0">「件」は 地区×品目 の数です。下の一覧には<b>必要と報告された物資だけ</b>を表示しています。世帯数は区長など地域の情報提供者の報告によるおおよその数です。</p>
+    <p class="desc" id="supportNote" style="margin:10px 0 0; display:none"></p>
+  <p class="desc" style="margin:10px 0 0">「件」は 地区×品目 の数です。下の一覧には<b>必要と報告された物資だけ</b>を表示しています。世帯数は区長など地域の情報提供者の報告によるおおよその数です。</p>
   </div>
 
   <div class="card" id="mapCard" style="display:none">
@@ -209,8 +220,18 @@ function renderSummary(s){
     tiles.appendChild(t);
   };
   add(s.districts, "登録地区");
-  add(s.households, "対象世帯（概数）");
+  add(s.households, "在宅避難の世帯（概数）");
+  add(s.support, s.supportUnknown ? "要支援の世帯（報告のあった区）" : "要支援の世帯");
   add(s.needCount, "必要とされている物資（件）");
+  const note = $("supportNote");
+  if (s.supportUnknown){
+    note.textContent = `※ ${s.supportUnknown}地区は要支援の世帯数が未報告のため、その区の数量は在宅避難の全世帯ぶんで計算しています。`;
+    note.style.display = "";
+  } else note.style.display = "none";
+  if (s.householdsUnknown){
+    note.textContent += `${s.householdsUnknown}地区は在宅避難の世帯数が未報告で、要支援の世帯数だけで計算しています。`;
+    note.style.display = "";
+  }
 }
 
 function renderNeed(s){
@@ -220,21 +241,27 @@ function renderNeed(s){
   const buffer = ZCALC.setting(DATA.settings, "buffer_days");
   $("bufferDaysLabel").textContent = buffer;
   const ihead = el("div", "ihead");
-  ihead.append(el("span", "", "必要な物資"), el("span", "", `${buffer}日分の数量`));
+  ihead.append(el("span", "", "必要な物資"), el("span", "", `まず届ける分（${buffer}日分）`));
   list.appendChild(ihead);
   s.itemList.forEach(r => {
     const row = el("div", "irow");
     const nm = el("div", "nm", r.rule.name);
     const s2 = document.createElement("small");
-    s2.textContent = `${r.districts}地区・約${r.households}世帯`;
+    s2.textContent = `${r.districts}地区・在宅避難 約${r.households}世帯`;
     nm.appendChild(s2);
     const qt = el("div", "qt");
-    qt.appendChild(el("b", "", ZCALC.fmtQty(r.need, r.rule.unit)));
-    const hint = ZCALC.packHint(r.rule, r.need);
+    qt.appendChild(el("b", "", ZCALC.fmtQty(r.needSupport, r.rule.unit)));
+    const hint = ZCALC.packHint(r.rule, r.needSupport);
     if (hint){
       const s3 = document.createElement("small");
       s3.textContent = hint;
       qt.appendChild(s3);
+    }
+    if (r.needSupport < r.need){
+      const s4 = document.createElement("small");
+      s4.className = "qall";
+      s4.textContent = `在宅避難の全世帯なら ${ZCALC.fmtQty(r.need, r.rule.unit)}`;
+      qt.appendChild(s4);
     }
     row.append(nm, qt);
     list.appendChild(row);
@@ -282,8 +309,18 @@ function renderDistricts(){
     card.className = "card dcard";
     const sum = document.createElement("summary");
     sum.appendChild(el("span", "dname", ward || school || town));
-    sum.appendChild(el("span", "dmeta",
-      `約${g.households}世帯` + (g.itemList.length ? `・必要${g.itemList.length}品目` : "・必要品なし")));
+    // 在宅避難の世帯数と、実際に物資を届ける「要支援」の世帯数を分けて示す
+    const hasSup = g.householdsKnown && Number.isFinite(g.support) && g.support !== g.households;
+    const meta = el("div", "dmeta");
+    if (g.householdsKnown) meta.appendChild(el("span", "", `在宅避難 ${g.households}世帯`));
+    if (Number.isFinite(g.support))
+      meta.appendChild(el("span", "sup", g.householdsKnown && !hasSup
+        ? `全世帯が要支援 ${g.support}`
+        : `要支援 ${g.support}世帯`));
+    if (!g.householdsKnown) meta.appendChild(el("span", "", "在宅避難は未報告"));
+    meta.appendChild(el("span", "itm",
+      g.itemList.length ? `必要 ${g.itemList.length}品目` : "必要品なし"));
+    sum.appendChild(meta);
     card.appendChild(sum);
     const body = el("div", "dbody");
     card.appendChild(body);
@@ -317,7 +354,11 @@ function renderDistricts(){
     }
     // 列見出し（「3日分の数量」はここに1回だけ）
     const ihead = el("div", "ihead");
-    ihead.append(el("span", "", "必要な物資"), el("span", "", `${g.itemList[0].buffer}日分の数量`));
+    const both = hasSup;
+    ihead.append(el("span", "", "必要な物資"),
+      el("span", "", hasSup || !g.householdsKnown
+        ? `要支援${g.support}世帯ぶん（${g.itemList[0].buffer}日分）`
+        : `在宅避難${g.households}世帯ぶん（${g.itemList[0].buffer}日分）`));
     body.appendChild(ihead);
     g.itemList.forEach(it => {
       const row = el("div", "irow");
@@ -331,13 +372,21 @@ function renderDistricts(){
         s.textContent = sub.join(" ／ ");
         nm.appendChild(s);
       }
+      // まず届ける「要支援の世帯」ぶんを主に出し、在宅避難の全世帯ぶんを補足に
+      const main = both ? it.needSupport : it.need;
       const qt = el("div", "qt");
-      qt.appendChild(el("b", "", ZCALC.fmtQty(it.need, it.rule.unit)));
-      const hint = ZCALC.packHint(it.rule, it.need);
+      qt.appendChild(el("b", "", ZCALC.fmtQty(main, it.rule.unit)));
+      const hint = ZCALC.packHint(it.rule, main);
       if (hint){
         const s = document.createElement("small");
         s.textContent = hint;
         qt.appendChild(s);
+      }
+      if (both){
+        const s2 = document.createElement("small");
+        s2.className = "qall";
+        s2.textContent = `在宅避難${g.households}世帯ぶんなら ${ZCALC.fmtQty(it.need, it.rule.unit)}`;
+        qt.appendChild(s2);
       }
       row.append(nm, qt);
       body.appendChild(row);

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-12 09:07 更新",
+  "updatedAt": "2026-08-12 15:02 更新",
   "settings": {
     "buffer_days": 3,
     "avg_household_size": 2,
@@ -293,54 +293,11 @@
   ],
   "districts": [
     {
-      "name": "小川町 河江校区 本村区",
-      "site": "本村区公民館",
-      "report": {
-        "reporter_role": "民生委員",
-        "households": 10,
-        "infants": null,
-        "elderly": null,
-        "needs": {
-          "water": {
-            "note": ""
-          },
-          "rice_pack": {
-            "note": ""
-          },
-          "retort": {
-            "note": ""
-          },
-          "tea": {
-            "note": ""
-          },
-          "sports_drink": {
-            "note": ""
-          },
-          "snack": {
-            "note": ""
-          },
-          "toilet_paper": {
-            "note": ""
-          },
-          "baby_wipes": {
-            "note": ""
-          },
-          "body_wipes": {
-            "note": ""
-          }
-        },
-        "notes": "",
-        "updatedAt": "2026-08-10 16:08"
-      },
-      "lat": 32.60102065955734,
-      "lng": 130.69845914840698
-    },
-    {
       "name": "小川町 河江校区 川尻",
       "site": "川尻構造改善センター",
       "report": {
         "reporter_role": "その他",
-        "households": 14,
+        "households": 370,
         "infants": null,
         "elderly": null,
         "needs": {
@@ -358,7 +315,8 @@
           }
         },
         "notes": "区全体は約370世帯。断水している世帯がある。8/11から、避難できない高齢者14世帯へ区長・民生委員さんを中心に物資配給を行っている。",
-        "updatedAt": "2026-08-11 13:17"
+        "updatedAt": "2026-08-12 14:28",
+        "support_households": 14
       },
       "lat": 32.5987313093076,
       "lng": 130.68867176901165
@@ -399,7 +357,8 @@
           }
         },
         "notes": "南山崎公民館が被災し使用できないため、北山崎公民館に集約している（世帯数も両区の合計）。区長・民生委員による報告。栄養がとれるもの（野菜ジュース・サプリメント等）の要望あり。",
-        "updatedAt": "2026-08-12 08:25"
+        "updatedAt": "2026-08-12 14:28",
+        "support_households": 6
       },
       "lat": 32.6441667,
       "lng": 130.7486667
@@ -409,7 +368,7 @@
       "site": "本村区公民館",
       "report": {
         "reporter_role": "民生委員",
-        "households": 10,
+        "households": 0,
         "infants": null,
         "elderly": null,
         "needs": {
@@ -442,7 +401,8 @@
           }
         },
         "notes": "",
-        "updatedAt": "2026-08-12 09:03"
+        "updatedAt": "2026-08-12 15:02",
+        "support_households": 10
       },
       "lat": 32.60102065955734,
       "lng": 130.69845914840698
@@ -471,7 +431,9 @@
         },
         "notes": "家の片付けや倉庫などの復旧作業に追われて食事もままならないため、レトルト食品や栄養補助食品が大変助かります。近くにお店やレストランもありません。",
         "updatedAt": "2026-08-12 09:07"
-      }
+      },
+      "lat": 32.6626389,
+      "lng": 130.7623333
     }
   ],
   "households": []
