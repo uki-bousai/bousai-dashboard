@@ -486,12 +486,25 @@ function parseName(name){
   return { town: p[0] || "", school: "", ward: "" };
 }
 
-/* 地区担当者は担当地区だけ編集できる（最終的な制限はサーバー側で強制される） */
+/* 地区担当者は担当地区だけ編集できる（最終的な制限はサーバー側で強制される）。
+   担当が「豊野町」のように町名だけの場合は、その町のすべての区を担当できる（町の統括担当者） */
+function inChargeOf(name){
+  const towns = Object.keys(SCHOOL_DISTRICTS);   // 統括担当にできるのは町名のみ
+  return (scope.districts || []).some(a =>
+    a && (a === name || (towns.includes(a) && String(name).startsWith(a + " "))));
+}
 function canEditDistrict(name){
-  return !scope || scope.type !== "district" || (scope.districts || []).includes(name);
+  if (!scope || scope.type !== "district") return true;
+  if (!(scope.districts || []).length) return true;   // 担当地区の指定なし＝全地区を編集できる
+  return inChargeOf(name);
+}
+/* 担当が町名だけ（区の指定なし）なら、その町の統括担当者 */
+function townScope(){
+  const list = (scope && scope.districts) || [];
+  return list.length === 1 && Object.keys(SCHOOL_DISTRICTS).includes(list[0]) ? list[0] : null;
 }
 function applyScope(){
-  const limited = scope && scope.type === "district";
+  const limited = scope && scope.type === "district" && (scope.districts || []).length > 0;
   $("rulesCard").style.display = limited ? "none" : "";
   $("addDistrict").style.display = limited ? "none" : "";
   if (limited){
@@ -500,7 +513,12 @@ function applyScope(){
       const p = parseName(list[0]);
       setDistrictFields(p.town, p.school, p.ward);
     }
-    setStatus(`地区担当としてログイン中（担当: ${list.join("、") || "なし"}）。担当地区だけ登録・更新できます`, "ok");
+    const town = townScope();
+    setStatus(town
+      ? `${town}の統括担当としてログイン中。${town}のすべての区を登録・更新できます（区名を選んでから入力してください）`
+      : `地区担当としてログイン中（担当: ${list.join("、") || "なし"}）。担当地区だけ登録・更新できます`, "ok");
+  } else if (scope && scope.type === "district"){
+    setStatus("在宅避難データの全体担当としてログイン中。すべての区を登録・更新できます", "ok");
   }
   if (data){ renderDistricts(); loadDistrictToForm(currentFormName(), { keepStatus: true }); }
 }

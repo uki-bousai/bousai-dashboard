@@ -123,6 +123,10 @@ export function validateSignup(body){
   if (!districts.length) return { error: "担当地区を入力してください" };
   if (districts.length > 3) return { error: "担当地区は3つまでです" };
   if (districts.some(d => d.length > 40)) return { error: "地区名が長すぎます" };
+  // 「豊野町」のように町名だけの指定はその町全体を担当できてしまうため、
+  // 自己登録では認めない（町の統括担当者は運営が ZAITAKU_USERS で作る）
+  if (districts.some(d => !d.includes(" ")))
+    return { error: "担当地区は町名と区名を選んでください" };
   return { code, name, password, districts };
 }
 
@@ -162,8 +166,24 @@ function stable(v){
 /* 地区担当者の保存内容チェック。
    担当地区（allowed）の世帯・集積場所だけ変更でき、計算基準・設定・
    他地区のデータに差分があればエラー文字列を返す。 */
+/* 町の統括担当者として指定できる町名。ここに無い文字列は前方一致せず、
+   完全一致した区だけの担当になる（緩い前方一致が生まれないようにする） */
+export const TOWNS = ["三角町", "不知火町", "松橋町", "小川町", "豊野町"];
+
+/* 担当範囲の判定。
+     「豊野町 下安見」のように区まで指定 → その区だけ
+     「豊野町」のように町名だけ指定     → その町のすべての区（町の統括担当者）
+   町名だけの指定は運営が ZAITAKU_USERS で作る場合のみ（自己登録では不可）。 */
+export function districtInScope(allowed, name){
+  return (allowed || []).some(a =>
+    a && (a === name || (TOWNS.includes(a) && String(name).startsWith(a + " "))));
+}
+
 export function zaitakuScopeError(oldData, newData, allowed){
-  const inScope = name => allowed.includes(name);
+  // 担当地区を書かずに登録したアカウントは、在宅避難のデータを全部編集できる
+  // （運営が ZAITAKU_USERS で明示的に作った場合のみ。自己登録では担当地区が必須）
+  if (!allowed || !allowed.length) return null;
+  const inScope = name => districtInScope(allowed, name);
   if (stable(oldData.rules) !== stable(newData.rules))
     return "計算基準は運営スタッフのみ変更できます";
   if (stable(oldData.settings) !== stable(newData.settings))
