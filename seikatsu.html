@@ -302,6 +302,49 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .kids .tel{white-space:nowrap; display:inline-block}
 .kids .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
 
+/* ランドリーカー・猫の預かり。手順と「持ち込めないもの」を取り違えないよう色で分ける */
+.lnd{margin-top:2px; border:1.5px solid #a9cfe2; border-radius:14px; padding:14px 16px;
+  background:#f2f8fc}
+.lnd .lh{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.lnd .lh .tt{font-size:1rem; font-weight:700}
+.lnd .lh .pv{font-size:.68rem; font-weight:700; color:#2f7fa8; background:#fff;
+  border:1px solid #a9cfe2; border-radius:99px; padding:3px 9px}
+.lnd .free{margin-top:10px; display:flex; align-items:center; justify-content:space-between;
+  gap:10px; background:#fff; border:1.5px solid #2f7fa8; border-radius:11px; padding:10px 14px}
+.lnd .free .fl{font-size:.78rem; font-weight:700; color:#2f7fa8; line-height:1.5}
+.lnd .free .fv{font-size:1.35rem; font-weight:700; color:#2f7fa8; white-space:nowrap}
+.lnd .kv{margin-top:10px; font-size:.8rem; line-height:1.9; color:var(--text-secondary)}
+.lnd .kv .k{font-weight:700; color:#2f7fa8}
+.lnd .kv b{color:var(--text-primary)}
+.lnd .blk{margin-top:11px; background:#fff; border:1px solid var(--border); border-radius:11px;
+  padding:10px 14px}
+.lnd .blk .bt{font-size:.79rem; font-weight:700; color:#2f7fa8}
+.lnd .blk.warn{border-color:#e0b4b4; background:#fdf6f6}
+.lnd .blk.warn .bt{color:#b3413a}
+.lnd .blk ul{list-style:none; margin:6px 0 0; padding:0}
+.lnd .blk li{position:relative; padding-left:15px; font-size:.79rem; line-height:1.8;
+  color:var(--text-secondary)}
+.lnd .blk li::before{content:"・"; position:absolute; left:0; color:var(--text-muted)}
+.lnd .blk.warn li::before{content:"✕"; font-size:.68rem; top:3px; color:#b3413a}
+.lnd .blk ul.plain li{padding-left:0}
+.lnd .blk ul.plain li::before{content:none}
+.lnd .blk li b{color:var(--text-primary)}
+.lnd .blk .bs{margin-top:6px; font-size:.75rem; line-height:1.75; color:var(--text-muted)}
+.lnd .steps{margin-top:11px}
+.lnd .steps .st{font-size:.79rem; line-height:1.85; color:var(--text-secondary); margin-top:5px}
+.lnd .steps .st:first-child{margin-top:0}
+.lnd .steps .st b{color:var(--text-primary)}
+.lnd .nb{margin-top:10px; background:#fff; border:1px solid var(--border); border-radius:10px;
+  padding:9px 13px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
+.lnd .tel{white-space:nowrap; display:inline-block}
+.lnd .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
+
+.lnd.pet{border-color:#e3c49a; background:#fcf7ef}
+.lnd.pet .lh .pv{color:#a86410; border-color:#e3c49a}
+.lnd.pet .kv .k{color:#a86410}
+.lnd.pet .free{border-color:#a86410}
+.lnd.pet .free .fl, .lnd.pet .free .fv{color:#a86410}
+
 /* 防災井戸（飲用不可） */
 .wells{margin-top:14px; background:#eef5fb; border:1px solid #b6d4e8; border-radius:12px;
   padding:13px 15px}
@@ -413,6 +456,8 @@ footer a{color:var(--accent)}
     <a href="#secHaves">📦 物資</a>
     <a href="#secDeliv">🚚 お届け</a>
     <a href="#kidsCard">👶 子どもの預かり</a>
+    <a href="#laundryCard">🧺 洗濯</a>
+    <a href="#petCard">🐈 猫の預かり</a>
     <a href="#repairCard">🔨 住宅修理</a>
     <a href="#hotelCard">🏨 住まい</a>
     <a href="#refreshCard">🏞 南阿蘇</a>
@@ -528,6 +573,18 @@ footer a{color:var(--accent)}
     <div id="kidsBody"></div>
   </section>
 
+  <section class="card hidden" id="laundryCard">
+    <h2><span class="dot" style="background:#2f7fa8"></span>洗濯できます（ランドリーカー）</h2>
+    <p class="desc">洗濯機と乾燥機を積んだ車が来ます。<b>避難所の方だけでなく、車中泊の方・家で避難している方も無料で使えます。</b></p>
+    <div id="laundryBody"></div>
+  </section>
+
+  <section class="card hidden" id="petCard">
+    <h2><span class="dot" style="background:#c07a2a"></span>飼い猫の一時預かり</h2>
+    <p class="desc">避難所に連れて行けない、家に置いておけない——<b>猫の預かり先がなくて困っている方</b>のための支援です。</p>
+    <div id="petBody"></div>
+  </section>
+
   <section class="card hidden" id="repairCard">
     <h2><span class="dot" style="background:#b8571f"></span>住宅の緊急修理（被害の拡大を防ぐため）</h2>
     <p class="desc">雨漏りなどを放っておくと被害が広がってしまう住宅について、<b>屋根や外壁などを直す費用を市が負担する制度</b>です。半壊以上でなくても対象になる場合があります。</p>
@@ -560,14 +617,14 @@ footer a{color:var(--accent)}
 
   <section class="card" id="secWater">
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
-    <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<br>混み具合や現地の運用は場所ごとに違います。<b>必要な分だけ</b>受け取り、次の方に残してください。<br><span class="srcbadge" style="margin:4px 5px 0 0">⚠ 変更</span><b>三角地区での給水は8月7日で終了しました。</b>8月8日以降の予定はありません。</p>
+    <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<br>混み具合や現地の運用は場所ごとに違います。<b>必要な分だけ</b>受け取り、次の方に残してください。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 再開</span><b>三角東港での給水が再び行われています。</b>支援船によるもので、時間や量の制限はありません。日ごとに予定が変わるので、日付をよく確認してください。</p>
     <div id="waterList"><p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p></div>
     <div id="wellBox" class="hidden"></div>
   </section>
 
   <section class="card" id="secBath">
     <h2><span class="dot" style="background:#d97a26"></span>無料の入浴・シャワー</h2>
-    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。<b>エリア名をタップすると、その地域の施設が開きます</b>。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月4日時点）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
+    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。<b>エリア名をタップすると、その地域の施設が開きます</b>。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月13日公表分）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
     <div class="okbox">
       <div class="okt">◯ 熊本市の施設は、市外の方も対象です</div>
       <div class="oks">熊本市の「無料入浴支援事業」は、<b>宇城市など市外で被災した方も利用できます</b>（熊本市に確認済み）。受付で住所・氏名を確認できるものの提示を求められます。</div>
@@ -1835,6 +1892,117 @@ function renderKids(){
   box.appendChild(c);
 }
 
+/* 小さな見出し付きのブロック。手順・注意・持ち込めないもので使い回す */
+function lndBlock(title, lines, opt){
+  const o = opt || {};
+  const w = document.createElement("div"); w.className = "blk" + (o.warn ? " warn" : "");
+  const t = document.createElement("div"); t.className = "bt"; t.textContent = title;
+  w.appendChild(t);
+  const ul = document.createElement("ul");
+  if (o.plain) ul.classList.add("plain");
+  lines.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+  w.appendChild(ul);
+  if (o.note){ const s = document.createElement("div"); s.className = "bs"; s.textContent = o.note; w.appendChild(s); }
+  return w;
+}
+
+/* ランドリーカー：まず「無料・いつから・どこ」、次に持ち込めないもの。空振りで来させないため */
+function renderLaundry(){
+  const card = document.getElementById("laundryCard");
+  const box = document.getElementById("laundryBody");
+  const l = DATA.laundry;
+  box.textContent = "";
+  card.classList.toggle("hidden", !l);
+  if (!l) return;
+
+  const c = document.createElement("div"); c.className = "lnd";
+
+  const lh = document.createElement("div"); lh.className = "lh";
+  const tt = document.createElement("span"); tt.className = "tt"; tt.textContent = l.title || "";
+  lh.appendChild(tt);
+  if (l.start){ const pv = document.createElement("span"); pv.className = "pv"; pv.textContent = l.start; lh.appendChild(pv); }
+  c.appendChild(lh);
+
+  if (l.lead){ const p = document.createElement("p"); p.className = "desc"; p.style.margin = "8px 0 0"; p.textContent = l.lead; c.appendChild(p); }
+
+  if (l.cost){
+    const f = document.createElement("div"); f.className = "free";
+    const fl = document.createElement("div"); fl.className = "fl"; fl.textContent = "利用料";
+    const fv = document.createElement("div"); fv.className = "fv"; fv.textContent = l.cost;
+    f.append(fl, fv); c.appendChild(f);
+  }
+
+  const kv = document.createElement("div"); kv.className = "kv";
+  [["場所", l.place], ["時間", l.hours], ["1日の枠", l.capacity], ["対象", l.target],
+   ["洗えるもの", l.items], ["かかる時間", l.duration]].forEach(([key, v]) => {
+    if (!v) return;
+    const line = document.createElement("div");
+    const ks = document.createElement("span"); ks.className = "k"; ks.textContent = key + "：";
+    line.append(ks, document.createTextNode(v));
+    kv.appendChild(line);
+  });
+  c.appendChild(kv);
+
+  if ((l.steps || []).length){
+    const st = document.createElement("div"); st.className = "blk";
+    const t = document.createElement("div"); t.className = "bt"; t.textContent = "🧺 受付のしかた";
+    st.appendChild(t);
+    const wrap = document.createElement("div"); wrap.className = "steps";
+    l.steps.forEach(x => { const d = document.createElement("div"); d.className = "st"; d.textContent = x; wrap.appendChild(d); });
+    st.appendChild(wrap); c.appendChild(st);
+  }
+
+  if ((l.ng || []).length) c.appendChild(lndBlock("洗えないもの（持ち込めません）", l.ng, { warn: true, note: l.ngNote }));
+  if ((l.cautions || []).length) c.appendChild(lndBlock("⚠ 利用上の注意", l.cautions));
+  if (l.extra){ const n = document.createElement("div"); n.className = "nb"; n.textContent = l.extra; c.appendChild(n); }
+  if (l.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = l.source; c.appendChild(s); }
+  box.appendChild(c);
+}
+
+/* 猫の預かり：場所がウイングまつばせなので、閉鎖の注意を電話番号より前に出す */
+function renderPets(){
+  const card = document.getElementById("petCard");
+  const box = document.getElementById("petBody");
+  const p = DATA.pets;
+  box.textContent = "";
+  card.classList.toggle("hidden", !p);
+  if (!p) return;
+
+  const c = document.createElement("div"); c.className = "lnd pet";
+
+  const lh = document.createElement("div"); lh.className = "lh";
+  const tt = document.createElement("span"); tt.className = "tt"; tt.textContent = p.title || "";
+  lh.appendChild(tt);
+  if (p.provider){ const pv = document.createElement("span"); pv.className = "pv"; pv.textContent = p.provider + "が実施"; lh.appendChild(pv); }
+  c.appendChild(lh);
+
+  if (p.lead){ const el = document.createElement("p"); el.className = "desc"; el.style.margin = "8px 0 0"; el.textContent = p.lead; c.appendChild(el); }
+
+  const kv = document.createElement("div"); kv.className = "kv";
+  [["場所", p.place], ["受付", p.reception]].forEach(([key, v]) => {
+    if (!v) return;
+    const line = document.createElement("div");
+    const ks = document.createElement("span"); ks.className = "k"; ks.textContent = key + "：";
+    line.append(ks, document.createTextNode(v));
+    kv.appendChild(line);
+  });
+  c.appendChild(kv);
+
+  if (p.warn) c.appendChild(lndBlock("⚠ 行く前に電話で確認してください", [p.warn], { warn: true, plain: true }));
+
+  if (p.tel){
+    const a = document.createElement("a"); a.className = "hbtn";
+    a.href = "tel:" + String(p.tel).replace(/-/g, "");
+    const num = document.createElement("span"); num.className = "tel"; num.textContent = p.tel;
+    a.append(document.createTextNode("📞 お問い合わせ　"), num);
+    c.appendChild(a);
+    if (p.telNote){ const n = document.createElement("p"); n.className = "desc"; n.style.margin = "5px 0 0"; n.textContent = p.telNote; c.appendChild(n); }
+  }
+
+  if (p.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = p.source; c.appendChild(s); }
+  box.appendChild(c);
+}
+
 /* 住宅の緊急修理：上限額 → 受付 → 対象 → 注意 の順。工事の前に見積もりが要る点がいちばん大事 */
 function renderRepair(){
   const card = document.getElementById("repairCard");
@@ -1967,6 +2135,8 @@ function renderAll(){
   renderShelters();
   renderTrendCard();
   renderKids();
+  renderLaundry();
+  renderPets();
   renderRepair();
   renderHotel();
   renderHousing();
