@@ -474,7 +474,7 @@ footer a{color:var(--accent)}
 
   <section class="card hidden" id="trendCard">
     <h2>避難者数・世帯数の推移</h2>
-    <p class="desc">市の公表（毎日 午前8時時点）に基づく日次の推移</p>
+    <p class="desc">市の公表に基づく日次の推移（8月10日までは午前8時、以降は22時の時点）</p>
     <div id="trendChart"></div>
     <div class="maplegend" style="margin-top:8px">
       <span class="key"><span class="dot" style="background:var(--accent)"></span>避難者数</span>
@@ -1119,7 +1119,7 @@ function renderTrendCard(){
   const pick = (obj, key) => (obj && Array.isArray(obj[key])) ? dates.map((_, i) => obj[key][i] || 0) : null;
   const desc = card.querySelector(".desc");
   const baseLegend = card.querySelector(".maplegend");
-  const setDesc = t => { if (desc) desc.textContent = `市の公表（毎日 午前8時時点）に基づく日次の推移${t}`; };
+  const setDesc = t => { if (desc) desc.textContent = `市の公表に基づく日次の推移（8月10日までは午前8時、以降は22時の時点）${t}`; };
   const subhead = t => {
     const el = document.createElement("div");
     el.className = "trend-subhead"; el.textContent = t;
