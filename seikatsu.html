@@ -345,6 +345,22 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .lnd.pet .free{border-color:#a86410}
 .lnd.pet .free .fl, .lnd.pet .free .fv{color:#a86410}
 
+/* トイレカーの設置場所。避難所以外にもあるので、避難所の一覧とは別枠にする */
+.tcar{margin:2px 0 14px; border:1.5px solid var(--toilet); border-radius:14px; padding:13px 15px;
+  background:#f6f4fa}
+.tcar .th{font-size:.92rem; font-weight:700}
+.tcar .ts{margin-top:5px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.tcar .tp{margin-top:10px; background:#fff; border:1px solid var(--border); border-radius:11px;
+  padding:9px 13px}
+.tcar .tp .nm{font-size:.86rem; font-weight:700}
+.tcar .tp .nm small{margin-left:6px; font-size:.7rem; font-weight:400; color:var(--text-muted)}
+.tcar .tp ul{list-style:none; margin:6px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
+.tcar .tp li{font-size:.72rem; font-weight:700; color:#5b4b8a; background:#f6f4fa;
+  border:1px solid #cfc6e4; border-radius:99px; padding:3px 9px}
+.tcar .tp .gmap{margin-top:7px}
+.tcar .tpart{margin-top:10px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
+.tcar .tsrc{margin-top:7px; font-size:.7rem; color:var(--text-muted)}
+
 /* 防災井戸（飲用不可） */
 .wells{margin-top:14px; background:#eef5fb; border:1px solid #b6d4e8; border-radius:12px;
   padding:13px 15px}
@@ -611,7 +627,8 @@ footer a{color:var(--accent)}
 
   <section class="card" id="secToilet">
     <h2><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</h2>
-    <p class="desc">仮設トイレの設置場所と基数。市の一覧が出ていないため、<b>市民の方から届いた情報</b>を確認のうえ掲載しています。設置されているのにここに無い場所は、ぜひ教えてください。</p>
+    <p class="desc"><b>トイレカー</b>は市が場所を公表しています。<b>仮設トイレ</b>のほうは一覧が出ていないため、<b>市民の方から届いた情報</b>を確認のうえ掲載しています。設置されているのにここに無い場所は、ぜひ教えてください。</p>
+    <div id="tcarBox" class="hidden"></div>
     <div id="toiletList"><p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
@@ -1123,6 +1140,38 @@ function renderToilets(){
       b.appendChild(r);
     }
   })));
+}
+/* トイレカーは避難所以外の駐車場にも置かれている。市の一覧が唯一の出どころなので、まとめて先に出す */
+function renderToiletCars(){
+  const box = document.getElementById("tcarBox");
+  const t = DATA.toiletCars;
+  box.textContent = "";
+  const places = ((t && t.places) || []).filter(p => !currentDistrict || p.district === currentDistrict);
+  box.classList.toggle("hidden", !places.length);
+  if (!places.length) return;
+
+  const w = document.createElement("div"); w.className = "tcar";
+  const h = document.createElement("div"); h.className = "th";
+  h.textContent = `🚽 トイレカーの設置場所（${places.length}か所）`;
+  w.appendChild(h);
+  if (t.note){ const n = document.createElement("p"); n.className = "ts"; n.textContent = t.note; w.appendChild(n); }
+
+  places.forEach(p => {
+    const row = document.createElement("div"); row.className = "tp";
+    const nm = document.createElement("div"); nm.className = "nm";
+    nm.textContent = p.name;
+    const sm = document.createElement("small"); sm.textContent = p.district; nm.appendChild(sm);
+    row.appendChild(nm);
+    const ul = document.createElement("ul");
+    (p.from || []).forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+    row.appendChild(ul);
+    row.appendChild(gmapsLink(gmapsQuery(p)));
+    w.appendChild(row);
+  });
+
+  if (t.partial){ const n = document.createElement("div"); n.className = "tpart"; n.textContent = "※ " + t.partial; w.appendChild(n); }
+  if (t.source){ const s = document.createElement("div"); s.className = "tsrc"; s.textContent = t.source; w.appendChild(s); }
+  box.appendChild(w);
 }
 function renderHaves(){
   const box = document.getElementById("haveList");
@@ -2144,6 +2193,7 @@ function renderAll(){
   renderWater();
   renderWells();
   renderBaths();
+  renderToiletCars();
   renderToilets();
   renderHaves();
   renderDelivery();
