@@ -421,6 +421,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice{margin-top:9px; background:#fdf3f3; border:2px solid #c0392b; border-radius:12px;
   padding:11px 14px}
 .shrow .shnotice .nh{font-size:.92rem; font-weight:700; color:#c0392b; line-height:1.5}
+.shrow .shnotice.open{background:#eef5fb; border-color:#2a78d6}
+.shrow .shnotice.open .nh{color:#1a5f8a}
 .shrow .shnotice p{margin-top:6px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
 .shrow .shnotice p.why{color:var(--text-muted); font-size:.75rem}
 .shrow .shnotice .tel{white-space:nowrap; display:inline-block}
@@ -849,7 +851,10 @@ function renderShelters(){
     const val = document.createElement("span"); val.className = "val";
     const b = document.createElement("b"); b.textContent = fmt(s.occupants);
     val.appendChild(b);
-    val.appendChild(document.createTextNode(` / ${fmt(s.capacity)}人（${s.capacity ? Math.round(r*100) : "—"}%）`));
+    /* 受入可能数が市から公表されていない避難所もある。その場合は「◯人」だけを出す */
+    val.appendChild(document.createTextNode(s.capacity
+      ? ` / ${fmt(s.capacity)}人（${Math.round(r * 100)}%）`
+      : "人"));
     /* 車中泊は市が8月10日夜から公表を始めた項目。建物の中の人数とは別に出す */
     if (typeof s.carStay === "number" && s.carStay > 0){
       const cs = document.createElement("span"); cs.className = "carstay";
@@ -868,9 +873,11 @@ function renderShelters(){
     row.append(top, track);
     /* 閉鎖・移動のお知らせ。見落とすと行き場を失うので、いちばん目立たせる */
     if (s.notice){
-      const n = document.createElement("div"); n.className = "shnotice";
+      /* 開設のお知らせは悪い知らせではないので、赤ではなく青で出す */
+      const good = s.notice.tone === "open";
+      const n = document.createElement("div"); n.className = "shnotice" + (good ? " open" : "");
       const h = document.createElement("div"); h.className = "nh";
-      h.textContent = "⚠ " + (s.notice.kind || "お知らせ");
+      h.textContent = (good ? "◯ " : "⚠ ") + (s.notice.kind || "お知らせ");
       n.appendChild(h);
       (s.notice.lines || []).forEach(l => {
         const p2 = document.createElement("p"); p2.textContent = l; n.appendChild(p2);
