@@ -40,6 +40,8 @@
 | `zaitaku-admin.html` | 入力画面。区ごとの世帯数・必要物資の登録、計算基準の変更（要ログイン） |
 | `zaitaku-calc.js` | 計算ロジック（両ページで共有。Nodeでもテスト可能） |
 | `zaitaku-icons.js` | 物資のアイコン（両ページで共有。品目IDから線画のSVGを作る） |
+| `home-add.js` | 「ホーム画面に追加」の案内（両ページで共有。アプリ内ブラウザを見分けて出し分ける） |
+| `manifest-zaitaku.json` / `manifest-nyuryoku.json` | ホーム画面に追加したときの名前と起動ページ（公開ページ / 入力画面） |
 | `zaitaku.json` | データ本体（settings / rules / districts / households） |
 
 ## データモデル（zaitaku.json）
