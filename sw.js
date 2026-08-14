@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v13";
+const VERSION = "v14";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
@@ -17,6 +17,7 @@ const APP_ASSETS = [
   "seikatsu.html",
   "zaitaku.html",
   "zaitaku-calc.js",
+  "zaitaku-icons.js",
   "manifest.json",
   "icons/icon-192.png",
   "icons/icon-512.png",
