@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v17";
+const VERSION = "v18";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
@@ -16,6 +16,7 @@ const APP_ASSETS = [
   "recruit.html",
   "seikatsu.html",
   "zaitaku.html",
+  "zaitaku-admin.html",
   "zaitaku-calc.js",
   "zaitaku-icons.js",
   "home-add.js",
@@ -126,6 +127,7 @@ self.addEventListener("fetch", e => {
     const page = p.endsWith("/recruit.html") ? "recruit.html"
       : p.endsWith("/seikatsu.html") ? "seikatsu.html"
       : p.endsWith("/zaitaku.html") ? "zaitaku.html"
+      : p.endsWith("/zaitaku-admin.html") ? "zaitaku-admin.html"
       : (p.endsWith("/") || p.endsWith("/index.html")) ? "index.html"
       : null;
     if (page){ e.respondWith(networkFirst(req, page)); return; }

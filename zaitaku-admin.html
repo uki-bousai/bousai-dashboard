@@ -1279,6 +1279,12 @@ addEventListener("beforeunload", e => { if (dirty){ e.preventDefault(); e.return
 
 initLogin();
 loadFromPublic();
+
+/* Androidでは、これが登録されていないと「ホーム画面に追加」しても
+   ただのショートカットになり、専用のアイコンで開けない */
+if ("serviceWorker" in navigator){
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
 </script>
 </body>
 </html>
