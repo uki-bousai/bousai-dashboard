@@ -111,13 +111,16 @@ details.dcard[open] > summary::after{content:"▲"}
   border-left:3px solid color-mix(in srgb, var(--accent) 55%, transparent)}
 /* 品目の一覧（表形式）: ラベルは列見出しに1回だけ */
 .ihead{display:flex; justify-content:space-between; gap:10px; margin-top:10px;
-  font-size:.68rem; color:var(--text-muted); border-bottom:1px solid var(--grid); padding-bottom:4px}
-.irow{display:flex; justify-content:space-between; gap:10px; align-items:baseline;
+  font-size:.68rem; color:var(--text-muted); border-bottom:1px solid var(--grid);
+  padding-bottom:4px; padding-left:32px}
+.irow{display:flex; justify-content:space-between; gap:8px; align-items:baseline;
   padding:9px 0; border-bottom:1px solid var(--grid)}
 .irow:last-child{border-bottom:none; padding-bottom:2px}
-.irow .nm{font-size:.98rem; font-weight:700; line-height:1.4}
+/* 品目の絵。文字が読めなくても何の物資か伝わるように */
+.zic{width:24px; height:24px; flex:none; color:var(--accent); align-self:center}
+.irow .nm{flex:1; min-width:0; font-size:.94rem; font-weight:700; line-height:1.4}
 .irow .nm small{display:block; font-weight:400; font-size:.7rem; color:var(--text-muted)}
-.irow .qt{text-align:right; flex:none; max-width:55%}
+.irow .qt{text-align:right; flex:none; max-width:54%}
 .irow .qt b{font-size:1.05rem; font-weight:800; font-variant-numeric:tabular-nums}
 .irow .qt small{display:block; font-size:.7rem; color:var(--text-secondary)}
 .irow .qt small.qall{color:var(--text-muted); margin-top:2px}
@@ -182,6 +185,7 @@ footer a{color:var(--accent)}
 </footer>
 
 <script src="zaitaku-calc.js"></script>
+<script src="zaitaku-icons.js"></script>
 <script>
 "use strict";
 
@@ -263,7 +267,7 @@ function renderNeed(s){
       s4.textContent = `在宅避難の全世帯なら ${ZCALC.fmtQty(r.need, r.rule.unit)}`;
       qt.appendChild(s4);
     }
-    row.append(nm, qt);
+    row.append(ZICON.svg(r.rule.id), nm, qt);
     list.appendChild(row);
   });
 }
@@ -388,7 +392,7 @@ function renderDistricts(){
         s2.textContent = `在宅避難${g.households}世帯ぶんなら ${ZCALC.fmtQty(it.need, it.rule.unit)}`;
         qt.appendChild(s2);
       }
-      row.append(nm, qt);
+      row.append(ZICON.svg(it.rule.id), nm, qt);
       body.appendChild(row);
     });
     box.appendChild(card);

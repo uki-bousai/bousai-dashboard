@@ -51,10 +51,15 @@ input[type="number"]{text-align:right}
 @media (max-width:520px){ .cols3{grid-template-columns:1fr} }
 .needgrid{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
 .needgrid button{font:inherit; font-size:.95rem; font-weight:700; cursor:pointer;
-  border:1.5px solid var(--border); border-radius:10px; padding:12px 14px;
+  display:inline-flex; align-items:center; gap:7px;
+  border:1.5px solid var(--border); border-radius:10px; padding:10px 14px;
   background:var(--surface-1); color:var(--text-primary)}
 .needgrid button.sel{border-color:var(--accent); color:var(--accent);
   background:color-mix(in srgb, var(--accent) 12%, transparent)}
+/* 品目の絵。文字が読めなくても何の物資か伝わるように */
+.zic{flex:none; width:26px; height:26px; color:var(--accent)}
+.needgrid button .zic{width:28px; height:28px}
+.needgrid button:not(.sel) .zic{color:var(--text-secondary)}
 .neednotes{margin-top:8px; display:grid; gap:8px; grid-template-columns:1fr 1fr}
 @media (max-width:520px){ .neednotes{grid-template-columns:1fr} }
 .neednotes label{font-size:.72rem; font-weight:400}
@@ -63,7 +68,8 @@ input[type="number"]{text-align:right}
 .preview .pline{display:flex; justify-content:space-between; gap:8px; align-items:baseline;
   padding:6px 0; border-bottom:1px solid var(--grid); flex-wrap:wrap; font-size:.84rem}
 .preview .pline:last-child{border-bottom:none}
-.preview .pname{font-weight:700; min-width:8em}
+.preview .pline .zic{width:24px; height:24px; align-self:center}
+.preview .pname{font-weight:700; min-width:7em}
 .preview .pqty{font-weight:800}
 .preview .pref{color:var(--text-secondary); font-size:.74rem}
 button{font:inherit; font-size:.85rem; font-weight:700; cursor:pointer; border:1px solid var(--border);
@@ -87,8 +93,10 @@ thead th{color:var(--text-muted); font-size:.68rem; font-weight:700; text-align:
 tbody td{padding:8px; border-bottom:1px solid var(--grid); vertical-align:top}
 tbody tr:last-child td{border-bottom:none}
 .hhchips{display:flex; gap:4px; flex-wrap:wrap}
-.tag{display:inline-block; font-size:.66rem; font-weight:700; color:var(--text-secondary);
-  border:1px solid var(--border); border-radius:99px; padding:1px 8px; white-space:nowrap}
+.tag{display:inline-flex; align-items:center; gap:4px; font-size:.66rem; font-weight:700;
+  color:var(--text-secondary); border:1px solid var(--border); border-radius:99px;
+  padding:2px 9px 2px 5px; white-space:nowrap}
+.tag .zic{width:17px; height:17px}
 td input{font:inherit; font-size:.8rem; color:var(--text-primary); background:transparent;
   border:1px solid transparent; border-radius:7px; padding:6px 8px; width:100%}
 td input:hover{border-color:var(--border)}
@@ -368,6 +376,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 </div>
 
 <script src="zaitaku-calc.js"></script>
+<script src="zaitaku-icons.js"></script>
 <script>
 "use strict";
 /* ============================================================
@@ -575,7 +584,8 @@ function renderNeedChips(){
     b.type = "button";
     const sel = !!formNeeds[rule.id];
     b.className = sel ? "sel" : "";
-    b.textContent = (sel ? "✓ " : "") + rule.name;
+    b.appendChild(ZICON.svg(rule.id));
+    b.appendChild(document.createTextNode((sel ? "✓ " : "") + rule.name));
     b.setAttribute("aria-pressed", sel);
     b.addEventListener("click", () => {
       if (formNeeds[rule.id]) delete formNeeds[rule.id];
@@ -861,7 +871,7 @@ function updatePreview(){
       : both || !d.report.households
       ? `要支援${d.report.support_households}世帯 × 平均${avg}人 × ${c.buffer}日分`
       : `在宅避難${d.report.households}世帯 × 平均${avg}人 × ${c.buffer}日分`;
-    line.append(nm, q, rf);
+    line.append(ZICON.svg(c.rule.id), nm, q, rf);
     // 在宅避難の全世帯に配る場合の数量も出す
     if (both){
       const q2 = document.createElement("span"); q2.className = "pref";
@@ -948,8 +958,9 @@ function renderDistricts(){
     } else ids.forEach(id => {
       const s = document.createElement("span");
       s.className = "tag";
+      s.appendChild(ZICON.svg(id));
       const note = r.needs[id] && r.needs[id].note;
-      s.textContent = ruleName(id) + (note ? `（${note}）` : "");
+      s.appendChild(document.createTextNode(ruleName(id) + (note ? `（${note}）` : "")));
       wrap.appendChild(s);
     });
     chips.appendChild(wrap);

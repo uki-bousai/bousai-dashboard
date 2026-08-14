@@ -39,6 +39,7 @@
 | `zaitaku.html` | 公開ページ。**地区単位の集計のみ**（全体サマリー・必要な物資と3日分の数量） |
 | `zaitaku-admin.html` | 入力画面。区ごとの世帯数・必要物資の登録、計算基準の変更（要ログイン） |
 | `zaitaku-calc.js` | 計算ロジック（両ページで共有。Nodeでもテスト可能） |
+| `zaitaku-icons.js` | 物資のアイコン（両ページで共有。品目IDから線画のSVGを作る） |
 | `zaitaku.json` | データ本体（settings / rules / districts / households） |
 
 ## データモデル（zaitaku.json）
