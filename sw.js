@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v14";
+const VERSION = "v15";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
@@ -18,7 +18,10 @@ const APP_ASSETS = [
   "zaitaku.html",
   "zaitaku-calc.js",
   "zaitaku-icons.js",
+  "home-add.js",
   "manifest.json",
+  "manifest-zaitaku.json",
+  "manifest-nyuryoku.json",
   "icons/icon-192.png",
   "icons/icon-512.png",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",

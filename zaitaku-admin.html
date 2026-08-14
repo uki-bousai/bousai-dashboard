@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#2a78d6">
+<link rel="manifest" href="manifest-nyuryoku.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="状況入力">
 <title>在宅避難の状況入力 ─ 区ごとに世帯数と必要な物資を選ぶだけ</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
@@ -124,6 +131,17 @@ td input[type="number"]{text-align:right; width:5.5em}
 #loginOverlay .loginbox{width:100%; max-width:400px; margin:auto}
 #loginErr{display:none; color:var(--status-critical); font-size:.76rem; font-weight:700; margin-top:4px}
 #loginErr.show{display:block}
+/* ホーム画面への追加の案内（home-add.js が中身を作る） */
+.hometip{margin-top:14px}
+.hometip-d, .hometip.warn{background:var(--surface-1); border:1px solid var(--border);
+  border-radius:10px; padding:10px 14px}
+.hometip.warn{background:rgba(250,178,25,.12); border-color:rgba(250,178,25,.75)}
+.hometip summary{cursor:pointer; font-size:.8rem; font-weight:700; color:var(--accent)}
+.hometip .hhead{font-size:.86rem; font-weight:800; margin-bottom:4px}
+.hometip .htext{font-size:.78rem; color:var(--text-secondary); line-height:1.8; margin-top:6px}
+.hometip .hstep{margin:8px 0 2px 1.2em; font-size:.8rem; line-height:1.9}
+.hometip .hmore{margin-top:8px}
+.hometip .hmore summary{color:var(--text-secondary)}
 details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding:4px 0}
 </style>
 </head>
@@ -139,6 +157,8 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 </header>
 
 <div class="container">
+
+  <div id="homeTip"></div>
 
   <!-- ===================== 区の登録・更新 ===================== -->
   <div class="card" id="formCard">
@@ -377,6 +397,7 @@ details.adv > summary{cursor:pointer; font-size:.82rem; font-weight:700; padding
 
 <script src="zaitaku-calc.js"></script>
 <script src="zaitaku-icons.js"></script>
+<script src="home-add.js" defer></script>
 <script>
 "use strict";
 /* ============================================================
