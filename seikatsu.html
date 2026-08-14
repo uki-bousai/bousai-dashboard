@@ -969,9 +969,9 @@ function renderBaths(){
     if (!last || last.area !== area) groups.push({ area, items:[bt] });
     else last.items.push(bt);
   });
-  groups.forEach((g, gi) => {
+  groups.forEach(g => {
     const det = document.createElement("details"); det.className = "areagrp";
-    det.open = gi < 2;   // 近い2エリアは開いておく
+    // 施設が増えて縦に長くなったので、どのエリアも閉じた状態から始める
     const sum = document.createElement("summary"); sum.className = "areahead";
     const nm = document.createElement("span"); nm.textContent = g.area;
     const ct = document.createElement("span"); ct.className = "cnt";
