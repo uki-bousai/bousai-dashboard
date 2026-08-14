@@ -423,6 +423,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice .nh{font-size:.92rem; font-weight:700; color:#c0392b; line-height:1.5}
 .shrow .shnotice.open{background:#eef5fb; border-color:#2a78d6}
 .shrow .shnotice.open .nh{color:#1a5f8a}
+.shrow .shnotice.limit{background:#fdf7ef; border-color:#d98d26}
+.shrow .shnotice.limit .nh{color:#a3620f}
 .shrow .shnotice p{margin-top:6px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
 .shrow .shnotice p.why{color:var(--text-muted); font-size:.75rem}
 .shrow .shnotice .tel{white-space:nowrap; display:inline-block}
@@ -873,11 +875,13 @@ function renderShelters(){
     row.append(top, track);
     /* 閉鎖・移動のお知らせ。見落とすと行き場を失うので、いちばん目立たせる */
     if (s.notice){
-      /* 開設のお知らせは悪い知らせではないので、赤ではなく青で出す */
-      const good = s.notice.tone === "open";
-      const n = document.createElement("div"); n.className = "shnotice" + (good ? " open" : "");
+      /* 開設は青、受け入れ停止は橙、閉鎖は赤。中にいる方を不安にさせない色にする */
+      const tone = s.notice.tone || "close";
+      const mark = { open: "◯ ", limit: "🔸 " }[tone] || "⚠ ";
+      const n = document.createElement("div");
+      n.className = "shnotice" + (tone === "close" ? "" : " " + tone);
       const h = document.createElement("div"); h.className = "nh";
-      h.textContent = (good ? "◯ " : "⚠ ") + (s.notice.kind || "お知らせ");
+      h.textContent = mark + (s.notice.kind || "お知らせ");
       n.appendChild(h);
       (s.notice.lines || []).forEach(l => {
         const p2 = document.createElement("p"); p2.textContent = l; n.appendChild(p2);
