@@ -11,8 +11,12 @@
 <meta property="og:url" content="https://uki-bousai.github.io/bousai-dashboard/zaitaku.html">
 <meta property="og:image" content="https://uki-bousai.github.io/bousai-dashboard/ogp.png">
 <meta name="theme-color" content="#2a78d6">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest-zaitaku.json">
+<link rel="apple-touch-icon" href="icons/zaitaku-apple.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="物資一覧">
 <title>在宅避難の方に必要な物資 ─ 地区別の一覧 ─ 宇城市 生活支援情報</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
@@ -111,16 +115,30 @@ details.dcard[open] > summary::after{content:"▲"}
   border-left:3px solid color-mix(in srgb, var(--accent) 55%, transparent)}
 /* 品目の一覧（表形式）: ラベルは列見出しに1回だけ */
 .ihead{display:flex; justify-content:space-between; gap:10px; margin-top:10px;
-  font-size:.68rem; color:var(--text-muted); border-bottom:1px solid var(--grid); padding-bottom:4px}
-.irow{display:flex; justify-content:space-between; gap:10px; align-items:baseline;
+  font-size:.68rem; color:var(--text-muted); border-bottom:1px solid var(--grid);
+  padding-bottom:4px; padding-left:32px}
+.irow{display:flex; justify-content:space-between; gap:8px; align-items:baseline;
   padding:9px 0; border-bottom:1px solid var(--grid)}
 .irow:last-child{border-bottom:none; padding-bottom:2px}
-.irow .nm{font-size:.98rem; font-weight:700; line-height:1.4}
+/* 品目の絵。文字が読めなくても何の物資か伝わるように */
+.zic{width:24px; height:24px; flex:none; color:var(--accent); align-self:center}
+.irow .nm{flex:1; min-width:0; font-size:.94rem; font-weight:700; line-height:1.4}
 .irow .nm small{display:block; font-weight:400; font-size:.7rem; color:var(--text-muted)}
-.irow .qt{text-align:right; flex:none; max-width:55%}
+.irow .qt{text-align:right; flex:none; max-width:54%}
 .irow .qt b{font-size:1.05rem; font-weight:800; font-variant-numeric:tabular-nums}
 .irow .qt small{display:block; font-size:.7rem; color:var(--text-secondary)}
 .irow .qt small.qall{color:var(--text-muted); margin-top:2px}
+/* ホーム画面への追加の案内（home-add.js が中身を作る） */
+.hometip{margin-top:14px}
+.hometip-d, .hometip.warn{background:var(--surface-1); border:1px solid var(--border);
+  border-radius:10px; padding:10px 14px}
+.hometip.warn{background:rgba(250,178,25,.12); border-color:rgba(250,178,25,.75)}
+.hometip summary{cursor:pointer; font-size:.8rem; font-weight:700; color:var(--accent)}
+.hometip .hhead{font-size:.86rem; font-weight:800; margin-bottom:4px}
+.hometip .htext{font-size:.78rem; color:var(--text-secondary); line-height:1.8; margin-top:6px}
+.hometip .hstep{margin:8px 0 2px 1.2em; font-size:.8rem; line-height:1.9}
+.hometip .hmore{margin-top:8px}
+.hometip .hmore summary{color:var(--text-secondary)}
 .empty{color:var(--text-muted); font-size:.82rem; padding:10px 0}
 footer{max-width:860px; margin:24px auto 0; padding:0 20px; font-size:.72rem; color:var(--text-muted); line-height:1.8}
 footer a{color:var(--accent)}
@@ -140,6 +158,8 @@ footer a{color:var(--accent)}
 </header>
 
 <div class="container">
+
+  <div id="homeTip"></div>
 
   <div class="privacy">
     🔒 このページに<b>個人がわかる情報は掲載していません</b>。世帯の場所は「地区」単位でのみ集計しています。
@@ -182,6 +202,8 @@ footer a{color:var(--accent)}
 </footer>
 
 <script src="zaitaku-calc.js"></script>
+<script src="zaitaku-icons.js"></script>
+<script src="home-add.js" defer></script>
 <script>
 "use strict";
 
@@ -263,7 +285,7 @@ function renderNeed(s){
       s4.textContent = `在宅避難の全世帯なら ${ZCALC.fmtQty(r.need, r.rule.unit)}`;
       qt.appendChild(s4);
     }
-    row.append(nm, qt);
+    row.append(ZICON.svg(r.rule.id), nm, qt);
     list.appendChild(row);
   });
 }
@@ -388,7 +410,7 @@ function renderDistricts(){
         s2.textContent = `在宅避難${g.households}世帯ぶんなら ${ZCALC.fmtQty(it.need, it.rule.unit)}`;
         qt.appendChild(s2);
       }
-      row.append(nm, qt);
+      row.append(ZICON.svg(it.rule.id), nm, qt);
       body.appendChild(row);
     });
     box.appendChild(card);
