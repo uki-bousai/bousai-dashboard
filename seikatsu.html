@@ -141,6 +141,13 @@ html{scroll-behavior:smooth}
 .srcbadge.city{color:#41556b; background:#eef1f4; border-color:#cdd6de}
 .acbadge{display:inline-block; font-size:.64rem; font-weight:700; color:#1a7fae;
   border:1px solid #8fc9e2; border-radius:99px; padding:1px 7px; margin-left:6px; white-space:nowrap}
+/* 避難所ごとの設備は絵文字だけにして、名前は上の凡例にまとめる */
+.acbadge.ic{font-size:.86rem; border:0; padding:0; margin-left:5px; line-height:1}
+.fleg{display:flex; flex-wrap:wrap; gap:5px 10px; margin:0 0 10px;
+  padding:9px 12px; background:var(--surface-2, #f4f2f0); border-radius:10px}
+.fleg span{display:inline-flex; align-items:center; gap:4px;
+  font-size:.68rem; color:var(--text-secondary); white-space:nowrap}
+.fleg span i{font-style:normal; font-size:.86rem; line-height:1}
 .acbadge.svc{color:#15794f; border-color:#8ccfae; background:#f0faf5;
   margin:0 5px 3px 0; font-size:.68rem; padding:2px 9px}
 .gmap{display:inline-block; font-size:.72rem; font-weight:700; color:var(--accent);
@@ -568,6 +575,7 @@ footer a{color:var(--accent)}
     <p class="desc" id="shelterDesc">避難者数は市の公表資料、受入可能数は市の地域防災計画にある指定避難所の収容者数（3㎡／1人）です。利用率の高い順</p>
     <p class="desc" style="margin-top:-4px"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジと車中泊の台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の設備や現地の様子は、市民の方に教えていただいた内容です。</p>
     <p class="desc" style="margin-top:-4px"><b>⚠ 受入可能数は被災前の想定です。</b>建物が被災して使えない部屋がある避難所では、実際に入れる人数はこれより少なくなります。利用率が低くても余裕があるとは限りません。</p>
+    <div id="facilityLegend" class="fleg hidden"></div>
     <div id="shelterList"></div>
   </section>
 
@@ -865,6 +873,22 @@ function renderKPIs(){
     tile("開設避難所", fmt(shelters.length), "ヶ所", over > 0 ? `超過${over}ヶ所` : "超過なし", over > 0);
   }
 }
+/* 設備の絵文字の読み方。いま出している避難所に付いているものだけを並べる */
+function renderFacilityLegend(shelters){
+  const box = document.getElementById("facilityLegend");
+  box.textContent = "";
+  const seen = [];
+  shelters.forEach(s => (s.facilities || []).forEach(f => {
+    if (!seen.includes(f) && !(s.notice && s.notice.tone === "closed")) seen.push(f);
+  }));
+  box.classList.toggle("hidden", !seen.length);
+  seen.forEach(f => {
+    const el = document.createElement("span");
+    const i = document.createElement("i"); i.textContent = FACILITY_ICONS[f] || "・";
+    el.append(i, document.createTextNode(f));
+    box.appendChild(el);
+  });
+}
 function renderShelters(){
   const card = document.getElementById("shelterCard");
   const box = document.getElementById("shelterList");
@@ -872,6 +896,7 @@ function renderShelters(){
   const shelters = fShelters();
   if (!shelters.length){ card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
+  renderFacilityLegend(shelters);
   const sorted = [...shelters].sort((a,b) =>
     (b.capacity ? b.occupants/b.capacity : -1) - (a.capacity ? a.occupants/a.capacity : -1));
   sorted.forEach(s => {
@@ -881,8 +906,11 @@ function renderShelters(){
     const top = document.createElement("div"); top.className = "top";
     const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = s.name;
     const sm = document.createElement("small"); sm.textContent = s.district; nm.appendChild(sm);
+    /* 名前を並べると行が埋まってしまうので、ここは絵文字だけ。読み方は上の凡例に出す */
     (s.facilities || []).forEach(f => {
-      const b = document.createElement("span"); b.className = "acbadge"; b.textContent = facilityLabel(f);
+      const b = document.createElement("span"); b.className = "acbadge ic";
+      b.textContent = FACILITY_ICONS[f] || "・";
+      b.title = f;
       nm.appendChild(b);
     });
     const val = document.createElement("span"); val.className = "val";
