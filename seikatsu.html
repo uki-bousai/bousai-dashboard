@@ -446,7 +446,13 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice p{margin-top:6px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
 .shrow .shnotice p.why{color:var(--text-muted); font-size:.75rem}
 .shrow .shnotice .tel{white-space:nowrap; display:inline-block}
-.shrow .shnotice .src3{margin-top:8px; font-size:.7rem; color:var(--text-muted)}
+/* 電話は大きなボタンにすると箱が重くなるので、行の中の小さなリンクにする */
+.shrow .shnotice .hbtn{display:inline-flex; align-items:center; gap:5px; margin:6px 8px 0 0;
+  font-size:.76rem; font-weight:700; padding:4px 12px; border-radius:99px;
+  color:#c0392b; background:var(--surface-1); border:1px solid currentColor}
+.shrow .shnotice.open .hbtn{color:#1a5f8a}
+.shrow .shnotice.limit .hbtn{color:#a3620f}
+.shrow .shnotice .src3{margin-top:7px; font-size:.68rem; color:var(--text-muted)}
 /* 閉鎖済みの避難所。開いている避難所と見間違えないよう、色を落として1行だけにする */
 .shrow.gone .name, .shrow.gone .val, .shrow.gone .track{opacity:.45}
 /* 設備・車中泊・現地の様子は、閉まったあとは古い情報にしかならないので出さない */
@@ -462,7 +468,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice .nmore[open] > summary::after{content:"▲"}
 .shrow .shnotice.open .nmore > summary{color:#1a5f8a}
 .shrow .shnotice.limit .nmore > summary{color:#a3620f}
-.shrow .rep{margin-top:6px}
+/* 住宅修理の .rep と同じ名前だが、こちらは行の中の小さな開閉なので枠を持たせない */
+.shrow .rep{margin-top:6px; border:0; padding:0; background:none; border-radius:0}
 .shrow .rep > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
   font-size:.7rem; font-weight:700; color:#1a5f8a; background:#eaf3fa;
   border:1px solid #b6d4e8; border-radius:99px; padding:3px 11px;
@@ -959,8 +966,9 @@ function renderShelters(){
         const p2 = document.createElement("p"); p2.textContent = lines[0]; n.appendChild(p2);
       }
       const rest = lines.slice(1);
+      let det = null;
       if (rest.length || s.notice.reason){
-        const det = document.createElement("details"); det.className = "nmore";
+        det = document.createElement("details"); det.className = "nmore";
         const sum = document.createElement("summary"); sum.textContent = "くわしく";
         det.appendChild(sum);
         rest.forEach(l => { const p2 = document.createElement("p"); p2.textContent = l; det.appendChild(p2); });
@@ -973,13 +981,15 @@ function renderShelters(){
       if (s.notice.tel){
         const a = document.createElement("a"); a.className = "hbtn";
         a.href = "tel:" + s.notice.tel.replace(/-/g, "");
+        a.title = s.notice.dept || "宇城市";
         const num = document.createElement("span"); num.className = "tel"; num.textContent = s.notice.tel;
-        a.append(document.createTextNode(`📞 ${s.notice.dept || "宇城市"}　`), num);
+        a.append(document.createTextNode("📞 "), num);
         n.appendChild(a);
       }
+      /* 出どころは「くわしく」の中へ。閉じているときに読む必要はない */
       if (s.notice.source){
         const sc = document.createElement("div"); sc.className = "src3"; sc.textContent = s.notice.source;
-        n.appendChild(sc);
+        (det || n).appendChild(sc);
       }
       row.appendChild(n);
     }
