@@ -267,6 +267,7 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .rep .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
 
 /* 避難所に行けない方への物資のお届け（届ける側・受け取る側で読む場所が違うので分ける） */
+#delivCommon .hub, #delivCommon .flow{margin-top:2px}
 .deliv{margin-top:12px; border:1.5px solid #e8c99b; border-radius:14px; padding:14px 16px;
   background:#fdf9f2}
 .deliv:first-child{margin-top:2px}
@@ -274,23 +275,23 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .deliv .dh .ar{font-size:1rem; font-weight:700}
 .deliv .dh .ct{font-size:.68rem; font-weight:700; color:#c07a1f; background:#fff;
   border:1px solid #e8c99b; border-radius:99px; padding:3px 9px}
-.deliv .hub{margin-top:9px; font-size:.82rem; line-height:1.8; color:var(--text-secondary)}
-.deliv .hub b{color:var(--text-primary)}
-.deliv .flow{list-style:none; margin:9px 0 0; padding:0; counter-reset:st}
-.deliv .flow li{counter-increment:st; position:relative; padding-left:26px; margin-top:6px;
+.deliv .hub, #delivCommon .hub{margin-top:9px; font-size:.82rem; line-height:1.8; color:var(--text-secondary)}
+.deliv .hub b, #delivCommon .hub b{color:var(--text-primary)}
+.deliv .flow, #delivCommon .flow{list-style:none; margin:9px 0 0; padding:0; counter-reset:st}
+.deliv .flow li, #delivCommon .flow li{counter-increment:st; position:relative; padding-left:26px; margin-top:6px;
   font-size:.82rem; line-height:1.75; color:var(--text-secondary)}
-.deliv .flow li::before{content:counter(st); position:absolute; left:0; top:2px;
+.deliv .flow li::before, #delivCommon .flow li::before{content:counter(st); position:absolute; left:0; top:2px;
   width:18px; height:18px; border-radius:50%; background:#c07a1f; color:#fff;
   font-size:.66rem; font-weight:700; display:flex; align-items:center; justify-content:center}
-.deliv .who{margin-top:12px; border-radius:11px; padding:10px 13px}
-.deliv .who.give{background:#fff; border:1.5px solid #e8c99b}
-.deliv .who.get{background:#f0faf5; border:1.5px solid #8ccfae}
-.deliv .who .wt{font-size:.86rem; font-weight:700}
-.deliv .who.give .wt{color:#a8650f}
-.deliv .who.get .wt{color:#15794f}
-.deliv .who .ws{margin-top:4px; font-size:.8rem; line-height:1.8; color:var(--text-secondary)}
-.deliv .who .ws b{color:var(--text-primary)}
-.deliv .cautionbox{margin-top:11px; background:#fdf3f3; border:1.5px solid #e8b2b2;
+.deliv .who, #delivCommon .who{margin-top:12px; border-radius:11px; padding:10px 13px}
+.deliv .who.give, #delivCommon .who.give{background:#fff; border:1.5px solid #e8c99b}
+.deliv .who.get, #delivCommon .who.get{background:#f0faf5; border:1.5px solid #8ccfae}
+.deliv .who .wt, #delivCommon .who .wt{font-size:.86rem; font-weight:700}
+.deliv .who.give .wt, #delivCommon .who.give .wt{color:#a8650f}
+.deliv .who.get .wt, #delivCommon .who.get .wt{color:#15794f}
+.deliv .who .ws, #delivCommon .who .ws{margin-top:4px; font-size:.8rem; line-height:1.8; color:var(--text-secondary)}
+.deliv .who .ws b, #delivCommon .who .ws b{color:var(--text-primary)}
+.deliv .cautionbox, #delivCommon .cautionbox{margin-top:11px; background:#fdf3f3; border:1.5px solid #e8b2b2;
   border-radius:11px; padding:10px 13px; font-size:.79rem; line-height:1.8;
   color:var(--text-secondary)}
 .deliv .tel{white-space:nowrap; display:inline-block}
@@ -599,6 +600,7 @@ footer a{color:var(--accent)}
   <section class="card hidden" id="secDeliv">
     <h2><span class="dot" style="background:#c07a1f"></span>避難所に行けない方へ、物資を届ける動き</h2>
     <p class="desc">避難所には物資があっても、<b>そこまで行けない方には届きません</b>。地域の有志の方が、<b>家にいる方へ物資を配る取り組み</b>を始めています。<br><b>お願い：物資を直接持って行かないでください。</b>知らない方が突然訪ねると不審に思われてしまいます。まずご連絡いただければ、届け先をお伝えします。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 活動されている方からの情報提供</span></p>
+    <div id="delivCommon"></div>
     <div id="delivList"></div>
   </section>
 
@@ -1891,12 +1893,41 @@ function zaitakuNeeds(name){
 }
 function renderDelivery(){
   const card = document.getElementById("secDeliv");
+  const common = document.getElementById("delivCommon");
   const box = document.getElementById("delivList");
   const list = DATA.delivery || [];
-  box.textContent = "";
+  const cm = DATA.deliveryCommon || {};
+  common.textContent = ""; box.textContent = "";
   card.classList.toggle("hidden", !list.length);
   if (!list.length) return;
 
+  /* 届け方も考え方も地区で変わらないので、section の頭に一度だけ出す */
+  if (cm.hub){
+    const h = document.createElement("div"); h.className = "hub";
+    h.textContent = "📍 " + cm.hub;
+    common.appendChild(h);
+  }
+  if ((cm.flow || []).length){
+    const ul = document.createElement("ul"); ul.className = "flow";
+    cm.flow.forEach(f => { const li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
+    common.appendChild(ul);
+  }
+  [["give", cm.givers], ["get", cm.residents]].forEach(([cls, w]) => {
+    if (!w) return;
+    const b = document.createElement("div"); b.className = "who " + cls;
+    const t = document.createElement("div"); t.className = "wt"; t.textContent = w.head || "";
+    const x = document.createElement("div"); x.className = "ws"; x.textContent = w.body || "";
+    b.append(t, x);
+    common.appendChild(b);
+  });
+  /* 制度として行われているものと誤解されると、区長さんたちに問い合わせが行ってしまう */
+  if (cm.caution){
+    const w = document.createElement("div"); w.className = "cautionbox";
+    w.textContent = "⚠ " + cm.caution;
+    common.appendChild(w);
+  }
+
+  /* 地区ごとに変わるのは「どこの区か」「何が足りていないか」「どこへ連絡するか」だけ */
   list.forEach(d => {
     const c = document.createElement("div"); c.className = "deliv";
 
@@ -1906,36 +1937,7 @@ function renderDelivery(){
     if (d.city){ const ct = document.createElement("span"); ct.className = "ct"; ct.textContent = d.city; dh.appendChild(ct); }
     c.appendChild(dh);
 
-    if (d.hub){
-      const h = document.createElement("div"); h.className = "hub";
-      h.textContent = "📍 " + d.hub;
-      c.appendChild(h);
-    }
-    if ((d.flow || []).length){
-      const ul = document.createElement("ul"); ul.className = "flow";
-      d.flow.forEach(f => { const li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
-      c.appendChild(ul);
-    }
-
-    /* 制度として行われているものと誤解されると、区長さんたちに問い合わせが行ってしまう */
-    const addCaution = () => {
-      if (!d.caution) return;
-      const w = document.createElement("div"); w.className = "cautionbox";
-      w.textContent = "⚠ " + d.caution;
-      c.appendChild(w);
-    };
-    [["give", d.givers], ["get", d.residents]].forEach(([cls, w]) => {
-      if (!w) return;
-      const b = document.createElement("div"); b.className = "who " + cls;
-      const t = document.createElement("div"); t.className = "wt"; t.textContent = w.head || "";
-      const s = document.createElement("div"); s.className = "ws"; s.textContent = w.body || "";
-      b.append(t, s);
-      c.appendChild(b);
-    });
-    addCaution();
-
-    /* いま足りていないもの。在宅の方は遠慮されるので、注記まで含めて出す。
-       区ごとの内容は在宅避難のページ（zaitaku.json）から読むので、二重に持たない */
+    /* 足りていないものは在宅避難のページ（zaitaku.json）から読むので、二重に持たない */
     const needBlock = (title, items, note) => {
       if (!items.length) return;
       const w = document.createElement("div"); w.className = "selfblock need";
@@ -1976,7 +1978,7 @@ function renderDelivery(){
       }
     }
     if (d.contactUrl){
-      const a = document.createElement("a"); a.className = "hbtn line2";
+      const a = document.createElement("a"); a.className = "hbtn" + (d.tel ? " line2" : "");
       a.href = d.contactUrl; a.target = "_blank"; a.rel = "noopener";
       a.textContent = d.contactLabel || "✉️ InstagramのDMで連絡する";
       c.appendChild(a);
@@ -1988,8 +1990,6 @@ function renderDelivery(){
     box.appendChild(c);
   });
 }
-
-/* こどもショートステイ：無料であることを最初に出す。お金の心配で相談をやめてしまわないように */
 function renderKids(){
   const card = document.getElementById("kidsCard");
   const box = document.getElementById("kidsBody");
