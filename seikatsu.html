@@ -445,6 +445,11 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice p.why{color:var(--text-muted); font-size:.75rem}
 .shrow .shnotice .tel{white-space:nowrap; display:inline-block}
 .shrow .shnotice .src3{margin-top:8px; font-size:.7rem; color:var(--text-muted)}
+/* 閉鎖済みの避難所。開いている避難所と見間違えないよう、色を落として1行だけにする */
+.shrow.gone .name, .shrow.gone .val, .shrow.gone .track{opacity:.45}
+.shrow.gone .acbadge, .shrow.gone .carstay{display:none}
+.shrow .shgone{margin-top:7px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
+  border-radius:9px; padding:6px 12px; font-size:.75rem; line-height:1.6; color:var(--text-secondary)}
 .shrow .shnotice .nmore{margin-top:7px}
 .shrow .shnotice .nmore > summary{list-style:none; cursor:pointer; display:inline-flex;
   align-items:center; gap:5px; font-size:.75rem; font-weight:700; color:#c0392b;
@@ -902,8 +907,14 @@ function renderShelters(){
     track.appendChild(fill);
     row.append(top, track);
     /* 閉鎖・移動のお知らせ。見落とすと行き場を失うので、いちばん目立たせる */
-    if (s.notice){
-      /* 開設は青、受け入れ停止は橙、閉鎖は赤。中にいる方を不安にさせない色にする */
+    if (s.notice && s.notice.tone === "closed"){
+      /* すでに閉まった避難所。もう行き先の判断には使わないので、1行だけにして目立たせない */
+      row.classList.add("gone");
+      const g = document.createElement("div"); g.className = "shgone";
+      g.textContent = "⚠ " + (s.notice.kind || "閉鎖しました");
+      row.appendChild(g);
+    } else if (s.notice){
+      /* 開設は青、受け入れ停止は橙、閉鎖予定は赤。中にいる方を不安にさせない色にする */
       const tone = s.notice.tone || "close";
       const mark = { open: "◯ ", limit: "🔸 " }[tone] || "⚠ ";
       const n = document.createElement("div");
