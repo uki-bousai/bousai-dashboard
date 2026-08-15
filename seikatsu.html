@@ -437,8 +437,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   background:#eef1f4; border:1px solid #cdd6de; border-radius:99px; padding:2px 8px;
   white-space:nowrap; display:inline-block}
 .shrow .shnotice{margin-top:9px; background:#fdf3f3; border:2px solid #c0392b; border-radius:12px;
-  padding:11px 14px}
-.shrow .shnotice .nh{font-size:.92rem; font-weight:700; color:#c0392b; line-height:1.5}
+  padding:9px 13px}
+.shrow .shnotice .nh{font-size:.88rem; font-weight:700; color:#c0392b; line-height:1.5}
 .shrow .shnotice.open{background:#eef5fb; border-color:#2a78d6}
 .shrow .shnotice.open .nh{color:#1a5f8a}
 .shrow .shnotice.limit{background:#fdf7ef; border-color:#d98d26}
@@ -459,7 +459,7 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow.gone .acbadge, .shrow.gone .carstay, .shrow.gone .rep{display:none}
 .shrow .shgone{margin-top:7px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
   border-radius:9px; padding:6px 12px; font-size:.75rem; line-height:1.6; color:var(--text-secondary)}
-.shrow .shnotice .nmore{margin-top:7px}
+.shrow .shnotice .nmore{margin-top:6px}
 .shrow .shnotice .nmore > summary{list-style:none; cursor:pointer; display:inline-flex;
   align-items:center; gap:5px; font-size:.75rem; font-weight:700; color:#c0392b;
   background:#fff; border:1px solid currentColor; border-radius:99px; padding:4px 12px}
@@ -959,24 +959,16 @@ function renderShelters(){
       const h = document.createElement("div"); h.className = "nh";
       h.textContent = mark + (s.notice.kind || "お知らせ");
       n.appendChild(h);
-      /* 見出しと1行目までは必ず出す。何が起きるか・どこへ行くかを閉じた状態でも読めるようにする。
-         残りは長いので、開きたい人だけが開けるようにたたむ */
+      /* 閉じているときは見出しだけ。「いつ開いた・いつ閉まる」が分かれば足りる。
+         移動先・送迎・理由・電話は、必要な人が開いて読む */
       const lines = s.notice.lines || [];
-      if (lines[0]){
-        const p2 = document.createElement("p"); p2.textContent = lines[0]; n.appendChild(p2);
-      }
-      const rest = lines.slice(1);
-      let det = null;
-      if (rest.length || s.notice.reason){
-        det = document.createElement("details"); det.className = "nmore";
-        const sum = document.createElement("summary"); sum.textContent = "くわしく";
-        det.appendChild(sum);
-        rest.forEach(l => { const p2 = document.createElement("p"); p2.textContent = l; det.appendChild(p2); });
-        if (s.notice.reason){
-          const r = document.createElement("p"); r.className = "why"; r.textContent = s.notice.reason;
-          det.appendChild(r);
-        }
-        n.appendChild(det);
+      const det = document.createElement("details"); det.className = "nmore";
+      const sum = document.createElement("summary"); sum.textContent = "くわしく";
+      det.appendChild(sum);
+      lines.forEach(l => { const p2 = document.createElement("p"); p2.textContent = l; det.appendChild(p2); });
+      if (s.notice.reason){
+        const r = document.createElement("p"); r.className = "why"; r.textContent = s.notice.reason;
+        det.appendChild(r);
       }
       if (s.notice.tel){
         const a = document.createElement("a"); a.className = "hbtn";
@@ -984,13 +976,13 @@ function renderShelters(){
         a.title = s.notice.dept || "宇城市";
         const num = document.createElement("span"); num.className = "tel"; num.textContent = s.notice.tel;
         a.append(document.createTextNode("📞 "), num);
-        n.appendChild(a);
+        det.appendChild(a);
       }
-      /* 出どころは「くわしく」の中へ。閉じているときに読む必要はない */
       if (s.notice.source){
         const sc = document.createElement("div"); sc.className = "src3"; sc.textContent = s.notice.source;
-        (det || n).appendChild(sc);
+        det.appendChild(sc);
       }
+      if (det.childElementCount > 1) n.appendChild(det);
       row.appendChild(n);
     }
     if (s.report){
