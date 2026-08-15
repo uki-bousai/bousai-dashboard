@@ -445,6 +445,15 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice p.why{color:var(--text-muted); font-size:.75rem}
 .shrow .shnotice .tel{white-space:nowrap; display:inline-block}
 .shrow .shnotice .src3{margin-top:8px; font-size:.7rem; color:var(--text-muted)}
+.shrow .shnotice .nmore{margin-top:7px}
+.shrow .shnotice .nmore > summary{list-style:none; cursor:pointer; display:inline-flex;
+  align-items:center; gap:5px; font-size:.75rem; font-weight:700; color:#c0392b;
+  background:#fff; border:1px solid currentColor; border-radius:99px; padding:4px 12px}
+.shrow .shnotice .nmore > summary::-webkit-details-marker{display:none}
+.shrow .shnotice .nmore > summary::after{content:"▼"; font-size:.55rem}
+.shrow .shnotice .nmore[open] > summary::after{content:"▲"}
+.shrow .shnotice.open .nmore > summary{color:#1a5f8a}
+.shrow .shnotice.limit .nmore > summary{color:#a3620f}
 .shrow .rep{margin-top:6px}
 .shrow .rep > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
   font-size:.7rem; font-weight:700; color:#1a5f8a; background:#eaf3fa;
@@ -902,12 +911,23 @@ function renderShelters(){
       const h = document.createElement("div"); h.className = "nh";
       h.textContent = mark + (s.notice.kind || "お知らせ");
       n.appendChild(h);
-      (s.notice.lines || []).forEach(l => {
-        const p2 = document.createElement("p"); p2.textContent = l; n.appendChild(p2);
-      });
-      if (s.notice.reason){
-        const r = document.createElement("p"); r.className = "why"; r.textContent = s.notice.reason;
-        n.appendChild(r);
+      /* 見出しと1行目までは必ず出す。何が起きるか・どこへ行くかを閉じた状態でも読めるようにする。
+         残りは長いので、開きたい人だけが開けるようにたたむ */
+      const lines = s.notice.lines || [];
+      if (lines[0]){
+        const p2 = document.createElement("p"); p2.textContent = lines[0]; n.appendChild(p2);
+      }
+      const rest = lines.slice(1);
+      if (rest.length || s.notice.reason){
+        const det = document.createElement("details"); det.className = "nmore";
+        const sum = document.createElement("summary"); sum.textContent = "くわしく";
+        det.appendChild(sum);
+        rest.forEach(l => { const p2 = document.createElement("p"); p2.textContent = l; det.appendChild(p2); });
+        if (s.notice.reason){
+          const r = document.createElement("p"); r.className = "why"; r.textContent = s.notice.reason;
+          det.appendChild(r);
+        }
+        n.appendChild(det);
       }
       if (s.notice.tel){
         const a = document.createElement("a"); a.className = "hbtn";
