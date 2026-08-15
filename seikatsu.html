@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="宇城市の避難者数・避難所の受入状況（市の公表資料に基づき毎日更新）、給水、無料入浴、仮設トイレ、配布物資の情報を公開するページ。">
+<meta name="description" content="宇城市の避難者数・避難所の受入状況（市の公表資料に基づき毎日更新）、給水、無料入浴、トイレカー、洗濯などの生活支援情報を公開するページ。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="宇城市 生活支援情報">
 <meta property="og:title" content="避難者数・避難所の受入状況 ─ 宇城市 生活支援情報">
-<meta property="og:description" content="市の公表資料に基づき毎日更新。給水・無料入浴・仮設トイレ・配布物資の情報も。">
+<meta property="og:description" content="市の公表資料に基づき毎日更新。給水・無料入浴・トイレカー・洗濯の情報も。">
 <meta property="og:url" content="https://uki-bousai.github.io/bousai-dashboard/seikatsu.html">
 <meta property="og:image" content="https://uki-bousai.github.io/bousai-dashboard/ogp.png">
 <meta property="og:image:width" content="1200">
@@ -129,12 +129,7 @@ html{scroll-behavior:smooth}
   .row .name{text-align:left}
   .row .name small{display:inline; margin-left:6px}
 }
-.tag{display:inline-block; font-size:.72rem; font-weight:700; border-radius:99px;
-  padding:1px 10px; margin:2px 4px 2px 0; color:var(--good-text); border:1px solid var(--status-good)}
-.tag.low{color:#7a5200; border-color:var(--status-warning); background:rgba(250,178,25,.15)}
-@media (prefers-color-scheme: dark){ .tag.low{color:#ffd479} }
 .at{font-size:.68rem; color:var(--text-muted); margin-left:6px}
-.atline{font-size:.7rem; color:var(--text-muted); margin-top:4px}
 .empty{font-size:.78rem; color:var(--text-muted)}
 .report{margin-top:6px; font-size:.76rem; line-height:1.75; color:#15794f;
   background:#eaf7f0; border:1px solid #b6e0c9; border-radius:8px; padding:6px 10px}
@@ -500,7 +495,7 @@ footer a{color:var(--accent)}
 
 <header>
   <h1>宇城市 生活支援情報</h1>
-  <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、仮設トイレ、受け取れる物資。<br>近隣地域の<b>自主運営の避難所</b>も掲載しています</p>
+  <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、トイレカー、洗濯。<br>近隣地域の<b>自主運営の避難所</b>も掲載しています</p>
   <div class="updated" id="updatedAt"></div>
   <a class="tipbtn zaitaku" href="zaitaku.html">🏠 在宅避難の方に必要な物資（地区別）</a>
   <a class="tipbtn" href="#secContact">🙋 避難所の情報を送る</a>
@@ -510,7 +505,6 @@ footer a{color:var(--accent)}
   <div class="secnav-in">
     <a href="#shelterCard">🏫 避難所</a>
     <a href="#mapCard">🗺 地図</a>
-    <a href="#secHaves">📦 物資</a>
     <a href="#secDeliv">🚚 お届け</a>
     <a href="#kidsCard">👶 子どもの預かり</a>
     <a href="#laundryCard">🧺 洗濯</a>
@@ -537,7 +531,7 @@ footer a{color:var(--accent)}
 
 <div class="notice warn hidden" id="countNotice"></div>
 <div class="notice hidden" id="provisionalNotice"><details>
-  <summary>ℹ 仮設トイレ・配布物資の情報は、現在集めています</summary>
+  <summary>ℹ 仮設トイレの情報は、現在集めています</summary>
   <div class="nbody">確認でき次第、順次このページに掲載します。避難所の避難者数と給水情報は市の公表資料、受入可能数は市の地域防災計画に基づきます。</div>
 </details></div>
 
@@ -572,7 +566,7 @@ footer a{color:var(--accent)}
   <section class="card hidden" id="shelterCard">
     <h2>避難所別 受入状況</h2>
     <p class="desc" id="shelterDesc">避難者数は市の公表資料、受入可能数は市の地域防災計画にある指定避難所の収容者数（3㎡／1人）です。利用率の高い順</p>
-    <p class="desc" style="margin-top:-4px"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジと車中泊の台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の物資や現地の様子は、市民の方に教えていただいた内容です。</p>
+    <p class="desc" style="margin-top:-4px"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジと車中泊の台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の設備や現地の様子は、市民の方に教えていただいた内容です。</p>
     <p class="desc" style="margin-top:-4px"><b>⚠ 受入可能数は被災前の想定です。</b>建物が被災して使えない部屋がある避難所では、実際に入れる人数はこれより少なくなります。利用率が低くても余裕があるとは限りません。</p>
     <div id="shelterList"></div>
   </section>
@@ -585,12 +579,6 @@ footer a{color:var(--accent)}
       <span class="key"><span class="dot" style="background:var(--accent)"></span>避難者数</span>
       <span class="key"><span class="dot" style="background:var(--water)"></span>避難世帯数</span>
     </div>
-  </section>
-
-  <section class="card" id="secHaves">
-    <h2><span class="dot" style="background:var(--status-good)"></span>いま受け取れる物資</h2>
-    <p class="desc">その避難所に<b>いま置いてあるもの</b>です。<span class="tag low" style="margin:0 2px">⚠残りわずか</span>が付いているものは早めになくなる可能性があります。数量・配布方法は各避難所の案内に従ってください。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 市民からの情報提供で掲載</span> 市から物資データの提供がないため、住民の方に教えていただいた内容をもとにしています。</p>
-    <div id="haveList"><p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p></div>
   </section>
 
   <section class="card hidden" id="secDeliv">
@@ -709,7 +697,7 @@ footer a{color:var(--accent)}
 
 <script>
 "use strict";
-let DATA = { water: [], toilets: [], haves: [] };
+let DATA = { water: [], toilets: [] };
 let SHELTERS = [];   // data.json（避難所ダッシュボードのデータ）から読む
 let TREND = null;    // data.json の推移（避難者数・世帯数）
 let COUNT_NOTE = "";  // 市の数え方が変わったときの説明
@@ -1004,7 +992,6 @@ function tsOf(v){
 function latestUpdate(){
   const src = [DATA.updatedAt, SHELTERS_UPDATED];
   (SHELTERS || []).forEach(s => src.push(s.reportAt));
-  (DATA.haves || []).forEach(h => src.push(h.at));
   (DATA.water || []).forEach(w => src.push(w.reportAt));
   (DATA.toilets || []).forEach(t => src.push(t.reportAt));
   (DATA.baths || []).forEach(b => src.push(b.reportAt));
@@ -1258,48 +1245,6 @@ function renderToiletCars(){
   if (t.source){ const s = document.createElement("div"); s.className = "tsrc"; s.textContent = t.source; w.appendChild(s); }
   box.appendChild(w);
 }
-function renderHaves(){
-  const box = document.getElementById("haveList");
-  box.textContent = "";
-  const list = (DATA.haves || []).filter(l => (l.items || []).length)
-    .filter(l => !currentDistrict || l.district === currentDistrict)
-    .filter(l => !currentShelter || l.shelter === currentShelter);
-  if (!list.length){
-    box.innerHTML = (DATA.haves || []).some(l => (l.items || []).length)
-      ? '<p class="empty">この絞り込みでの配布情報はまだありません。</p>'
-      : '<p class="empty">配布情報は準備中です。各避難所からの報告が入り次第、掲載します。</p>';
-    return;
-  }
-  const sorted = [...list].sort((a,b) => String(b.at || "").localeCompare(String(a.at || "")));
-  sorted.forEach(l => box.appendChild(rowEl(l.shelter, l.district, b => {
-    [...l.items].sort((x,y) => (x.low?1:0)-(y.low?1:0)).forEach(it => {
-      const tag = document.createElement("span");
-      tag.className = "tag" + (it.low ? " low" : "");
-      tag.textContent = (it.low ? "⚠残りわずか " : "") + itemLabel(it.name);
-      b.appendChild(tag);
-    });
-    if (l.at){
-      const at = document.createElement("div"); at.className = "atline";
-      at.textContent = whenLabel(l.at);
-      b.appendChild(at);
-    }
-    if (l.note){
-      const n = document.createElement("div"); n.className = "report";
-      n.textContent = l.note;
-      b.appendChild(n);
-    }
-    // 混んでいる避難所は、物資だけを目当てに行くと入れないことがある
-    const sh = SHELTERS.find(x => x.name === l.shelter);
-    const st = sh ? shelterStatus(sh) : null;
-    if (st && st.cls){
-      const w = document.createElement("div"); w.className = "report cite";
-      w.textContent = `この避難所は現在 ${st.label}（${sh.occupants}/${sh.capacity}人）です`;
-      b.appendChild(w);
-    }
-  })));
-}
-
-/* ---------- 推移グラフ（避難者数・世帯数の2系列） ---------- */
 function renderTrendCard(){
   const card = document.getElementById("trendCard");
   const box = document.getElementById("trendChart");
@@ -2284,7 +2229,6 @@ function renderAll(){
   renderBaths();
   renderToiletCars();
   renderToilets();
-  renderHaves();
   renderDelivery();
   renderSelfShelters();
   renderBriefings();
