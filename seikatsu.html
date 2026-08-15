@@ -92,6 +92,18 @@ html{scroll-behavior:smooth}
 .notice{max-width:860px; margin:12px auto 0; padding:0 20px}
 .notice > div{background:var(--surface-1); border:1px solid var(--status-warning); border-radius:10px;
   padding:10px 14px; font-size:.76rem; color:var(--text-secondary); line-height:1.7}
+/* 注釈は長くなりがちなので、見出しだけ出して開けるようにする */
+.notice > details{background:var(--surface-1); border:1px solid var(--status-warning);
+  border-radius:10px; padding:0 14px}
+.notice > details > summary{list-style:none; cursor:pointer; padding:10px 0;
+  display:flex; align-items:center; gap:9px;
+  font-size:.78rem; font-weight:700; color:var(--text-primary); line-height:1.6}
+.notice > details > summary::-webkit-details-marker{display:none}
+.notice > details > summary::after{content:"▼"; margin-left:auto; flex:0 0 auto;
+  font-size:.58rem; color:var(--text-muted)}
+.notice > details[open] > summary::after{content:"▲"}
+.notice > details > .nbody{padding:9px 0 11px; border-top:1px solid var(--border);
+  font-size:.76rem; color:var(--text-secondary); line-height:1.75}
 .hidden{display:none !important}
 .backlink{display:inline-block; font-size:.78rem; margin-top:8px; color:var(--accent)}
 .card{background:var(--surface-1); border:1px solid var(--border); border-radius:12px;
@@ -503,7 +515,10 @@ footer a{color:var(--accent)}
 </a>
 
 <div class="notice warn hidden" id="countNotice"></div>
-<div class="notice hidden" id="provisionalNotice"><div><b>ℹ 仮設トイレ・配布物資の情報は、現在集めています。</b>確認でき次第、順次このページに掲載します。避難所の避難者数と給水情報は市の公表資料、受入可能数は市の地域防災計画に基づきます。</div></div>
+<div class="notice hidden" id="provisionalNotice"><details>
+  <summary>ℹ 仮設トイレ・配布物資の情報は、現在集めています</summary>
+  <div class="nbody">確認でき次第、順次このページに掲載します。避難所の避難者数と給水情報は市の公表資料、受入可能数は市の地域防災計画に基づきます。</div>
+</details></div>
 
 <div class="container">
 
@@ -1597,9 +1612,13 @@ async function loadData(){
   cn.classList.toggle("hidden", !COUNT_NOTE);
   if (COUNT_NOTE){
     cn.textContent = "";
-    const b = document.createElement("b"); b.textContent = "ℹ 避難者数の数え方が変わりました　";
-    const d = document.createElement("div"); d.append(b, document.createTextNode(COUNT_NOTE));
-    cn.appendChild(d);
+    const det = document.createElement("details");
+    const sum = document.createElement("summary");
+    sum.textContent = "ℹ 避難者数の数え方が変わりました";
+    const body = document.createElement("div"); body.className = "nbody";
+    body.textContent = COUNT_NOTE;
+    det.append(sum, body);
+    cn.appendChild(det);
   }
   rebuildFilter();
   renderAll();
