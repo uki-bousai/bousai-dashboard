@@ -713,6 +713,7 @@ footer a{color:var(--accent)}
 <script>
 "use strict";
 let DATA = { water: [], toilets: [] };
+let ZAITAKU = null;   // 在宅避難のページのデータ（区長さんたちの入力）
 let SHELTERS = [];   // data.json（避難所ダッシュボードのデータ）から読む
 let TREND = null;    // data.json の推移（避難者数・世帯数）
 let COUNT_NOTE = "";  // 市の数え方が変わったときの説明
@@ -812,7 +813,7 @@ const ITEM_ICONS = [
   [/冷却|保冷|氷|冷感/, "🧊"],
   [/粉ミルク|液体ミルク|ミルク/, "🍼"],
   [/おむつ|オムツ/, "👶"],
-  [/おしりふき|お尻ふき|ウェットティッシュ/, "🧻"],
+  [/おしり(ふき|拭き)|お尻(ふき|拭き)|ウェットティッシュ/, "🧻"],
   [/非常食|アルファ米|レトルト|パン|食料|食品/, "🍚"],
   [/毛布|ブランケット/, "🧣"],
   [/段ボールベッド|ベッド|マット|寝袋/, "🛏"],
@@ -1643,6 +1644,11 @@ async function loadData(){
         + `指定避難所の収容者数（3㎡／1人）です。利用率の高い順`;
     }
   } catch (e) { /* 前回の表示を維持 */ }
+  try {
+    // 在宅避難のページと同じデータ。足りていない物資は区長さんたちの入力をそのまま使う
+    const res3 = await fetch("zaitaku.json?_=" + Date.now(), { cache: "no-store" });
+    if (res3.ok) ZAITAKU = await res3.json();
+  } catch (e) { /* 前回の表示を維持 */ }
   document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
   const cn = document.getElementById("countNotice");
   cn.classList.toggle("hidden", !COUNT_NOTE);
@@ -1865,6 +1871,24 @@ function renderWells(){
 
 /* 市外の自治体からの住まいの提供（締切が短いので、期限を最初に見せる） */
 /* 物資のお届け：届ける側と受け取る側で必要な情報が違うので、ブロックを分けて出す */
+/* 在宅避難のページに登録された「足りていないもの」を、区の名前で引く */
+function zaitakuNeeds(name){
+  if (!ZAITAKU) return null;
+  const d = (ZAITAKU.districts || []).find(x => x.name === name);
+  const r = d && d.report;
+  if (!r || !r.needs) return null;
+  const ruleName = {};
+  (ZAITAKU.rules || []).forEach(x => { ruleName[x.id] = x.name; });
+  const items = Object.keys(r.needs).map(k => ruleName[k]).filter(Boolean);
+  if (!items.length) return null;
+  const notes = Object.values(r.needs).map(v => v && v.note).filter(Boolean);
+  return {
+    label: name.replace(/^.*?[町市]\s*/, "") || name,
+    items,
+    note: [...new Set(notes)].join("／"),
+    at: (r.updatedAt || "").slice(0, 10).replace(/^\d{4}-0?(\d+)-0?(\d+)$/, "$1月$2日")
+  };
+}
 function renderDelivery(){
   const card = document.getElementById("secDeliv");
   const box = document.getElementById("delivList");
@@ -1910,19 +1934,32 @@ function renderDelivery(){
     });
     addCaution();
 
-    /* いま足りていないもの。在宅の方は遠慮されるので、注記まで含めて出す */
-    if ((d.needs || []).length){
+    /* いま足りていないもの。在宅の方は遠慮されるので、注記まで含めて出す。
+       区ごとの内容は在宅避難のページ（zaitaku.json）から読むので、二重に持たない */
+    const needBlock = (title, items, note) => {
+      if (!items.length) return;
       const w = document.createElement("div"); w.className = "selfblock need";
-      const t = document.createElement("div"); t.className = "bt"; t.textContent = "⚠ いま足りていないもの";
+      const t = document.createElement("div"); t.className = "bt"; t.textContent = title;
       const ul = document.createElement("ul");
-      d.needs.forEach(n => { const li = document.createElement("li"); li.textContent = itemLabel(n); ul.appendChild(li); });
+      items.forEach(n => { const li = document.createElement("li"); li.textContent = itemLabel(n); ul.appendChild(li); });
       w.append(t, ul);
-      if (d.needsNote){
+      if (note){
         const nn = document.createElement("p"); nn.className = "desc"; nn.style.margin = "7px 0 0";
-        nn.textContent = d.needsNote;
+        nn.textContent = note;
         w.appendChild(nn);
       }
       c.appendChild(w);
+    };
+    const zds = d.zaitakuDistricts || [];
+    if (zds.length){
+      zds.forEach(name => {
+        const z = zaitakuNeeds(name);
+        if (!z) return;
+        needBlock(`⚠ ${z.label}で足りていないもの`, z.items,
+          [z.note, z.at ? `（${z.at} 地区からの報告）` : ""].filter(Boolean).join(""));
+      });
+    } else {
+      needBlock("⚠ いま足りていないもの", d.needs || [], d.needsNote);
     }
 
     /* 代表の方に直接つながるのがいちばん早いので、電話を先に出す */
