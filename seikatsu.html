@@ -447,7 +447,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice .src3{margin-top:8px; font-size:.7rem; color:var(--text-muted)}
 /* 閉鎖済みの避難所。開いている避難所と見間違えないよう、色を落として1行だけにする */
 .shrow.gone .name, .shrow.gone .val, .shrow.gone .track{opacity:.45}
-.shrow.gone .acbadge, .shrow.gone .carstay{display:none}
+/* 設備・車中泊・現地の様子は、閉まったあとは古い情報にしかならないので出さない */
+.shrow.gone .acbadge, .shrow.gone .carstay, .shrow.gone .rep{display:none}
 .shrow .shgone{margin-top:7px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
   border-radius:9px; padding:6px 12px; font-size:.75rem; line-height:1.6; color:var(--text-secondary)}
 .shrow .shnotice .nmore{margin-top:7px}
