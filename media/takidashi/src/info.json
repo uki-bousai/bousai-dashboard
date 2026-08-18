@@ -9,5 +9,7 @@
   "lat": 32.6460278,
   "lng": 130.7470556,
   "notice": "南山崎公民館は被災のため使用できません。北山崎公民館にお集まりください。",
-  "site": "uki-bousai.github.io/bousai-dashboard/zaitaku.html"
+  "site": "uki-bousai.github.io/bousai-dashboard/zaitaku.html",
+  "landmarks": [],
+  "mapCredit": "Googleマップ"
 }
