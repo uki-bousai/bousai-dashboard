@@ -206,6 +206,26 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .btopic .voice li::before{content:"「"; }
 .btopic .voice li::after{content:"」"}
 .btopic .voice .vs{margin-top:6px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
+/* 市民の声。市の会議で説明がないことを、そのままの言葉で残す場所 */
+.vcard{margin-top:12px; border:1.5px solid #e8b6c8; border-radius:14px; padding:14px 16px;
+  background:#fdf5f8}
+.vcard:first-child{margin-top:2px}
+.vcard .vh{font-size:1rem; font-weight:700; color:#a8447a; line-height:1.55}
+.vcard .vtag{display:inline-block; margin-bottom:6px; font-size:.68rem; font-weight:700;
+  color:#a8447a; background:#fff; border:1px solid #e8b6c8; border-radius:99px; padding:3px 10px}
+.vcard ul{list-style:none; margin:9px 0 0; padding:0}
+.vcard li{font-size:.82rem; line-height:1.85; color:var(--text-primary);
+  padding-left:16px; text-indent:-16px; margin-bottom:5px}
+.vcard li::before{content:"「"; color:#a8447a}
+.vcard li::after{content:"」"; color:#a8447a}
+/* 市の説明。声と混ざらないよう白地にする */
+.vcard .vcity{margin-top:10px; background:#fff; border:1px solid var(--border);
+  border-radius:11px; padding:9px 13px}
+.vcard .vcity .h{font-size:.75rem; font-weight:700; color:var(--text-secondary)}
+.vcard .vcity p{margin-top:3px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.vcard .vmore{margin-top:9px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.vcard .vmore b{color:var(--text-primary)}
+.vcard .vsrc{margin-top:9px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
 /* 自主運営の避難所 */
 .selfcard{margin-top:12px; border:1.5px solid #cfe3d8; border-radius:14px; padding:14px 16px;
   background:#f6fbf8}
@@ -544,6 +564,7 @@ footer a{color:var(--accent)}
     <a href="#secBath">♨️ 入浴</a>
     <a href="#secSelf">🤝 自主避難所</a>
     <a href="#secBrief">📋 市議会</a>
+    <a href="#voiceCard">💬 市民の声</a>
     <a href="#secContact">🙋 情報提供</a>
   </div>
 </nav>
@@ -626,6 +647,12 @@ footer a{color:var(--accent)}
       <div class="vs">8月6日の報告では、<b>災害ごみの仮置場を増やしてほしい</b>という要望が市へ出されました。住民の方の困りごとが、こうして市に届いています。<br>ひとりの声だと届きにくくても、<b>同じ困りごとが集まれば、市議会で取り上げられることがあります</b>。困っていること、足りていないものを教えてください。</div>
       <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
     </div>
+  </section>
+
+  <section class="card hidden" id="voiceCard">
+    <h2><span class="dot" style="background:#a8447a"></span>市民の声</h2>
+    <p class="desc">市の会議では説明されていないけれど、暮らしのなかで実際に困っていること。<b>教えていただいた声を、そのまま載せています。</b><br>お名前・連絡先は載せません。同じ困りごとが集まれば、市議会を通して市へ伝えることができます。</p>
+    <div id="voiceList"></div>
   </section>
 
   <section class="card" id="secSelf">
@@ -1739,6 +1766,33 @@ function renderBriefings(){
   });
 }
 
+/* 市に対応する報告がない困りごと。市議会のまとめに並べられないので、ここに独立して置く */
+function renderVoices(){
+  const card = document.getElementById("voiceCard");
+  const box = document.getElementById("voiceList");
+  box.textContent = "";
+  const list = DATA.voices || [];
+  card.classList.toggle("hidden", !list.length);
+  list.forEach(v => {
+    const c = document.createElement("div"); c.className = "vcard";
+    if (v.tag){ const t = document.createElement("div"); t.className = "vtag"; t.textContent = v.tag; c.appendChild(t); }
+    const h = document.createElement("div"); h.className = "vh"; h.textContent = "🙋 " + (v.head || "市民の方からの声");
+    c.appendChild(h);
+    const ul = document.createElement("ul");
+    (v.lines || []).forEach(l => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
+    c.appendChild(ul);
+    if (v.city){
+      const cy = document.createElement("div"); cy.className = "vcity";
+      const ch = document.createElement("div"); ch.className = "h"; ch.textContent = "📋 市の説明";
+      const cp = document.createElement("p"); cp.textContent = v.city;
+      cy.append(ch, cp); c.appendChild(cy);
+    }
+    if (v.note){ const n = document.createElement("div"); n.className = "vmore"; n.textContent = v.note; c.appendChild(n); }
+    if (v.source){ const s = document.createElement("div"); s.className = "vsrc"; s.textContent = v.source; c.appendChild(s); }
+    box.appendChild(c);
+  });
+}
+
 /* 南阿蘇村のリフレッシュ宿泊支援（期間限定・宇城市民が対象） */
 function renderRefresh(){
   const card = document.getElementById("refreshCard");
@@ -2339,6 +2393,7 @@ function renderAll(){
   renderDelivery();
   renderSelfShelters();
   renderBriefings();
+  renderVoices();
   renderMap();
 }
 loadData();
