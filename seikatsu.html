@@ -197,6 +197,15 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .btopic li{font-size:.82rem; line-height:1.85; color:var(--text-secondary);
   padding-left:14px; text-indent:-14px}
 .btopic li::before{content:"・"}
+/* 会議の報告に対して、市民の方から寄せられた声。市の説明と混ざらないよう枠で分ける */
+.btopic .voice{margin-top:8px; background:#fdf9f2; border:1px solid #e6c48e; border-radius:11px;
+  padding:9px 13px}
+.btopic .voice .vh{font-size:.76rem; font-weight:700; color:#a3620f}
+.btopic .voice ul{margin-top:4px}
+.btopic .voice li{color:var(--text-primary); font-size:.81rem}
+.btopic .voice li::before{content:"「"; }
+.btopic .voice li::after{content:"」"}
+.btopic .voice .vs{margin-top:6px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
 /* 自主運営の避難所 */
 .selfcard{margin-top:12px; border:1.5px solid #cfe3d8; border-radius:14px; padding:14px 16px;
   background:#f6fbf8}
@@ -1710,6 +1719,20 @@ function renderBriefings(){
         const li = document.createElement("li"); li.textContent = l; ul.appendChild(li);
       });
       w.append(h, ul);
+      /* この報告を読んだ方から届いた声。市の説明だけでは見えない実情を並べて置く */
+      if (t.voice && (t.voice.lines || []).length){
+        const v = document.createElement("div"); v.className = "voice";
+        const vh = document.createElement("div"); vh.className = "vh";
+        vh.textContent = "🙋 " + (t.voice.head || "市民の方からの声");
+        const vul = document.createElement("ul");
+        t.voice.lines.forEach(l => { const li = document.createElement("li"); li.textContent = l; vul.appendChild(li); });
+        v.append(vh, vul);
+        if (t.voice.source){
+          const vs = document.createElement("div"); vs.className = "vs"; vs.textContent = t.voice.source;
+          v.appendChild(vs);
+        }
+        w.appendChild(v);
+      }
       det.appendChild(w);
     });
     box.appendChild(det);
