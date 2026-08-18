@@ -437,6 +437,9 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .carstay{margin-left:6px; font-size:.7rem; font-weight:700; color:#41556b;
   background:#eef1f4; border:1px solid #cdd6de; border-radius:99px; padding:2px 8px;
   white-space:nowrap; display:inline-block}
+.shrow .carstay.bed{color:#4a5340; background:#f0f3ec; border-color:#cfd8c4}
+/* 人数分のベッドがそろっていないところは、ひと目で分かるようにする */
+.shrow .carstay.bed.short{color:#a3620f; background:#fdf7ef; border-color:#e6c48e}
 .shrow .shnotice{margin-top:9px; background:#fdf3f3; border:2px solid #c0392b; border-radius:12px;
   padding:9px 13px}
 .shrow .shnotice .nh{font-size:.88rem; font-weight:700; color:#c0392b; line-height:1.5}
@@ -941,6 +944,14 @@ function renderShelters(){
       const cs = document.createElement("span"); cs.className = "carstay";
       cs.textContent = `🚗 車中泊 ${s.carStay}台`;
       val.appendChild(cs);
+    }
+    /* 段ボールベッドは市が避難所ごとに公表している。人数より少ないところは色を変えて出す */
+    const beds = s.stocks && s.stocks["段ボールベッド"];
+    if (typeof beds === "number" && beds > 0){
+      const short = beds < s.occupants;
+      const bd = document.createElement("span"); bd.className = "carstay bed" + (short ? " short" : "");
+      bd.textContent = `🛏 ベッド ${fmt(beds)}台` + (short ? "（人数より少ない）" : "");
+      val.appendChild(bd);
     }
     if (st.cls){
       const f = document.createElement("span"); f.className = "flag " + st.cls; f.textContent = " " + st.label;
