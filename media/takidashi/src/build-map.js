@@ -7,7 +7,8 @@ const fs = require("fs");
 
 const DIR = __dirname;
 const INFO = JSON.parse(fs.readFileSync(path.join(DIR, "info.json"), "utf8"));
-const HAS_MAP = fs.existsSync(path.join(DIR, "map.png"));
+const HAS_MAP = fs.existsSync(path.join(DIR, "map-wide.png")) &&
+                fs.existsSync(path.join(DIR, "map-near.png"));
 
 (async () => {
   const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
