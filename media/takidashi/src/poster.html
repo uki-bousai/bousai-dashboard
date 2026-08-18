@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>炊き出しのお知らせ</title>
+<style>
+:root{
+  --ink:#111110; --sub:#4a4945; --paper:#ffffff;
+  --accent:#0f7a52; --accent-d:#0a5c3e; --warn:#c2371e; --line:#d8d6ce;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#666; font-family:"Noto Sans CJK JP","Noto Sans JP",sans-serif;
+  -webkit-font-smoothing:antialiased}
+
+/* ==== 用紙 ==== */
+.sheet{background:var(--paper); color:var(--ink); position:relative; overflow:hidden;
+  display:flex; flex-direction:column}
+#a4{width:1240px; height:1754px; padding:64px 68px 56px}
+#sns{width:1080px; height:1920px; padding:150px 68px 230px; justify-content:center}
+
+/* ==== 見出し ==== */
+.kicker{display:inline-block; align-self:flex-start; font-weight:900; letter-spacing:.14em;
+  color:#fff; background:var(--accent); border-radius:99px; padding:10px 26px}
+h1{font-weight:900; letter-spacing:-.02em; line-height:1.14; margin-top:20px}
+h1 .em{color:var(--accent)}
+.lead{color:var(--sub); font-weight:700; line-height:1.7; margin-top:14px}
+
+/* ==== 場所 ==== */
+.place{border:6px solid var(--accent); border-radius:26px; margin-top:24px;
+  padding:26px 34px 28px; background:#f2faf6}
+.place .lb{display:inline-block; font-weight:900; color:#fff; background:var(--accent-d);
+  border-radius:8px; padding:7px 18px; letter-spacing:.1em}
+.place .nm{font-weight:900; letter-spacing:-.03em; line-height:1.1; margin-top:16px}
+.place .ad{color:var(--sub); font-weight:700; margin-top:12px; line-height:1.6}
+
+/* ==== 注意 ==== */
+.warn{margin-top:22px; border:4px solid var(--warn); border-radius:18px;
+  background:#fdf2ef; padding:20px 26px; color:var(--warn); font-weight:900; line-height:1.6}
+
+/* ==== 記入欄 / 明細 ==== */
+.rows{margin-top:26px; border-top:3px solid var(--ink)}
+.row{display:flex; align-items:stretch; border-bottom:2px solid var(--line)}
+.row .k{flex:none; width:220px; font-weight:900; color:var(--sub);
+  display:flex; align-items:center; padding:18px 6px 18px 4px; letter-spacing:.08em}
+.row .v{flex:1; font-weight:900; display:flex; align-items:center; padding:18px 0}
+.row .v.blank{color:#b9b7ae; font-weight:700}
+
+/* ==== 地図 ==== */
+.map{margin-top:28px; display:flex; gap:30px; align-items:center;
+  border:3px solid var(--line); border-radius:22px; padding:26px 30px; background:#fafaf8}
+.map img{display:block; border-radius:12px; background:#fff; image-rendering:pixelated}
+.map .mt{flex:1}
+.map .mh{font-weight:900; line-height:1.4}
+.map .mu{color:var(--sub); font-weight:700; margin-top:10px; line-height:1.7; word-break:break-all}
+.map .mc{color:var(--sub); font-weight:700; margin-top:8px}
+.map .mc b{color:var(--ink)}
+
+.foot{margin-top:auto; padding-top:22px; border-top:2px solid var(--line);
+  color:var(--sub); font-weight:700; line-height:1.7; white-space:pre-line}
+
+/* ==== A4のサイズ ==== */
+#a4 .kicker{font-size:30px}
+#a4 h1{font-size:92px}
+#a4 .lead{font-size:30px}
+#a4 .place .lb{font-size:26px}
+#a4 .place .nm{font-size:116px}
+#a4 .place .ad{font-size:32px}
+#a4 .warn{font-size:32px}
+#a4 .row .k{font-size:30px}
+#a4 .row .v{font-size:40px}
+#a4 .map img{width:300px; height:300px}
+#a4 .map .mh{font-size:36px}
+#a4 .map .mu{font-size:23px}
+#a4 .map .mc{font-size:25px}
+#a4 .foot{font-size:24px}
+
+/* ==== SNSのサイズ ==== */
+#sns .kicker{font-size:32px}
+#sns h1{font-size:96px}
+#sns .lead{font-size:32px}
+#sns .place{margin-top:34px; padding:34px 34px 36px}
+#sns .place .lb{font-size:28px}
+#sns .place .nm{font-size:126px}
+#sns .place .ad{font-size:33px}
+#sns .warn{font-size:33px}
+#sns .row .k{width:200px; font-size:30px}
+#sns .row .v{font-size:40px}
+#sns .map img{width:270px; height:270px}
+#sns .map .mh{font-size:36px}
+#sns .map .mu{font-size:23px}
+#sns .map .mc{font-size:25px}
+#sns .foot{font-size:25px; margin-top:26px}
+</style>
+</head>
+<body>
+<div class="sheet" id="a4"></div>
+<div class="sheet" id="sns"></div>
+
+<script>
+const INFO = window.__INFO__;
+
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text) e.textContent = text;
+  return e;
+}
+
+/* 記入欄。値がなければ手書き用の空欄にする */
+function row(k, v, blankLabel){
+  const r = el("div", "row");
+  r.appendChild(el("div", "k", k));
+  const val = el("div", "v" + (v ? "" : " blank"), v || blankLabel);
+  r.appendChild(val);
+  return r;
+}
+
+function build(target, isA4){
+  const box = document.getElementById(target);
+  box.textContent = "";
+  box.appendChild(el("div", "kicker", "宇城市 豊野町"));
+  const h1 = el("h1");
+  h1.append(document.createTextNode("炊き出しの"), el("span", "em", "お知らせ"));
+  box.appendChild(h1);
+  box.appendChild(el("div", "lead",
+    "在宅で避難されている方も、どうぞお越しください。"));
+
+  const p = el("div", "place");
+  p.appendChild(el("span", "lb", "場所"));
+  p.appendChild(el("div", "nm", INFO.place));
+  p.appendChild(el("div", "ad", INFO.ward));
+  box.appendChild(p);
+
+  if (INFO.notice) box.appendChild(el("div", "warn", "⚠ " + INFO.notice));
+
+  const rows = el("div", "rows");
+  rows.appendChild(row("日 時", INFO.when, "　月　　日（　）　　時　　分 〜"));
+  if (INFO.menu || isA4) rows.appendChild(row("内 容", INFO.menu, "（記入してください）"));
+  if (INFO.bring || isA4) rows.appendChild(row("持ち物", INFO.bring, "（記入してください）"));
+  rows.appendChild(row("問い合わせ", INFO.host, "（記入してください）"));
+  box.appendChild(rows);
+
+  const m = el("div", "map");
+  const img = document.createElement("img");
+  img.src = "qr-map.png";
+  img.alt = "";
+  m.appendChild(img);
+  const mt = el("div", "mt");
+  mt.appendChild(el("div", "mh", "スマホで地図をひらく"));
+  mt.appendChild(el("div", "mu",
+    "カメラでこの四角を読みとると、Googleマップが開きます。地図で「北山崎公民館」と検索してもたどりつけます。"));
+  const mc = el("div", "mc");
+  mc.append(document.createTextNode("カーナビ用の位置　"),
+            el("b", "", INFO.lat.toFixed(6) + "、" + INFO.lng.toFixed(6)));
+  mt.appendChild(mc);
+  m.appendChild(mt);
+  box.appendChild(m);
+
+  box.appendChild(el("div", "foot",
+    "宇城市 生活支援情報　" + INFO.site + "\n必要な物資の一覧もこちらで見られます。"));
+}
+
+build("a4", true);
+build("sns", false);
+</script>
+</body>
+</html>

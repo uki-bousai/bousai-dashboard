@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>北山崎公民館 の場所</title>
+<style>
+:root{ --ink:#111110; --sub:#4a4945; --accent:#0f7a52; --accent-d:#0a5c3e;
+       --warn:#c2371e; --line:#d8d6ce; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#666; font-family:"Noto Sans CJK JP","Noto Sans JP",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.sheet{background:#fff; color:var(--ink); position:relative; overflow:hidden;
+  display:flex; flex-direction:column}
+#a4{width:1240px; height:1754px; padding:58px 62px 50px}
+#sns{width:1080px; height:1920px; padding:112px 62px 172px; justify-content:center}
+
+.kicker{display:inline-block; align-self:flex-start; font-weight:900; letter-spacing:.14em;
+  color:#fff; background:var(--accent); border-radius:99px; padding:9px 24px}
+h1{font-weight:900; letter-spacing:-.03em; line-height:1.12; margin-top:16px}
+h1 small{display:block; font-weight:900; letter-spacing:-.01em; color:var(--sub)}
+
+/* 地図（2枚ならべ） */
+.maps{margin-top:20px; display:flex; gap:18px}
+.mcol{flex:1; min-width:0; display:flex; flex-direction:column}
+.mcap{font-weight:900; color:#fff; background:var(--accent-d); border-radius:10px 10px 0 0;
+  padding:9px 16px; letter-spacing:.04em}
+.map{border:5px solid var(--accent-d); border-top:none; border-radius:0 0 14px 14px;
+  overflow:hidden; position:relative; background:#20241f; flex:1}
+.map img{display:block; width:100%; height:100%; object-fit:contain; background:#20241f}
+.map .ph{width:100%; height:100%; display:flex; flex-direction:column; gap:12px;
+  align-items:center; justify-content:center; color:#8d8b83; font-weight:900;
+  text-align:center; line-height:1.7}
+.cred{color:var(--sub); font-weight:700; margin-top:8px; text-align:right}
+
+/* 目印 */
+.marks{margin-top:20px; border:4px solid var(--accent); border-radius:18px;
+  background:#f2faf6; padding:20px 26px}
+.marks .h{font-weight:900; color:var(--accent-d)}
+.marks ul{margin:10px 0 0 1.2em; columns:2; column-gap:34px}
+.marks li{font-weight:900; line-height:1.75; break-inside:avoid; margin-bottom:4px}
+.marks .blank{margin-top:14px}
+.marks .blank i{display:block; height:2px; background:#bfd8cc; margin-top:34px}
+
+.warn{margin-top:18px; border:4px solid var(--warn); border-radius:16px;
+  background:#fdf2ef; padding:16px 24px; color:var(--warn); font-weight:900; line-height:1.6}
+
+.qrbox{margin-top:20px; display:flex; gap:26px; align-items:center;
+  border:3px solid var(--line); border-radius:18px; padding:22px 26px; background:#fafaf8}
+.qrbox img{display:block; image-rendering:pixelated}
+.qrbox .t{flex:1}
+.qrbox .h{font-weight:900}
+.qrbox .d{color:var(--sub); font-weight:700; margin-top:8px; line-height:1.7}
+.qrbox .c{color:var(--sub); font-weight:700; margin-top:6px}
+.qrbox .c b{color:var(--ink)}
+
+.foot{margin-top:auto; padding-top:18px; border-top:2px solid var(--line);
+  color:var(--sub); font-weight:700; line-height:1.7; white-space:pre-line}
+
+#a4 .kicker{font-size:28px}
+#a4 h1{font-size:88px}
+#a4 h1 small{font-size:34px; margin-bottom:6px}
+#a4 .maps{height:656px}
+#a4 .mcap{font-size:25px}
+#a4 .cred{font-size:20px}
+#a4 .map .ph{font-size:30px}
+#a4 .marks .h{font-size:30px}
+#a4 .marks li, #a4 .marks .blank{font-size:29px}
+#a4 .warn{font-size:29px}
+#a4 .qrbox img{width:212px; height:212px}
+#a4 .qrbox .h{font-size:32px}
+#a4 .qrbox .d{font-size:23px}
+#a4 .qrbox .c{font-size:24px}
+#a4 .foot{font-size:22px}
+
+#sns .kicker{font-size:30px}
+#sns h1{font-size:86px}
+#sns h1 small{font-size:34px; margin-bottom:6px}
+#sns .maps{height:628px}
+#sns .marks ul{columns:1}
+#sns .mcap{font-size:25px}
+#sns .cred{font-size:20px}
+#sns .map .ph{font-size:30px}
+#sns .marks .h{font-size:31px}
+#sns .marks li, #sns .marks .blank{font-size:30px}
+#sns .warn{font-size:30px}
+#sns .qrbox img{width:200px; height:200px}
+#sns .qrbox .h{font-size:32px}
+#sns .qrbox .d{font-size:23px}
+#sns .qrbox .c{font-size:24px}
+#sns .foot{font-size:23px; margin-top:22px}
+</style>
+</head>
+<body>
+<div class="sheet" id="a4"></div>
+<div class="sheet" id="sns"></div>
+<script>
+const INFO = window.__INFO__;
+const HAS_MAP = window.__HAS_MAP__;
+
+function el(t, c, x){ const e=document.createElement(t); if(c)e.className=c; if(x)e.textContent=x; return e; }
+
+function build(id){
+  const box = document.getElementById(id);
+  box.textContent = "";
+  box.appendChild(el("div","kicker","宇城市 豊野町"));
+  const h1 = el("h1");
+  h1.appendChild(el("small","","炊き出しの会場はこちら"));
+  h1.appendChild(document.createTextNode("北山崎公民館"));
+  box.appendChild(h1);
+
+  const maps = el("div","maps");
+  [["① まわりの様子", "map-wide.png"], ["② 建物のちかく", "map-near.png"]].forEach(([cap, file]) => {
+    const col = el("div","mcol");
+    col.appendChild(el("div","mcap",cap));
+    const m = el("div","map");
+    if (HAS_MAP){
+      const img = document.createElement("img");
+      img.src = file; img.alt = "";
+      m.appendChild(img);
+    } else {
+      const ph = el("div","ph");
+      ph.appendChild(el("div","","ここに地図が入ります"));
+      m.appendChild(ph);
+    }
+    col.appendChild(m);
+    maps.appendChild(col);
+  });
+  box.appendChild(maps);
+  if (HAS_MAP) box.appendChild(el("div","cred","地図: " + INFO.mapCredit));
+
+  const mk = el("div","marks");
+  mk.appendChild(el("div","h","▼ 目印"));
+  if (INFO.landmarks && INFO.landmarks.length){
+    const ul = document.createElement("ul");
+    INFO.landmarks.forEach(t => ul.appendChild(el("li","",t)));
+    mk.appendChild(ul);
+  } else {
+    const bl = el("div","blank");
+    bl.appendChild(el("i")); bl.appendChild(el("i"));
+    mk.appendChild(bl);
+  }
+  box.appendChild(mk);
+
+  box.appendChild(el("div","warn","⚠ 南山崎公民館は被災のため使用できません。北山崎公民館にお越しください。"));
+
+  const q = el("div","qrbox");
+  const img = document.createElement("img");
+  img.src = "qr-map.png"; img.alt = "";
+  q.appendChild(img);
+  const t = el("div","t");
+  t.appendChild(el("div","h","スマホで地図をひらく"));
+  t.appendChild(el("div","d","カメラでこの四角を読みとってください。地図で「北山崎公民館」と検索してもたどりつけます。"));
+  const c = el("div","c");
+  c.append(document.createTextNode("カーナビ用の位置　"),
+           el("b","", INFO.lat.toFixed(6) + "、" + INFO.lng.toFixed(6)));
+  t.appendChild(c);
+  q.appendChild(t);
+  box.appendChild(q);
+
+  box.appendChild(el("div","foot","宇城市 生活支援情報　" + INFO.site));
+}
+build("a4"); build("sns");
+</script>
+</body>
+</html>
