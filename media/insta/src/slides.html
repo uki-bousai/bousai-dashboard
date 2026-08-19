@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Instagram用 8月19日のまとめ</title>
+<style>
+:root{
+  --page:#f7f7f4; --surface:#fff; --ink:#111110; --sub:#4a4945;
+  --line:rgba(17,17,16,.12); --accent:#2a78d6; --accent-d:#1b5aa8;
+  --dark:#101519; --hi:#ffd166; --warm:#c8501e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#666; font-family:"Noto Sans CJK JP","Noto Sans JP",sans-serif;
+  -webkit-font-smoothing:antialiased; display:flex; flex-wrap:wrap; gap:24px; padding:24px}
+/* Instagram のフィードでいちばん大きく出せる 4:5 */
+.s{width:1080px; height:1350px; position:relative; overflow:hidden;
+  background:var(--page); color:var(--ink); display:flex; flex-direction:column;
+  padding:96px 84px 90px}
+.s.dark{background:
+    radial-gradient(1000px 800px at 88% -10%, rgba(42,120,214,.40), transparent 62%),
+    var(--dark); color:#fff}
+
+/* 表紙 */
+.tag{display:inline-block; align-self:flex-start; font-size:29px; font-weight:800;
+  letter-spacing:.12em; border:2px solid rgba(255,255,255,.28); border-radius:99px;
+  padding:11px 26px}
+h1{font-size:104px; font-weight:900; line-height:1.16; letter-spacing:-.03em;
+  margin-top:30px; white-space:pre-line}
+h1 .hi{color:var(--hi)}
+.cap{font-size:33px; font-weight:600; line-height:1.75; margin-top:26px;
+  opacity:.85; white-space:pre-line}
+.toc{margin-top:38px; display:grid; grid-template-columns:1fr 1fr; gap:12px 26px}
+.toc div{font-size:28px; font-weight:700; opacity:.9; line-height:1.5}
+.swipe{margin-top:auto; display:flex; align-items:center; gap:16px;
+  font-size:31px; font-weight:900; color:var(--hi)}
+.swipe .ar{font-size:40px}
+
+/* 本文 */
+.num{font-size:27px; font-weight:900; letter-spacing:.14em; color:var(--accent-d)}
+.ico{font-size:104px; line-height:1; margin-top:16px}
+h2{font-size:70px; font-weight:900; line-height:1.25; letter-spacing:-.025em;
+  margin-top:20px; white-space:pre-line}
+h2 .hl{background:linear-gradient(transparent 62%, rgba(42,120,214,.28) 62%)}
+ul{margin-top:36px; list-style:none; display:flex; flex-direction:column; gap:22px}
+li{font-size:36px; font-weight:600; line-height:1.65; color:var(--sub);
+  padding-left:38px; position:relative}
+li::before{content:""; position:absolute; left:6px; top:.62em;
+  width:14px; height:14px; border-radius:50%; background:var(--accent)}
+li b{color:var(--ink); font-weight:900}
+.note{margin-top:auto; font-size:28px; font-weight:700; line-height:1.6;
+  color:var(--accent-d); background:rgba(42,120,214,.09);
+  border:2px solid rgba(42,120,214,.28); border-radius:18px; padding:20px 24px}
+.note.warn{color:var(--warm); background:rgba(200,80,30,.08);
+  border-color:rgba(200,80,30,.32)}
+
+/* そのほかの3件 */
+.mini{margin-top:34px; display:flex; flex-direction:column; gap:24px; margin-bottom:auto}
+.mini .m{background:var(--surface); border:2px solid var(--line); border-radius:22px;
+  padding:26px 30px}
+.mini .mh{font-size:40px; font-weight:900; line-height:1.3}
+.mini .mt{font-size:30px; font-weight:600; color:var(--sub); line-height:1.6; margin-top:10px}
+
+/* 最後 */
+.url{font-size:36px; font-weight:800; line-height:1.6; word-break:break-all;
+  background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.30);
+  border-radius:20px; padding:26px 30px; margin-top:36px; white-space:pre-line}
+.who{font-size:34px; font-weight:700; line-height:1.9; margin-top:34px; white-space:pre-line}
+.who b{color:var(--hi); font-weight:900}
+.foot{position:absolute; left:84px; bottom:44px; font-size:26px; font-weight:700; opacity:.5}
+.s:not(.dark) .foot{opacity:.42}
+</style>
+</head>
+<body><div id="root"></div>
+<script>
+const S = window.__SLIDES__;
+const root = document.getElementById("root");
+function el(t,c,x){const e=document.createElement(t); if(c)e.className=c; if(x)e.textContent=x; return e;}
+function rich(txt){
+  /* **強調** を太字にする */
+  const f=document.createDocumentFragment();
+  txt.split(/(\*\*[^*]+\*\*)/).forEach(p=>{
+    if(/^\*\*/.test(p)) f.appendChild(el("b","",p.slice(2,-2)));
+    else if(p) f.appendChild(document.createTextNode(p));
+  });
+  return f;
+}
+S.forEach((s,i)=>{
+  const d=el("div","s"+(s.dark?" dark":"")); d.id="s"+String(i+1).padStart(2,"0");
+  if(s.type==="cover"){
+    d.appendChild(el("div","tag",s.tag));
+    const h=el("h1"); h.appendChild(rich(s.title)); d.appendChild(h);
+    d.appendChild(el("div","cap",s.cap));
+    const toc=el("div","toc"); s.toc.forEach(t=>toc.appendChild(el("div","",t))); d.appendChild(toc);
+    const sw=el("div","swipe"); sw.append(el("span","","スワイプでくわしく"), el("span","ar","→")); d.appendChild(sw);
+  } else if(s.type==="end"){
+    d.appendChild(el("div","tag",s.tag));
+    const h=el("h1"); h.appendChild(rich(s.title)); d.appendChild(h);
+    d.appendChild(el("div","url",s.url));
+    const w=el("div","who"); w.appendChild(rich(s.who)); d.appendChild(w);
+  } else if(s.type==="mini"){
+    d.appendChild(el("div","num",s.num));
+    const h=el("h2"); h.appendChild(rich(s.head)); d.appendChild(h);
+    const box=el("div","mini");
+    s.items.forEach(it=>{
+      const m=el("div","m");
+      m.appendChild(el("div","mh",it.h));
+      m.appendChild(el("div","mt",it.t));
+      box.appendChild(m);
+    });
+    d.appendChild(box);
+  } else {
+    d.appendChild(el("div","num",s.num));
+    d.appendChild(el("div","ico",s.icon));
+    const h=el("h2"); h.appendChild(rich(s.head)); d.appendChild(h);
+    const ul=document.createElement("ul");
+    s.lines.forEach(l=>{const li=document.createElement("li"); li.appendChild(rich(l)); ul.appendChild(li);});
+    d.appendChild(ul);
+    if(s.note) d.appendChild(el("div","note"+(s.warn?" warn":""),s.note));
+  }
+  if(s.type!=="cover") d.appendChild(el("div","foot","宇城市 生活支援情報"));
+  root.appendChild(d);
+});
+</script>
+</body>
+</html>
