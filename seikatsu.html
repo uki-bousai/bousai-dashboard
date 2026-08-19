@@ -244,30 +244,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .fold[open] > summary::after{content:"▲"}
 .fold > .fbody{padding:10px 13px 12px; border-top:1px solid var(--border)}
 .fold > .fbody > *:first-child{margin-top:0}
-/* 自主運営の避難所 */
-.selfcard{margin-top:12px; border:1.5px solid #cfe3d8; border-radius:14px; padding:14px 16px;
-  background:#f6fbf8}
-.selfcard:first-child{margin-top:2px}
-.selfcard .sh{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
-.selfcard .sh .nm{font-size:1rem; font-weight:700}
-.selfcard .sh .city{font-size:.68rem; font-weight:700; color:#15794f; background:#fff;
-  border:1px solid #8ccfae; border-radius:99px; padding:3px 9px}
-.selfcard .addr{margin-top:5px; font-size:.78rem; color:var(--text-secondary); line-height:1.8}
-.selfcard .addr a{color:#15794f; font-weight:700}
-.selfcard .hours{margin-top:8px; font-size:.82rem; font-weight:700; color:#15794f;
-  background:#fff; border:1px solid #8ccfae; border-radius:9px; padding:7px 12px; display:inline-block}
-.selfcard .badges{margin-top:9px; display:flex; flex-wrap:wrap; gap:5px}
-.selfcard .badges span{font-size:.72rem; font-weight:700; color:#15794f; background:#fff;
-  border:1px solid #cfe3d8; border-radius:99px; padding:4px 10px}
-.selfblock{margin-top:11px}
-.selfblock .bt{font-size:.8rem; font-weight:700}
-.selfblock ul{list-style:none; margin:5px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
-.selfblock li{font-size:.76rem; font-weight:700; border-radius:99px; padding:4px 11px}
-.selfblock.have li{color:#15794f; background:#fff; border:1px solid #8ccfae}
-.selfblock.need li{color:#b8571f; background:#fdf0e3; border:1px solid #f0c99b}
-.selfblock.need .bt{color:#b8571f}
-.selfcard .who2{margin-top:10px; font-size:.78rem; line-height:1.85; color:var(--text-secondary)}
-.selfcard .who2 b{color:var(--text-primary)}
 .selfshots{margin-top:11px; display:flex; gap:8px}
 .selfshots figure{flex:1; margin:0}
 .selfshots img{width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:10px; display:block;
@@ -348,37 +324,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .kyu .hbtn{border-color:#c0392b; color:#c0392b}
 .kyu .hbtn.go{background:#c0392b; color:#fff; border-color:#c0392b}
 .kyu .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
-
-/* 避難所に行けない方への物資のお届け（届ける側・受け取る側で読む場所が違うので分ける） */
-#delivCommon .hub, #delivCommon .flow{margin-top:2px}
-.deliv{margin-top:12px; border:1.5px solid #e8c99b; border-radius:14px; padding:14px 16px;
-  background:#fdf9f2}
-.deliv:first-child{margin-top:2px}
-.deliv .dh{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
-.deliv .dh .ar{font-size:1rem; font-weight:700}
-.deliv .dh .ct{font-size:.68rem; font-weight:700; color:#c07a1f; background:#fff;
-  border:1px solid #e8c99b; border-radius:99px; padding:3px 9px}
-.deliv .hub, #delivCommon .hub{margin-top:9px; font-size:.82rem; line-height:1.8; color:var(--text-secondary)}
-.deliv .hub b, #delivCommon .hub b{color:var(--text-primary)}
-.deliv .flow, #delivCommon .flow{list-style:none; margin:9px 0 0; padding:0; counter-reset:st}
-.deliv .flow li, #delivCommon .flow li{counter-increment:st; position:relative; padding-left:26px; margin-top:6px;
-  font-size:.82rem; line-height:1.75; color:var(--text-secondary)}
-.deliv .flow li::before, #delivCommon .flow li::before{content:counter(st); position:absolute; left:0; top:2px;
-  width:18px; height:18px; border-radius:50%; background:#c07a1f; color:#fff;
-  font-size:.66rem; font-weight:700; display:flex; align-items:center; justify-content:center}
-.deliv .who, #delivCommon .who{margin-top:12px; border-radius:11px; padding:10px 13px}
-.deliv .who.give, #delivCommon .who.give{background:#fff; border:1.5px solid #e8c99b}
-.deliv .who.get, #delivCommon .who.get{background:#f0faf5; border:1.5px solid #8ccfae}
-.deliv .who .wt, #delivCommon .who .wt{font-size:.86rem; font-weight:700}
-.deliv .who.give .wt, #delivCommon .who.give .wt{color:#a8650f}
-.deliv .who.get .wt, #delivCommon .who.get .wt{color:#15794f}
-.deliv .who .ws, #delivCommon .who .ws{margin-top:4px; font-size:.8rem; line-height:1.8; color:var(--text-secondary)}
-.deliv .who .ws b, #delivCommon .who .ws b{color:var(--text-primary)}
-.deliv .cautionbox, #delivCommon .cautionbox{margin-top:11px; background:#fdf3f3; border:1.5px solid #e8b2b2;
-  border-radius:11px; padding:10px 13px; font-size:.79rem; line-height:1.8;
-  color:var(--text-secondary)}
-.deliv .tel{white-space:nowrap; display:inline-block}
-.deliv .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
 
 /* こどもショートステイ（無料・宿泊預かり） */
 .kids{margin-top:2px; border:1.5px solid #e8b6c8; border-radius:14px; padding:14px 16px;
@@ -608,7 +553,6 @@ footer a{color:var(--accent)}
   <div class="secnav-in">
     <a href="#shelterCard">🏫 避難所</a>
     <a href="#mapCard">🗺 地図</a>
-    <a href="#secDeliv">🚚 お届け</a>
     <a href="#kidsCard">👶 子どもの預かり</a>
     <a href="#laundryCard">🧺 洗濯</a>
     <a href="#petCard">🐈 猫の預かり</a>
@@ -619,7 +563,6 @@ footer a{color:var(--accent)}
     <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
-    <a href="#secSelf">🤝 自主避難所</a>
     <a href="#secBrief">📋 市議会</a>
     <a href="#voiceCard">💬 市民の声</a>
     <a href="#secContact">🙋 情報提供</a>
@@ -687,13 +630,6 @@ footer a{color:var(--accent)}
     </div>
   </section>
 
-  <section class="card hidden" id="secDeliv">
-    <h2><span class="dot" style="background:#c07a1f"></span>避難所に行けない方へ、物資を届ける動き</h2>
-    <p class="desc">避難所には物資があっても、<b>そこまで行けない方には届きません</b>。地域の有志の方が、<b>家にいる方へ物資を配る取り組み</b>を始めています。<br><b>お願い：物資を直接持って行かないでください。</b>知らない方が突然訪ねると不審に思われてしまいます。まずご連絡いただければ、届け先をお伝えします。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 活動されている方からの情報提供</span></p>
-    <div id="delivCommon"></div>
-    <div id="delivList"></div>
-  </section>
-
   <section class="card" id="secBrief">
     <h2><span class="dot" style="background:#5a7fa8"></span>宇城市議会からの報告</h2>
     <p class="desc">宇城市議会が公式YouTubeで発信している報告をまとめています。市の災害対応の状況が、議長から市民に向けて説明されています。<b>市内全体のこと</b>——住宅の被害、道路や水道の復旧、罹災証明書やブルーシートの手続きなど、避難所の外の話もここで分かります。<br>市議会は、<b>市民から寄せられた困りごとを市へ要望として伝える場</b>でもあります。<br><span class="srcbadge city" style="margin:4px 5px 0 0">📋 宇城市議会の発信から要約</span> 数字は報告の時点のもので、今後変わることがあります。手続きの詳細は市の公式発表をご確認ください。</p>
@@ -710,14 +646,6 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#a8447a"></span>市民の声</h2>
     <p class="desc">市の会議では説明されていないけれど、暮らしのなかで実際に困っていること。<b>教えていただいた声を、そのまま載せています。</b><br>お名前・連絡先は載せません。同じ困りごとが集まれば、市議会を通して市へ伝えることができます。</p>
     <div id="voiceList"></div>
-  </section>
-
-  <section class="card" id="secSelf">
-    <h2><span class="dot" style="background:#2f8f6b"></span>自主運営の避難所</h2>
-    <p class="desc">地域の方が<b>自分たちで開設・運営されている避難所</b>です。市が開設した避難所と違い、物資が行政から自動的に届くわけではありません。<b>いま足りていないもの</b>を、そのまま載せています。<br>宇城市外の避難所も含みます。地図に載らない・行政の一覧に出ないため、情報が届きにくい場所です。<br><span class="srcbadge via" style="margin:4px 5px 0 0">🙋 避難所の方からの情報提供</span> 掲載内容は、その避難所を運営されている方から直接いただいたものです。</p>
-    <div id="selfList"><p class="empty">情報は準備中です。</p></div>
-    <p class="desc" style="margin:14px 0 0"><b>物資を届けたい、という方へ。</b>お送り先や受け取り方法をお伝えしますので、DMでご連絡ください。個人での持ち込みが難しい場合も、まずはご相談ください。</p>
-    <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ 物資について相談する（InstagramのDM）</a>
   </section>
 
   <section class="card contact" id="secContact">
@@ -1965,89 +1893,6 @@ function renderRefresh(){
   }
 }
 
-/* 自主運営の避難所（市の一覧に出ないため、必要な物資まで載せる） */
-function renderSelfShelters(){
-  const box = document.getElementById("selfList");
-  box.textContent = "";
-  const list = DATA.selfShelters || [];
-  if (!list.length){
-    const p = document.createElement("p"); p.className = "empty";
-    p.textContent = "情報は準備中です。"; box.appendChild(p); return;
-  }
-  list.forEach(sh => {
-    const c = document.createElement("div"); c.className = "selfcard";
-
-    const head = document.createElement("div"); head.className = "sh";
-    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = sh.name;
-    head.appendChild(nm);
-    if (sh.city){
-      const ct = document.createElement("span"); ct.className = "city";
-      ct.textContent = sh.city + (sh.area ? "・" + sh.area : "");
-      head.appendChild(ct);
-    }
-    c.appendChild(head);
-
-    if (sh.address){
-      const ad = document.createElement("div"); ad.className = "addr";
-      ad.appendChild(document.createTextNode(sh.address + " "));
-      const a = document.createElement("a");
-      a.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(sh.address);
-      a.target = "_blank"; a.rel = "noopener"; a.textContent = "地図で開く";
-      ad.appendChild(a);
-      c.appendChild(ad);
-    }
-
-    if (sh.hours){
-      const h = document.createElement("div"); h.className = "hours";
-      h.textContent = "🕗 受付時間：" + sh.hours;
-      c.appendChild(h);
-    }
-
-    if ((sh.facilities || []).length){
-      const bs = document.createElement("div"); bs.className = "badges";
-      sh.facilities.forEach(f => {
-        const b = document.createElement("span"); b.textContent = facilityLabel(f); bs.appendChild(b);
-      });
-      c.appendChild(bs);
-    }
-
-    const block = (cls, title, items, labelFn) => {
-      if (!(items || []).length) return;
-      const w = document.createElement("div"); w.className = "selfblock " + cls;
-      const t = document.createElement("div"); t.className = "bt"; t.textContent = title;
-      const ul = document.createElement("ul");
-      items.forEach(i => { const li = document.createElement("li"); li.textContent = labelFn(i); ul.appendChild(li); });
-      w.append(t, ul); c.appendChild(w);
-    };
-    block("have", "いまある物資", sh.haves, itemLabel);
-    block("need", "⚠ いま足りていないもの", sh.needs, itemLabel);
-
-    if (sh.people || sh.note){
-      const w = document.createElement("div"); w.className = "who2";
-      if (sh.people){ const b = document.createElement("b"); b.textContent = sh.people; w.append(b, document.createElement("br")); }
-      if (sh.note) w.appendChild(document.createTextNode(sh.note));
-      c.appendChild(w);
-    }
-
-    if ((sh.photos || []).length){
-      const g = document.createElement("div"); g.className = "selfshots";
-      sh.photos.slice(0, 2).forEach(ph => {
-        const fig = document.createElement("figure");
-        const im = document.createElement("img"); im.src = ph.src; im.alt = ph.cap || ""; im.loading = "lazy";
-        const cap = document.createElement("figcaption"); cap.textContent = ph.cap || "";
-        fig.append(im, cap); g.appendChild(fig);
-      });
-      c.appendChild(g);
-    }
-
-    const src = document.createElement("div"); src.className = "who2";
-    src.style.marginTop = "8px";
-    src.textContent = (sh.source ? sh.source : "") + (sh.updatedAt ? `（${whenLabel(sh.updatedAt)}）` : "");
-    c.appendChild(src);
-
-    box.appendChild(c);
-  });
-}
 
 /* 防災井戸（飲めないので、生活用水としての案内） */
 function renderWells(){
@@ -2071,127 +1916,6 @@ function renderWells(){
 
 /* 市外の自治体からの住まいの提供（締切が短いので、期限を最初に見せる） */
 /* 物資のお届け：届ける側と受け取る側で必要な情報が違うので、ブロックを分けて出す */
-/* 在宅避難のページに登録された「足りていないもの」を、区の名前で引く */
-function zaitakuNeeds(name){
-  if (!ZAITAKU) return null;
-  const d = (ZAITAKU.districts || []).find(x => x.name === name);
-  const r = d && d.report;
-  if (!r || !r.needs) return null;
-  const ruleName = {};
-  (ZAITAKU.rules || []).forEach(x => { ruleName[x.id] = x.name; });
-  const items = Object.keys(r.needs).map(k => ruleName[k]).filter(Boolean);
-  if (!items.length) return null;
-  const notes = Object.values(r.needs).map(v => v && v.note).filter(Boolean);
-  return {
-    label: name.replace(/^.*?[町市]\s*/, "") || name,
-    items,
-    note: [...new Set(notes)].join("／"),
-    at: (r.updatedAt || "").slice(0, 10).replace(/^\d{4}-0?(\d+)-0?(\d+)$/, "$1月$2日")
-  };
-}
-function renderDelivery(){
-  const card = document.getElementById("secDeliv");
-  const common = document.getElementById("delivCommon");
-  const box = document.getElementById("delivList");
-  const list = DATA.delivery || [];
-  const cm = DATA.deliveryCommon || {};
-  common.textContent = ""; box.textContent = "";
-  card.classList.toggle("hidden", !list.length);
-  if (!list.length) return;
-
-  /* 届け方も考え方も地区で変わらないので、section の頭に一度だけ出す */
-  if (cm.hub){
-    const h = document.createElement("div"); h.className = "hub";
-    h.textContent = "📍 " + cm.hub;
-    common.appendChild(h);
-  }
-  /* 届け方と役割の説明は長い。場所だけ先に見せて、あとは開いた人が読む */
-  const cdet = fold("📦 届け方・渡す側と受け取る側へのお願いを見る", b0 => {
-    if ((cm.flow || []).length){
-      const ul = document.createElement("ul"); ul.className = "flow";
-      cm.flow.forEach(f => { const li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
-      b0.appendChild(ul);
-    }
-    [["give", cm.givers], ["get", cm.residents]].forEach(([cls, w]) => {
-      if (!w) return;
-      const b = document.createElement("div"); b.className = "who " + cls;
-      const t = document.createElement("div"); t.className = "wt"; t.textContent = w.head || "";
-      const x = document.createElement("div"); x.className = "ws"; x.textContent = w.body || "";
-      b.append(t, x);
-      b0.appendChild(b);
-    });
-    /* 制度として行われているものと誤解されると、区長さんたちに問い合わせが行ってしまう */
-    if (cm.caution){
-      const w = document.createElement("div"); w.className = "cautionbox";
-      w.textContent = "⚠ " + cm.caution;
-      b0.appendChild(w);
-    }
-  });
-  if (cdet) common.appendChild(cdet);
-
-  /* 地区ごとに変わるのは「どこの区か」「何が足りていないか」「どこへ連絡するか」だけ */
-  list.forEach(d => {
-    const c = document.createElement("div"); c.className = "deliv";
-
-    const dh = document.createElement("div"); dh.className = "dh";
-    const ar = document.createElement("span"); ar.className = "ar"; ar.textContent = d.area || "";
-    dh.appendChild(ar);
-    if (d.city){ const ct = document.createElement("span"); ct.className = "ct"; ct.textContent = d.city; dh.appendChild(ct); }
-    c.appendChild(dh);
-
-    /* 足りていないものは在宅避難のページ（zaitaku.json）から読むので、二重に持たない */
-    const needBlock = (title, items, note) => {
-      if (!items.length) return;
-      const w = document.createElement("div"); w.className = "selfblock need";
-      const t = document.createElement("div"); t.className = "bt"; t.textContent = title;
-      const ul = document.createElement("ul");
-      items.forEach(n => { const li = document.createElement("li"); li.textContent = itemLabel(n); ul.appendChild(li); });
-      w.append(t, ul);
-      if (note){
-        const nn = document.createElement("p"); nn.className = "desc"; nn.style.margin = "7px 0 0";
-        nn.textContent = note;
-        w.appendChild(nn);
-      }
-      c.appendChild(w);
-    };
-    const zds = d.zaitakuDistricts || [];
-    if (zds.length){
-      zds.forEach(name => {
-        const z = zaitakuNeeds(name);
-        if (!z) return;
-        needBlock(`⚠ ${z.label}で足りていないもの`, z.items,
-          [z.note, z.at ? `（${z.at} 地区からの報告）` : ""].filter(Boolean).join(""));
-      });
-    } else {
-      needBlock("⚠ いま足りていないもの", d.needs || [], d.needsNote);
-    }
-
-    /* 代表の方に直接つながるのがいちばん早いので、電話を先に出す */
-    if (d.tel){
-      const a = document.createElement("a"); a.className = "hbtn";
-      a.href = "tel:" + d.tel.replace(/[-\s]/g, "");
-      const num = document.createElement("span"); num.className = "tel"; num.textContent = d.tel;
-      a.append(document.createTextNode(`📞 ${d.lead || "代表の方"}へ電話　`), num);
-      c.appendChild(a);
-      if (d.leadRole){
-        const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
-        n.textContent = d.leadRole + "です。ご本人の了解を得て掲載しています。";
-        c.appendChild(n);
-      }
-    }
-    if (d.contactUrl){
-      const a = document.createElement("a"); a.className = "hbtn" + (d.tel ? " line2" : "");
-      a.href = d.contactUrl; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = d.contactLabel || "✉️ InstagramのDMで連絡する";
-      c.appendChild(a);
-    }
-    if (d.source){
-      const sc = document.createElement("div"); sc.className = "src2"; sc.textContent = d.source;
-      c.appendChild(sc);
-    }
-    box.appendChild(c);
-  });
-}
 function renderKids(){
   const card = document.getElementById("kidsCard");
   const box = document.getElementById("kidsBody");
@@ -2606,8 +2330,6 @@ function renderAll(){
   renderBaths();
   renderToiletCars();
   renderToilets();
-  renderDelivery();
-  renderSelfShelters();
   renderBriefings();
   renderVoices();
   renderMap();
