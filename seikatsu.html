@@ -294,6 +294,42 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .rep .nb{margin-top:10px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
 .rep .nb li{margin-left:1.1em}
 .rep .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
+/* 応急修理。取り返しがつかない注意が多いので、緊急修理より強い色で組む */
+.kyu{margin-top:2px; border:2px solid #e8b2b2; border-radius:14px; padding:14px 16px;
+  background:#fdf6f5}
+.kyu .when{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:#fff; border:1.5px solid #c0392b; border-radius:11px; padding:10px 14px}
+.kyu .when .wl{font-size:.76rem; font-weight:700; color:#c0392b; white-space:nowrap}
+.kyu .when .wv{font-size:.95rem; font-weight:700; color:#c0392b; text-align:right; line-height:1.5}
+/* 写真の注意。ここを読み飛ばすと申し込めなくなる */
+.kyu .first{margin-top:11px; background:#c0392b; border-radius:11px; padding:11px 14px; color:#fff}
+.kyu .first b{display:block; font-size:.92rem; line-height:1.5}
+.kyu .first p{margin-top:4px; font-size:.79rem; line-height:1.8; color:#ffe9e6}
+.kyu .cau{margin-top:9px; background:#fff; border:1.5px solid #e8b2b2; border-radius:11px;
+  padding:9px 13px}
+.kyu .cau .h{font-size:.82rem; font-weight:700; color:#c0392b; line-height:1.55}
+.kyu .cau p{margin-top:3px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.kyu .lim{margin-top:11px; background:#fff; border:1px solid var(--border); border-radius:11px;
+  padding:9px 13px}
+.kyu .lim .r{display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  padding:5px 0; border-top:1px solid var(--grid)}
+.kyu .lim .r:first-of-type{border-top:0}
+.kyu .lim .r .k{font-size:.78rem; font-weight:700; color:var(--text-secondary)}
+.kyu .lim .r .v{font-size:1.1rem; font-weight:700; color:#c0392b; white-space:nowrap}
+.kyu .lim .t{font-size:.75rem; font-weight:700; color:#c0392b}
+.kyu .lim .n{margin-top:5px; font-size:.72rem; line-height:1.7; color:var(--text-muted)}
+.kyu .blk{margin-top:11px}
+.kyu .blk .bh{font-size:.82rem; font-weight:700; color:#c0392b}
+.kyu .blk ul{list-style:none; margin:5px 0 0; padding:0}
+.kyu .blk li{font-size:.79rem; line-height:1.8; color:var(--text-secondary);
+  padding-left:17px; text-indent:-17px; margin-bottom:3px}
+.kyu .blk li::before{content:"・"; color:var(--text-muted)}
+.kyu .blk.ng li::before{content:"✕ "; color:#c0392b; font-weight:700}
+.kyu .blk.need li::before{content:"□ "; color:#8a867c}
+.kyu .blk p{margin-top:4px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
+.kyu .hbtn{border-color:#c0392b; color:#c0392b}
+.kyu .hbtn.go{background:#c0392b; color:#fff; border-color:#c0392b}
+.kyu .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
 
 /* 避難所に行けない方への物資のお届け（届ける側・受け取る側で読む場所が違うので分ける） */
 #delivCommon .hub, #delivCommon .flow{margin-top:2px}
@@ -559,6 +595,7 @@ footer a{color:var(--accent)}
     <a href="#laundryCard">🧺 洗濯</a>
     <a href="#petCard">🐈 猫の預かり</a>
     <a href="#repairCard">🔨 住宅修理</a>
+    <a href="#kyuRepairCard">🔧 応急修理</a>
     <a href="#hotelCard">🏨 住まい</a>
     <a href="#refreshCard">🏞 南阿蘇</a>
     <a href="#secToilet">🚻 トイレ</a>
@@ -689,6 +726,12 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#c07a2a"></span>飼い猫の一時預かり</h2>
     <p class="desc">避難所に連れて行けない、家に置いておけない——<b>猫の預かり先がなくて困っている方</b>のための支援です。</p>
     <div id="petBody"></div>
+  </section>
+
+  <section class="card hidden" id="kyuRepairCard">
+    <h2><span class="dot" style="background:#c0392b"></span>住宅の応急修理（8月20日から受付）</h2>
+    <p class="desc">罹災証明書で<b>「準半壊」以上</b>の判定を受けた方が対象です。<b>屋根・ドア・水道・トイレなど、日常生活に欠かせない部分の修理費用を市が業者へ直接支払います。</b><br><b>工事を始める前に、必ず被災の写真を撮ってください。</b>撮っていないと申し込めません。</p>
+    <div id="kyuRepairBody"></div>
   </section>
 
   <section class="card hidden" id="repairCard">
@@ -2263,6 +2306,99 @@ function renderPets(){
 }
 
 /* 住宅の緊急修理：上限額 → 受付 → 対象 → 注意 の順。工事の前に見積もりが要る点がいちばん大事 */
+/* 災害救助法の応急修理。写真と併用制限を読み飛ばすと取り返しがつかないので、
+   お金や条件より先にその2つを出す */
+function renderKyuRepair(){
+  const card = document.getElementById("kyuRepairCard");
+  const box = document.getElementById("kyuRepairBody");
+  const k = DATA.kyuRepair;
+  box.textContent = "";
+  card.classList.toggle("hidden", !k);
+  if (!k) return;
+
+  const c = document.createElement("div"); c.className = "kyu";
+
+  if (k.start){
+    const w = document.createElement("div"); w.className = "when";
+    const wl = document.createElement("div"); wl.className = "wl"; wl.textContent = k.startLabel || "受付開始";
+    const wv = document.createElement("div"); wv.className = "wv"; wv.textContent = k.start;
+    w.append(wl, wv); c.appendChild(w);
+  }
+
+  if (k.firstWarn){
+    const f = document.createElement("div"); f.className = "first";
+    const b = document.createElement("b"); b.textContent = "📷 " + (k.firstWarnHead || "工事の前に写真を");
+    const p = document.createElement("p"); p.textContent = k.firstWarn;
+    f.append(b, p); c.appendChild(f);
+  }
+
+  (k.cautions || []).forEach(x => {
+    const cu = document.createElement("div"); cu.className = "cau";
+    const h = document.createElement("div"); h.className = "h"; h.textContent = "⚠ " + x.h;
+    const p = document.createElement("p"); p.textContent = x.b;
+    cu.append(h, p); c.appendChild(cu);
+  });
+
+  if ((k.limits || []).length){
+    const l = document.createElement("div"); l.className = "lim";
+    const t = document.createElement("div"); t.className = "t"; t.textContent = "💰 1世帯あたりの限度額";
+    l.appendChild(t);
+    k.limits.forEach(x => {
+      const r = document.createElement("div"); r.className = "r";
+      const ks = document.createElement("span"); ks.className = "k"; ks.textContent = x.k;
+      const vs = document.createElement("span"); vs.className = "v"; vs.textContent = x.v;
+      r.append(ks, vs); l.appendChild(r);
+    });
+    if (k.limitNote){ const n = document.createElement("div"); n.className = "n"; n.textContent = k.limitNote; l.appendChild(n); }
+    c.appendChild(l);
+  }
+
+  /* 見出し付きの箇条書き。対象・工事の範囲・持ち物で使い回す */
+  const blk = (cls, head, items, note) => {
+    if (!(items || []).length && !note) return;
+    const b = document.createElement("div"); b.className = "blk" + (cls ? " " + cls : "");
+    const h = document.createElement("div"); h.className = "bh"; h.textContent = head;
+    b.appendChild(h);
+    if ((items || []).length){
+      const ul = document.createElement("ul");
+      items.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      b.appendChild(ul);
+    }
+    if (note){ const p = document.createElement("p"); p.textContent = note; b.appendChild(p); }
+    c.appendChild(b);
+  };
+
+  blk("", "👤 対象になる方（すべてにあてはまる方）", k.targets, k.targetNote);
+  blk("", "🔧 直せるところ", [], k.scope);
+  blk("ng", "対象にならないもの", k.scopeNg);
+  blk("need", "📋 申込みに必要なもの", k.needs, k.needsNote);
+  blk("", "🔨 修理業者について", [], k.builder);
+
+  if (k.builderUrl){
+    const a = document.createElement("a"); a.className = "hbtn line2";
+    a.href = k.builderUrl; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = k.builderUrlLabel || "修理業者の名簿を見る";
+    c.appendChild(a);
+  }
+  if (k.onlineUrl){
+    const a = document.createElement("a"); a.className = "hbtn go line2";
+    a.href = k.onlineUrl; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = k.onlineLabel || "オンラインで申し込む";
+    c.appendChild(a);
+  }
+  if (k.counter){
+    blk("", "🏢 窓口で申し込む場合", [], k.counter + (k.counterNote ? "（" + k.counterNote + "）" : ""));
+  }
+  if (k.tel){
+    const a = document.createElement("a"); a.className = "hbtn line2";
+    a.href = "tel:" + String(k.tel).replace(/-/g, "");
+    a.textContent = `📞 ${k.dept || "宇城市"}　${k.tel}`;
+    c.appendChild(a);
+  }
+  if (k.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = k.source; c.appendChild(s); }
+  box.appendChild(c);
+}
+
 function renderRepair(){
   const card = document.getElementById("repairCard");
   const box = document.getElementById("repairBody");
@@ -2396,6 +2532,7 @@ function renderAll(){
   renderKids();
   renderLaundry();
   renderPets();
+  renderKyuRepair();
   renderRepair();
   renderHotel();
   renderHousing();
