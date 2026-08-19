@@ -192,7 +192,12 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .brief:first-child{margin-top:2px}
 .btopic{padding:9px 2px 9px 0; border-top:1px solid var(--border)}
 .btopic:first-child{border-top:0; padding-top:4px}
-.btopic .bh{font-size:.86rem; font-weight:700; display:flex; gap:7px; align-items:baseline}
+.btopic > .bh{font-size:.86rem; font-weight:700; display:flex; gap:7px; align-items:baseline;
+  list-style:none; cursor:pointer}
+.btopic > .bh::-webkit-details-marker{display:none}
+.btopic > .bh::after{content:"▼"; margin-left:auto; flex:0 0 auto; font-size:.52rem;
+  color:var(--text-muted); align-self:center}
+.btopic[open] > .bh::after{content:"▲"}
 .btopic ul{list-style:none; margin:4px 0 0; padding:0}
 .btopic li{font-size:.82rem; line-height:1.85; color:var(--text-secondary);
   padding-left:14px; text-indent:-14px}
@@ -226,6 +231,19 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .vcard .vmore{margin-top:9px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
 .vcard .vmore b{color:var(--text-primary)}
 .vcard .vsrc{margin-top:9px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
+/* 長い説明は、まず結論だけ出して残りを畳む。使うと決めた人だけが開けばいい。
+   期限・受付開始日・取り返しがつかない警告・場所と時間は、ここに入れない */
+.fold{margin-top:11px; border:1px solid var(--border); border-radius:11px;
+  background:var(--surface-1)}
+.fold > summary{list-style:none; cursor:pointer; padding:9px 13px; display:flex;
+  align-items:center; gap:8px; font-size:.79rem; font-weight:700;
+  color:var(--text-secondary); line-height:1.6}
+.fold > summary::-webkit-details-marker{display:none}
+.fold > summary::after{content:"▼"; margin-left:auto; flex:0 0 auto; font-size:.55rem;
+  color:var(--text-muted)}
+.fold[open] > summary::after{content:"▲"}
+.fold > .fbody{padding:10px 13px 12px; border-top:1px solid var(--border)}
+.fold > .fbody > *:first-child{margin-top:0}
 /* 自主運営の避難所 */
 .selfcard{margin-top:12px; border:1.5px solid #cfe3d8; border-radius:14px; padding:14px 16px;
   background:#f6fbf8}
@@ -941,6 +959,16 @@ function shelterStatus(s){
   if (r >= 0.9) return { color: cssVar("--status-warning"),  label: "⚠ 逼迫",     cls: "warn" };
   return { color: cssVar("--accent"), label: "受入可", cls: "" };
 }
+/* 細かい説明を畳むための入れもの。中身が空なら null を返すので、そのまま append できる */
+function fold(label, fill){
+  const d = document.createElement("details"); d.className = "fold";
+  const s = document.createElement("summary"); s.textContent = label;
+  const b = document.createElement("div"); b.className = "fbody";
+  d.append(s, b);
+  fill(b);
+  return b.childElementCount ? d : null;
+}
+
 function renderKPIs(){
   const box = document.getElementById("kpis");
   box.textContent = "";
@@ -1265,32 +1293,36 @@ function renderHotel(){
     box.appendChild(el);
   }
 
-  (h.steps || []).forEach(s => {
-    const el = document.createElement("div"); el.className = "hstep"; el.textContent = s;
-    box.appendChild(el);
-  });
+  /* 申込みの手順と注意は、使うと決めた人だけが読めばいい */
+  const hdet = fold("📋 申込みの手順と、知っておいてほしいことを見る", b0 => {
+    (h.steps || []).forEach(s => {
+      const el = document.createElement("div"); el.className = "hstep"; el.textContent = s;
+      b0.appendChild(el);
+    });
 
-  /* 県のコールセンター：土日も出るので、まずここに電話するのが早い */
-  if (h.callTel){
-    const a = document.createElement("a"); a.className = "hbtn";
-    a.href = "tel:" + h.callTel.replace(/-/g, "");
-    a.textContent = `📞 ${h.callName || "コールセンター"} ${h.callTel}`;
-    box.appendChild(a);
-    if (h.callNote){
-      const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
-      n.textContent = h.callNote;
-      box.appendChild(n);
+    /* 県のコールセンター：土日も出るので、まずここに電話するのが早い */
+    if (h.callTel){
+      const a = document.createElement("a"); a.className = "hbtn";
+      a.href = "tel:" + h.callTel.replace(/-/g, "");
+      a.textContent = `📞 ${h.callName || "コールセンター"} ${h.callTel}`;
+      b0.appendChild(a);
+      if (h.callNote){
+        const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
+        n.textContent = h.callNote;
+        b0.appendChild(n);
+      }
     }
-  }
 
-  if (h.notes && h.notes.length){
-    const nb = document.createElement("div"); nb.className = "bring";
-    const t = document.createElement("div"); t.className = "bring-title"; t.textContent = "⚠ 知っておいてください";
-    const ul = document.createElement("ul");
-    h.notes.forEach(n => { const li = document.createElement("li"); li.textContent = "・" + n; ul.appendChild(li); });
-    nb.append(t, ul);
-    box.appendChild(nb);
-  }
+    if (h.notes && h.notes.length){
+      const nb = document.createElement("div"); nb.className = "bring";
+      const t = document.createElement("div"); t.className = "bring-title"; t.textContent = "⚠ 知っておいてください";
+      const ul = document.createElement("ul");
+      h.notes.forEach(n => { const li = document.createElement("li"); li.textContent = "・" + n; ul.appendChild(li); });
+      nb.append(t, ul);
+      b0.appendChild(nb);
+    }
+  });
+  if (hdet) box.appendChild(hdet);
 
   if (h.formUrl){
     const a = document.createElement("a"); a.className = "hbtn line2"; a.href = h.formUrl;
@@ -1372,12 +1404,22 @@ function renderToiletCars(){
     nm.textContent = p.name;
     const sm = document.createElement("small"); sm.textContent = p.district; nm.appendChild(sm);
     row.appendChild(nm);
-    const ul = document.createElement("ul");
-    (p.from || []).forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-    row.appendChild(ul);
     row.appendChild(gmapsLink(gmapsQuery(p)));
     w.appendChild(row);
   });
+
+  /* どこの自治体から来ているかは、トイレを探すのに要らない。読みたい人だけが開く */
+  const fdet = fold("🙏 どこから来ているか（派遣元の自治体）", b0 => {
+    places.forEach(p => {
+      if (!(p.from || []).length) return;
+      const r = document.createElement("div"); r.className = "tp";
+      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = p.name;
+      const ul = document.createElement("ul");
+      p.from.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      r.append(nm, ul); b0.appendChild(r);
+    });
+  });
+  if (fdet) w.appendChild(fdet);
 
   if (t.partial){ const n = document.createElement("div"); n.className = "tpart"; n.textContent = "※ " + t.partial; w.appendChild(n); }
   if (t.source){ const s = document.createElement("div"); s.className = "tsrc"; s.textContent = t.source; w.appendChild(s); }
@@ -1794,8 +1836,10 @@ function renderBriefings(){
     sum.appendChild(cnt);
     det.appendChild(sum);
     (bf.topics || []).forEach(t => {
-      const w = document.createElement("div"); w.className = "btopic";
-      const h = document.createElement("div"); h.className = "bh";
+      /* 見出しだけを並べて、中身はタップで開く。1回の会議で10件近くあるので、
+         全部出すと下の項目にたどり着けない */
+      const w = document.createElement("details"); w.className = "btopic";
+      const h = document.createElement("summary"); h.className = "bh";
       const ic = document.createElement("span"); ic.textContent = t.icon || "・";
       const hd = document.createElement("span"); hd.textContent = t.head || "";
       h.append(ic, hd);
@@ -1817,6 +1861,7 @@ function renderBriefings(){
           v.appendChild(vs);
         }
         w.appendChild(v);
+        w.open = true;   // 市民の声が付いている回は、畳むと見えなくなるので開けておく
       }
       det.appendChild(w);
     });
@@ -1839,14 +1884,18 @@ function renderVoices(){
     const ul = document.createElement("ul");
     (v.lines || []).forEach(l => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
     c.appendChild(ul);
-    if (v.city){
-      const cy = document.createElement("div"); cy.className = "vcity";
-      const ch = document.createElement("div"); ch.className = "h"; ch.textContent = "📋 市の説明";
-      const cp = document.createElement("p"); cp.textContent = v.city;
-      cy.append(ch, cp); c.appendChild(cy);
-    }
     if (v.note){ const n = document.createElement("div"); n.className = "vmore"; n.textContent = v.note; c.appendChild(n); }
-    if (v.source){ const s = document.createElement("div"); s.className = "vsrc"; s.textContent = v.source; c.appendChild(s); }
+    /* 市の説明と出典は、声そのものより後で読めばいい */
+    const vdet = fold("📋 市の説明と出典を見る", b0 => {
+      if (v.city){
+        const cy = document.createElement("div"); cy.className = "vcity"; cy.style.marginTop = "0";
+        const ch = document.createElement("div"); ch.className = "h"; ch.textContent = "📋 市の説明";
+        const cp = document.createElement("p"); cp.textContent = v.city;
+        cy.append(ch, cp); b0.appendChild(cy);
+      }
+      if (v.source){ const s = document.createElement("div"); s.className = "vsrc"; s.textContent = v.source; b0.appendChild(s); }
+    });
+    if (vdet) c.appendChild(vdet);
     box.appendChild(c);
   });
 }
@@ -1880,19 +1929,22 @@ function renderRefresh(){
     box.appendChild(n);
   }
 
-  (r.steps || []).forEach(t => {
-    const el = document.createElement("div"); el.className = "hstep"; el.textContent = t;
-    box.appendChild(el);
-  });
+  const rdet = fold("📋 予約の手順と、知っておいてほしいことを見る", b0 => {
+    (r.steps || []).forEach(t => {
+      const el = document.createElement("div"); el.className = "hstep"; el.textContent = t;
+      b0.appendChild(el);
+    });
 
-  if ((r.notes || []).length){
-    const nb = document.createElement("div"); nb.className = "bring";
-    const t = document.createElement("div"); t.className = "bring-title"; t.textContent = "⚠ 知っておいてください";
-    const ul = document.createElement("ul");
-    r.notes.forEach(n => { const li = document.createElement("li"); li.textContent = "・" + n; ul.appendChild(li); });
-    nb.append(t, ul);
-    box.appendChild(nb);
-  }
+    if ((r.notes || []).length){
+      const nb = document.createElement("div"); nb.className = "bring";
+      const t = document.createElement("div"); t.className = "bring-title"; t.textContent = "⚠ 知っておいてください";
+      const ul = document.createElement("ul");
+      r.notes.forEach(n => { const li = document.createElement("li"); li.textContent = "・" + n; ul.appendChild(li); });
+      nb.append(t, ul);
+      b0.appendChild(nb);
+    }
+  });
+  if (rdet) box.appendChild(rdet);
 
   if (r.pageUrl){
     const a = document.createElement("a"); a.className = "hbtn"; a.href = r.pageUrl;
@@ -2053,25 +2105,29 @@ function renderDelivery(){
     h.textContent = "📍 " + cm.hub;
     common.appendChild(h);
   }
-  if ((cm.flow || []).length){
-    const ul = document.createElement("ul"); ul.className = "flow";
-    cm.flow.forEach(f => { const li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
-    common.appendChild(ul);
-  }
-  [["give", cm.givers], ["get", cm.residents]].forEach(([cls, w]) => {
-    if (!w) return;
-    const b = document.createElement("div"); b.className = "who " + cls;
-    const t = document.createElement("div"); t.className = "wt"; t.textContent = w.head || "";
-    const x = document.createElement("div"); x.className = "ws"; x.textContent = w.body || "";
-    b.append(t, x);
-    common.appendChild(b);
+  /* 届け方と役割の説明は長い。場所だけ先に見せて、あとは開いた人が読む */
+  const cdet = fold("📦 届け方・渡す側と受け取る側へのお願いを見る", b0 => {
+    if ((cm.flow || []).length){
+      const ul = document.createElement("ul"); ul.className = "flow";
+      cm.flow.forEach(f => { const li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
+      b0.appendChild(ul);
+    }
+    [["give", cm.givers], ["get", cm.residents]].forEach(([cls, w]) => {
+      if (!w) return;
+      const b = document.createElement("div"); b.className = "who " + cls;
+      const t = document.createElement("div"); t.className = "wt"; t.textContent = w.head || "";
+      const x = document.createElement("div"); x.className = "ws"; x.textContent = w.body || "";
+      b.append(t, x);
+      b0.appendChild(b);
+    });
+    /* 制度として行われているものと誤解されると、区長さんたちに問い合わせが行ってしまう */
+    if (cm.caution){
+      const w = document.createElement("div"); w.className = "cautionbox";
+      w.textContent = "⚠ " + cm.caution;
+      b0.appendChild(w);
+    }
   });
-  /* 制度として行われているものと誤解されると、区長さんたちに問い合わせが行ってしまう */
-  if (cm.caution){
-    const w = document.createElement("div"); w.className = "cautionbox";
-    w.textContent = "⚠ " + cm.caution;
-    common.appendChild(w);
-  }
+  if (cdet) common.appendChild(cdet);
 
   /* 地区ごとに変わるのは「どこの区か」「何が足りていないか」「どこへ連絡するか」だけ */
   list.forEach(d => {
@@ -2245,17 +2301,21 @@ function renderLaundry(){
   });
   c.appendChild(kv);
 
-  if ((l.steps || []).length){
-    const st = document.createElement("div"); st.className = "blk";
-    const t = document.createElement("div"); t.className = "bt"; t.textContent = "🧺 受付のしかた";
-    st.appendChild(t);
-    const wrap = document.createElement("div"); wrap.className = "steps";
-    l.steps.forEach(x => { const d = document.createElement("div"); d.className = "st"; d.textContent = x; wrap.appendChild(d); });
-    st.appendChild(wrap); c.appendChild(st);
-  }
+  /* 使い方と持ち込めないものは、行くと決めた人が読めばいい */
+  const ldet = fold("📋 使い方・洗えないもの・注意を見る", b0 => {
+    if ((l.steps || []).length){
+      const st = document.createElement("div"); st.className = "blk";
+      const t = document.createElement("div"); t.className = "bt"; t.textContent = "🧺 受付のしかた";
+      st.appendChild(t);
+      const wrap = document.createElement("div"); wrap.className = "steps";
+      l.steps.forEach(x => { const d = document.createElement("div"); d.className = "st"; d.textContent = x; wrap.appendChild(d); });
+      st.appendChild(wrap); b0.appendChild(st);
+    }
 
-  if ((l.ng || []).length) c.appendChild(lndBlock("洗えないもの（持ち込めません）", l.ng, { warn: true, note: l.ngNote }));
-  if ((l.cautions || []).length) c.appendChild(lndBlock("⚠ 利用上の注意", l.cautions));
+    if ((l.ng || []).length) b0.appendChild(lndBlock("洗えないもの（持ち込めません）", l.ng, { warn: true, note: l.ngNote }));
+    if ((l.cautions || []).length) b0.appendChild(lndBlock("⚠ 利用上の注意", l.cautions));
+  });
+  if (ldet) c.appendChild(ldet);
   if (l.extra){ const n = document.createElement("div"); n.className = "nb"; n.textContent = l.extra; c.appendChild(n); }
   if (l.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = l.source; c.appendChild(s); }
   box.appendChild(c);
@@ -2354,7 +2414,7 @@ function renderKyuRepair(){
   }
 
   /* 見出し付きの箇条書き。対象・工事の範囲・持ち物で使い回す */
-  const blk = (cls, head, items, note) => {
+  const blk = (into, cls, head, items, note) => {
     if (!(items || []).length && !note) return;
     const b = document.createElement("div"); b.className = "blk" + (cls ? " " + cls : "");
     const h = document.createElement("div"); h.className = "bh"; h.textContent = head;
@@ -2365,21 +2425,25 @@ function renderKyuRepair(){
       b.appendChild(ul);
     }
     if (note){ const p = document.createElement("p"); p.textContent = note; b.appendChild(p); }
-    c.appendChild(b);
+    into.appendChild(b);
   };
 
-  blk("", "👤 対象になる方（すべてにあてはまる方）", k.targets, k.targetNote);
-  blk("", "🔧 直せるところ", [], k.scope);
-  blk("ng", "対象にならないもの", k.scopeNg);
-  blk("need", "📋 申込みに必要なもの", k.needs, k.needsNote);
-  blk("", "🔨 修理業者について", [], k.builder);
+  /* 条件と持ち物は、使うと決めた人が読めばいい。受付日と写真の注意より下に畳む */
+  const det = fold("📄 対象になる方・直せるところ・必要な書類を見る", box2 => {
+    blk(box2, "", "👤 対象になる方（すべてにあてはまる方）", k.targets, k.targetNote);
+    blk(box2, "", "🔧 直せるところ", [], k.scope);
+    blk(box2, "ng", "対象にならないもの", k.scopeNg);
+    blk(box2, "need", "📋 申込みに必要なもの", k.needs, k.needsNote);
+    blk(box2, "", "🔨 修理業者について", [], k.builder);
+    if (k.builderUrl){
+      const a = document.createElement("a"); a.className = "hbtn line2";
+      a.href = k.builderUrl; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = k.builderUrlLabel || "修理業者の名簿を見る";
+      box2.appendChild(a);
+    }
+  });
+  if (det) c.appendChild(det);
 
-  if (k.builderUrl){
-    const a = document.createElement("a"); a.className = "hbtn line2";
-    a.href = k.builderUrl; a.target = "_blank"; a.rel = "noopener";
-    a.textContent = k.builderUrlLabel || "修理業者の名簿を見る";
-    c.appendChild(a);
-  }
   if (k.onlineUrl){
     const a = document.createElement("a"); a.className = "hbtn go line2";
     a.href = k.onlineUrl; a.target = "_blank"; a.rel = "noopener";
@@ -2387,7 +2451,7 @@ function renderKyuRepair(){
     c.appendChild(a);
   }
   if (k.counter){
-    blk("", "🏢 窓口で申し込む場合", [], k.counter + (k.counterNote ? "（" + k.counterNote + "）" : ""));
+    blk(c, "", "🏢 窓口で申し込む場合", [], k.counter + (k.counterNote ? "（" + k.counterNote + "）" : ""));
   }
   if (k.tel){
     const a = document.createElement("a"); a.className = "hbtn line2";
