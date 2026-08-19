@@ -467,8 +467,10 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   background:#eef1f4; border:1px solid #cdd6de; border-radius:99px; padding:2px 8px;
   white-space:nowrap; display:inline-block}
 .shrow .carstay.bed{color:#4a5340; background:#f0f3ec; border-color:#cfd8c4}
-/* 人数分のベッドがそろっていないところは、ひと目で分かるようにする */
-.shrow .carstay.bed.short{color:#a3620f; background:#fdf7ef; border-color:#e6c48e}
+/* 数字の読み方について、現地の方から教えていただいた補足 */
+.shrow .bednote{margin-top:7px; background:#f0f3ec; border:1px solid #cfd8c4; border-radius:9px;
+  padding:7px 12px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
+.shrow .bednote b{color:var(--text-primary)}
 .shrow .shnotice{margin-top:9px; background:#fdf3f3; border:2px solid #c0392b; border-radius:12px;
   padding:9px 13px}
 .shrow .shnotice .nh{font-size:.88rem; font-weight:700; color:#c0392b; line-height:1.5}
@@ -981,12 +983,13 @@ function renderShelters(){
       cs.textContent = `🚗 車中泊 ${s.carStay}台`;
       val.appendChild(cs);
     }
-    /* 段ボールベッドは市が避難所ごとに公表している。人数より少ないところは色を変えて出す */
+    /* 段ボールベッドは市が避難所ごとに公表している。
+       公表の人数には食事だけを受け取りに来る方が含まれる避難所があると教えていただいたので、
+       台数と人数をそのまま引き算した「足りない／足りている」は出さない */
     const beds = s.stocks && s.stocks["段ボールベッド"];
     if (typeof beds === "number" && beds > 0){
-      const short = beds < s.occupants;
-      const bd = document.createElement("span"); bd.className = "carstay bed" + (short ? " short" : "");
-      bd.textContent = `🛏 ベッド ${fmt(beds)}台` + (short ? "（人数より少ない）" : "");
+      const bd = document.createElement("span"); bd.className = "carstay bed";
+      bd.textContent = `🛏 ベッド ${fmt(beds)}台`;
       val.appendChild(bd);
     }
     if (st.cls){
@@ -999,6 +1002,12 @@ function renderShelters(){
     fill.style.width = Math.min(r * 100, 100) + "%";
     track.appendChild(fill);
     row.append(top, track);
+    /* この避難所の数字の読み方。現地をご存じの方に教えていただいた分だけ出す */
+    if (s.countNote){
+      const cn = document.createElement("div"); cn.className = "bednote";
+      cn.textContent = "🙋 " + s.countNote;
+      row.appendChild(cn);
+    }
     /* 閉鎖・移動のお知らせ。見落とすと行き場を失うので、いちばん目立たせる */
     if (s.notice && s.notice.tone === "closed"){
       /* すでに閉まった避難所。もう行き先の判断には使わないので、1行だけにして目立たせない */
@@ -1705,9 +1714,15 @@ async function loadData(){
     cn.textContent = "";
     const det = document.createElement("details");
     const sum = document.createElement("summary");
-    sum.textContent = "ℹ 避難者数の数え方が変わりました";
+    sum.textContent = "ℹ 避難者数の数え方について";
     const body = document.createElement("div"); body.className = "nbody";
-    body.textContent = COUNT_NOTE;
+    /* 数え方の説明は複数の話題にまたがるので、改行ごとに段落にする */
+    COUNT_NOTE.split("\n").forEach((t, i) => {
+      const p = document.createElement("p");
+      if (i) p.style.marginTop = "7px";
+      p.textContent = t;
+      body.appendChild(p);
+    });
     det.append(sum, body);
     cn.appendChild(det);
   }
