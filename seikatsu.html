@@ -2414,7 +2414,11 @@ function renderKyuRepair(){
   }
 
   /* 見出し付きの箇条書き。対象・工事の範囲・持ち物で使い回す */
+<<<<<<< HEAD
   const blk = (into, cls, head, items, note) => {
+=======
+  const blk = (cls, head, items, note) => {
+>>>>>>> origin/main
     if (!(items || []).length && !note) return;
     const b = document.createElement("div"); b.className = "blk" + (cls ? " " + cls : "");
     const h = document.createElement("div"); h.className = "bh"; h.textContent = head;
@@ -2425,6 +2429,7 @@ function renderKyuRepair(){
       b.appendChild(ul);
     }
     if (note){ const p = document.createElement("p"); p.textContent = note; b.appendChild(p); }
+<<<<<<< HEAD
     into.appendChild(b);
   };
 
@@ -2444,6 +2449,23 @@ function renderKyuRepair(){
   });
   if (det) c.appendChild(det);
 
+=======
+    c.appendChild(b);
+  };
+
+  blk("", "👤 対象になる方（すべてにあてはまる方）", k.targets, k.targetNote);
+  blk("", "🔧 直せるところ", [], k.scope);
+  blk("ng", "対象にならないもの", k.scopeNg);
+  blk("need", "📋 申込みに必要なもの", k.needs, k.needsNote);
+  blk("", "🔨 修理業者について", [], k.builder);
+
+  if (k.builderUrl){
+    const a = document.createElement("a"); a.className = "hbtn line2";
+    a.href = k.builderUrl; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = k.builderUrlLabel || "修理業者の名簿を見る";
+    c.appendChild(a);
+  }
+>>>>>>> origin/main
   if (k.onlineUrl){
     const a = document.createElement("a"); a.className = "hbtn go line2";
     a.href = k.onlineUrl; a.target = "_blank"; a.rel = "noopener";
@@ -2451,7 +2473,11 @@ function renderKyuRepair(){
     c.appendChild(a);
   }
   if (k.counter){
+<<<<<<< HEAD
     blk(c, "", "🏢 窓口で申し込む場合", [], k.counter + (k.counterNote ? "（" + k.counterNote + "）" : ""));
+=======
+    blk("", "🏢 窓口で申し込む場合", [], k.counter + (k.counterNote ? "（" + k.counterNote + "）" : ""));
+>>>>>>> origin/main
   }
   if (k.tel){
     const a = document.createElement("a"); a.className = "hbtn line2";
