@@ -254,6 +254,17 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 /* 小川町のように、同じ区分の中でも扱いが違うところ */
 .wst .grp .ar .aw{margin-top:5px; background:#fdf3f3; border:1px solid #e8b2b2; border-radius:8px;
   padding:6px 10px; font-size:.75rem; font-weight:700; color:#c0392b; line-height:1.7}
+/* 判断が要ることは、みんながどうしているかを集めるほうが早い */
+.wst .wask{margin-top:11px; background:#fdf5f8; border:1.5px solid #e8b6c8; border-radius:12px;
+  padding:12px 15px}
+.wst .wask .qh{font-size:.88rem; font-weight:700; color:#a8447a; line-height:1.55}
+.wst .wask p{margin-top:5px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.wst .wask ul{list-style:none; margin:8px 0 0; padding:0}
+.wst .wask li{font-size:.79rem; line-height:1.75; color:var(--text-primary);
+  padding-left:17px; text-indent:-17px; margin-bottom:3px}
+.wst .wask li::before{content:"・"; color:#a8447a}
+.wst .wask .hbtn{margin-top:10px; background:#fff; border-color:#a8447a; color:#a8447a}
+.wst .wask .qn{margin-top:8px; font-size:.73rem; color:var(--text-muted)}
 .wst .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
 /* 終了した給水所。行ってしまう人が出ないよう、灰色で残す */
 .wend{margin-top:12px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
@@ -1341,6 +1352,25 @@ function renderWaterStatus(){
     });
     c.appendChild(gw);
   });
+
+  /* 「濁りが取れるまで」は各家庭で判断するしかない。どうしているかを集める */
+  if (w.ask){
+    const q = document.createElement("div"); q.className = "wask";
+    const h = document.createElement("div"); h.className = "qh"; h.textContent = "🙋 " + (w.ask.head || "教えてください");
+    q.appendChild(h);
+    if (w.ask.body){ const p2 = document.createElement("p"); p2.textContent = w.ask.body; q.appendChild(p2); }
+    if ((w.ask.items || []).length){
+      const ul = document.createElement("ul");
+      w.ask.items.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      q.appendChild(ul);
+    }
+    const a2 = document.createElement("a"); a2.className = "hbtn";
+    a2.href = "https://ig.me/m/akiyo_8"; a2.target = "_blank"; a2.rel = "noopener";
+    a2.textContent = "✉️ InstagramのDMで教える";
+    q.appendChild(a2);
+    if (w.ask.note){ const n = document.createElement("p"); n.className = "qn"; n.textContent = w.ask.note; q.appendChild(n); }
+    c.appendChild(q);
+  }
 
   const det = fold("📋 " + (w.cautionHead || "注意事項") + "を見る", b0 => {
     const ul = document.createElement("ul"); ul.className = "nb";
