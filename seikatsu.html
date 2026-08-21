@@ -231,6 +231,39 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .vcard .vmore{margin-top:9px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
 .vcard .vmore b{color:var(--text-primary)}
 .vcard .vsrc{margin-top:9px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
+/* いま水が出るのか。「制限＝飲めない」と誤解されやすいので、飲めることを最初に大きく出す */
+.wst{margin-top:2px}
+.wst .top{background:#0f6b8a; color:#fff; border-radius:14px; padding:14px 17px}
+.wst .top .h{font-size:1.05rem; font-weight:700; line-height:1.5}
+.wst .top .s{margin-top:5px; font-size:.8rem; line-height:1.8; color:#cfe8f2}
+.wst .out{margin-top:10px; background:#eef4f8; border:1px solid #b6cede; border-radius:11px;
+  padding:9px 13px; font-size:.8rem; font-weight:700; color:#0f6b8a; line-height:1.65}
+.wst .grp{margin-top:11px; border-radius:13px; padding:12px 15px}
+.wst .grp.done{background:#f0faf5; border:1.5px solid #8ccfae}
+.wst .grp.limit{background:#eef4f8; border:1.5px solid #7fb4cc}
+.wst .grp.out{background:#fdf3f3; border:1.5px solid #e8b2b2}
+.wst .grp .gh{font-size:.95rem; font-weight:700; line-height:1.5}
+.wst .grp.done .gh{color:#15794f}
+.wst .grp.limit .gh{color:#0f6b8a}
+.wst .grp.out .gh{color:#c0392b}
+.wst .grp .gn{margin-top:2px; font-size:.76rem; color:var(--text-secondary); line-height:1.7}
+.wst .grp .ar{margin-top:9px; background:#fff; border-radius:10px; padding:9px 12px}
+.wst .grp .ar + .ar{margin-top:7px}
+.wst .grp .ar .an{font-size:.88rem; font-weight:700}
+.wst .grp .ar .at{margin-top:3px; font-size:.76rem; line-height:1.75; color:var(--text-secondary)}
+/* 小川町のように、同じ区分の中でも扱いが違うところ */
+.wst .grp .ar .aw{margin-top:5px; background:#fdf3f3; border:1px solid #e8b2b2; border-radius:8px;
+  padding:6px 10px; font-size:.75rem; font-weight:700; color:#c0392b; line-height:1.7}
+.wst .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
+/* 終了した給水所。行ってしまう人が出ないよう、灰色で残す */
+.wend{margin-top:12px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
+  border-radius:12px; padding:11px 14px}
+.wend .h{font-size:.82rem; font-weight:700; color:var(--text-secondary)}
+.wend ul{list-style:none; margin:6px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
+.wend li{font-size:.74rem; color:var(--text-muted); background:#fff; border:1px solid var(--border);
+  border-radius:99px; padding:3px 10px; text-decoration:line-through}
+.wend .n{margin-top:7px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
+.subh{margin-top:18px; font-size:.95rem; font-weight:700}
 /* 長い説明は、まず結論だけ出して残りを畳む。使うと決めた人だけが開けばいい。
    期限・受付開始日・取り返しがつかない警告・場所と時間は、ここに入れない */
 .fold{margin-top:11px; border:1px solid var(--border); border-radius:11px;
@@ -713,8 +746,12 @@ footer a{color:var(--accent)}
 
   <section class="card" id="secWater">
     <h2><span class="dot" style="background:var(--water)"></span>給水情報</h2>
-    <p class="desc">市の公表に基づく応急給水（7/29〜断水解消まで）。当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<br>混み具合や現地の運用は場所ごとに違います。<b>必要な分だけ</b>受け取り、次の方に残してください。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 再開</span><b>三角東港での給水が再び行われています。</b>支援船によるもので、時間や量の制限はありません。日ごとに予定が変わるので、日付をよく確認してください。</p>
+    <p class="desc">まず、<b>お住まいの地域の水道がいまどうなっているか</b>。そのあとに、給水を受けられる場所を載せています。</p>
+    <div id="waterStatusBox"></div>
+    <h3 class="subh">💧 給水を受けられる場所</h3>
+    <p class="desc" style="margin-top:-2px">当面の間<b>1日1回・1人あたり4リットル以内</b>。容器（ポリタンク・ペットボトル）をご自身で持参してください。<b>必要な分だけ</b>受け取り、次の方に残してください。</p>
     <div id="waterList"><p class="empty">給水情報は準備中です。確認でき次第、掲載します。</p></div>
+    <div id="waterEndedBox" class="hidden"></div>
     <div id="wellBox" class="hidden"></div>
   </section>
 
@@ -1268,6 +1305,71 @@ function renderHotel(){
     box.appendChild(a);
   }
 }
+/* いま水道がどうなっているか。「うちは水が出るのか」がいちばん先に知りたいこと */
+function renderWaterStatus(){
+  const box = document.getElementById("waterStatusBox");
+  const w = DATA.waterStatus;
+  box.textContent = "";
+  if (!w) return;
+
+  const c = document.createElement("div"); c.className = "wst";
+
+  if (w.headline){
+    const t = document.createElement("div"); t.className = "top";
+    const h = document.createElement("div"); h.className = "h"; h.textContent = "💧 " + w.headline;
+    t.appendChild(h);
+    if (w.headlineNote){ const s = document.createElement("div"); s.className = "s"; s.textContent = w.headlineNote; t.appendChild(s); }
+    c.appendChild(t);
+  }
+  if (w.outlook){ const o = document.createElement("div"); o.className = "out"; o.textContent = "🔧 " + w.outlook; c.appendChild(o); }
+
+  const MARK = { done: "◯ ", limit: "🔹 ", out: "⚠ " };
+  (w.groups || []).forEach(g => {
+    const gw = document.createElement("div"); gw.className = "grp " + (g.tone || "limit");
+    const gh = document.createElement("div"); gh.className = "gh";
+    gh.textContent = (MARK[g.tone] || "") + (g.label || "");
+    gw.appendChild(gh);
+    if (g.note){ const n = document.createElement("div"); n.className = "gn"; n.textContent = g.note; gw.appendChild(n); }
+    (g.areas || []).forEach(a => {
+      const ar = document.createElement("div"); ar.className = "ar";
+      const an = document.createElement("div"); an.className = "an"; an.textContent = a.name;
+      ar.appendChild(an);
+      /* 同じ区分でも扱いが違うところは、地区名のすぐ下に赤で出す */
+      if (a.warn){ const aw = document.createElement("div"); aw.className = "aw"; aw.textContent = "⚠ " + a.warn; ar.appendChild(aw); }
+      if (a.note){ const at = document.createElement("div"); at.className = "at"; at.textContent = a.note; ar.appendChild(at); }
+      gw.appendChild(ar);
+    });
+    c.appendChild(gw);
+  });
+
+  const det = fold("📋 " + (w.cautionHead || "注意事項") + "を見る", b0 => {
+    const ul = document.createElement("ul"); ul.className = "nb";
+    (w.cautions || []).forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+    if (ul.childElementCount) b0.appendChild(ul);
+  });
+  if (det) c.appendChild(det);
+
+  if (w.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = w.source; c.appendChild(s); }
+  box.appendChild(c);
+}
+
+/* 終了した給水所。知らずに行ってしまう人が出ないよう、消さずに残す */
+function renderWaterEnded(){
+  const box = document.getElementById("waterEndedBox");
+  const e = DATA.waterEnded;
+  box.textContent = "";
+  box.classList.toggle("hidden", !e || !(e.places || []).length);
+  if (!e || !(e.places || []).length) return;
+  const c = document.createElement("div"); c.className = "wend";
+  const h = document.createElement("div"); h.className = "h"; h.textContent = "⚠ " + (e.head || "終了した場所");
+  c.appendChild(h);
+  const ul = document.createElement("ul");
+  e.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+  c.appendChild(ul);
+  if (e.note){ const n = document.createElement("div"); n.className = "n"; n.textContent = e.note; c.appendChild(n); }
+  box.appendChild(c);
+}
+
 function renderWater(){
   const box = document.getElementById("waterList");
   box.textContent = "";
@@ -1279,8 +1381,14 @@ function renderWater(){
     return;
   }
   list.forEach(w => box.appendChild(rowEl(w.name, w.district, b => {
-    const t = document.createElement("b"); t.textContent = w.schedule || "";
+    const t = document.createElement("b"); t.textContent = [w.kind, w.hours].filter(Boolean).join("　");
     b.appendChild(t);
+    /* 終わる日が決まっている給水所は、行ってから知ることのないよう先に出す */
+    if (w.closing){
+      const cl = document.createElement("div"); cl.className = "report cite";
+      cl.textContent = "⚠ " + w.closing;
+      b.appendChild(cl);
+    }
     if (w.note) b.appendChild(document.createTextNode(" ／ " + w.note));
     b.appendChild(gmapsLink(gmapsQuery(w)));
     if (w.report){
@@ -2325,7 +2433,9 @@ function renderAll(){
   renderHotel();
   renderHousing();
   renderRefresh();
+  renderWaterStatus();
   renderWater();
+  renderWaterEnded();
   renderWells();
   renderBaths();
   renderToiletCars();
