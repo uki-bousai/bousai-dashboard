@@ -254,6 +254,22 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 /* 小川町のように、同じ区分の中でも扱いが違うところ */
 .wst .grp .ar .aw{margin-top:5px; background:#fdf3f3; border:1px solid #e8b2b2; border-radius:8px;
   padding:6px 10px; font-size:.75rem; font-weight:700; color:#c0392b; line-height:1.7}
+/* 教えていただいた判断の基準。いちばん知りたいことなので、質問欄より目立たせる */
+.wst .wans{margin-top:11px; background:#f0faf5; border:2px solid #15794f; border-radius:13px;
+  padding:13px 16px}
+.wst .wans .ah{font-size:1.02rem; font-weight:700; color:#15794f; line-height:1.5}
+.wst .wans .al{margin-top:4px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.wst .wans .jd{margin-top:9px; background:#fff; border-radius:11px; padding:9px 13px;
+  border-left:5px solid #15794f}
+.wst .wans .jd.ng{border-left-color:#c0392b}
+.wst .wans .jd .jt{font-size:.9rem; font-weight:700; color:#15794f; line-height:1.5}
+.wst .wans .jd.ng .jt{color:#c0392b}
+.wst .wans .jd .js{margin-top:2px; font-size:.79rem; line-height:1.75; color:var(--text-secondary)}
+.wst .wans ul.at{list-style:none; margin:10px 0 0; padding:0}
+.wst .wans ul.at li{font-size:.77rem; line-height:1.8; color:var(--text-secondary);
+  padding-left:17px; text-indent:-17px; margin-bottom:3px}
+.wst .wans ul.at li::before{content:"・"; color:#15794f}
+.wst .wans .as{margin-top:9px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
 /* 判断が要ることは、みんながどうしているかを集めるほうが早い */
 .wst .wask{margin-top:11px; background:#fdf5f8; border:1.5px solid #e8b6c8; border-radius:12px;
   padding:12px 15px}
@@ -1353,7 +1369,31 @@ function renderWaterStatus(){
     c.appendChild(gw);
   });
 
-  /* 「濁りが取れるまで」は各家庭で判断するしかない。どうしているかを集める */
+  /* 判断の基準。教えていただいた答えは、質問より先に出す */
+  if (w.answer){
+    const an = w.answer;
+    const q = document.createElement("div"); q.className = "wans";
+    const h = document.createElement("div"); h.className = "ah"; h.textContent = "🥛 " + (an.head || "");
+    q.appendChild(h);
+    if (an.lead){ const p2 = document.createElement("p"); p2.className = "al"; p2.textContent = an.lead; q.appendChild(p2); }
+    [["ok", an.ok], ["ng", an.ng]].forEach(([cls, v]) => {
+      if (!v) return;
+      const r = document.createElement("div"); r.className = "jd " + cls;
+      const t = document.createElement("div"); t.className = "jt";
+      t.textContent = (cls === "ok" ? "◯ " : "✕ ") + (v.t || "");
+      const sx = document.createElement("div"); sx.className = "js"; sx.textContent = v.s || "";
+      r.append(t, sx); q.appendChild(r);
+    });
+    if ((an.tips || []).length){
+      const ul = document.createElement("ul"); ul.className = "at";
+      an.tips.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      q.appendChild(ul);
+    }
+    if (an.source){ const sc = document.createElement("div"); sc.className = "as"; sc.textContent = an.source; q.appendChild(sc); }
+    c.appendChild(q);
+  }
+
+  /* 基準が分かっても、家庭ごとの運用は違う。引き続き集める */
   if (w.ask){
     const q = document.createElement("div"); q.className = "wask";
     const h = document.createElement("div"); h.className = "qh"; h.textContent = "🙋 " + (w.ask.head || "教えてください");
