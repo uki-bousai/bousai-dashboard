@@ -273,6 +273,9 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 /* 判断が要ることは、みんながどうしているかを集めるほうが早い */
 .wst .wask{margin-top:11px; background:#fdf5f8; border:1.5px solid #e8b6c8; border-radius:12px;
   padding:12px 15px}
+/* 畳んだ中に入れるときは、外の枠と二重にならないよう背景だけにする */
+.wst .wask.plain{margin-top:0; background:none; border:0; padding:0}
+.wst .wask.plain p:first-child{margin-top:0}
 .wst .wask .qh{font-size:.88rem; font-weight:700; color:#a8447a; line-height:1.55}
 .wst .wask p{margin-top:5px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
 .wst .wask ul{list-style:none; margin:8px 0 0; padding:0}
@@ -283,6 +286,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .wst .wask .qn{margin-top:8px; font-size:.73rem; color:var(--text-muted)}
 .wst .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
 /* 終了した給水所。行ってしまう人が出ないよう、灰色で残す */
+/* 畳んだ中に入れるときは、外の枠と二重にならないよう飾りを外す */
+.wend.plain, .wells.plain{margin-top:0; background:none; border:0; padding:0}
 .wend{margin-top:12px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
   border-radius:12px; padding:11px 14px}
 .wend .h{font-size:.82rem; font-weight:700; color:var(--text-secondary)}
@@ -735,8 +740,10 @@ footer a{color:var(--accent)}
   <section class="card hidden" id="shelterCard">
     <h2>避難所別 受入状況</h2>
     <p class="desc" id="shelterDesc">避難者数は市の公表資料、受入可能数は市の地域防災計画にある指定避難所の収容者数（3㎡／1人）です。利用率の高い順</p>
-    <p class="desc" style="margin-top:-4px"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジ・車中泊の台数・段ボールベッドの台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の設備や現地の様子は、市民の方に教えていただいた内容です。</p>
-    <p class="desc" style="margin-top:-4px"><b>⚠ 受入可能数は被災前の想定です。</b>建物が被災して使えない部屋がある避難所では、実際に入れる人数はこれより少なくなります。利用率が低くても余裕があるとは限りません。</p>
+    <details class="fold"><summary>ℹ 数字の出どころと、受入可能数の注意</summary><div class="fbody">
+      <p class="desc" style="margin-top:0"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジ・車中泊の台数・段ボールベッドの台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の設備や現地の様子は、市民の方に教えていただいた内容です。</p>
+      <p class="desc" style="margin-top:6px"><b>⚠ 受入可能数は被災前の想定です。</b>建物が被災して使えない部屋がある避難所では、実際に入れる人数はこれより少なくなります。利用率が低くても余裕があるとは限りません。</p>
+    </div></details>
     <div id="facilityLegend" class="fleg hidden"></div>
     <div id="shelterList"></div>
   </section>
@@ -753,14 +760,16 @@ footer a{color:var(--accent)}
 
   <section class="card" id="secBrief">
     <h2><span class="dot" style="background:#5a7fa8"></span>宇城市議会からの報告</h2>
-    <p class="desc">宇城市議会が公式YouTubeで発信している報告をまとめています。市の災害対応の状況が、議長から市民に向けて説明されています。<b>市内全体のこと</b>——住宅の被害、道路や水道の復旧、罹災証明書やブルーシートの手続きなど、避難所の外の話もここで分かります。<br>市議会は、<b>市民から寄せられた困りごとを市へ要望として伝える場</b>でもあります。<br><span class="srcbadge city" style="margin:4px 5px 0 0">📋 宇城市議会の発信から要約</span> 数字は報告の時点のもので、今後変わることがあります。手続きの詳細は市の公式発表をご確認ください。</p>
+    <p class="desc">宇城市議会が公式YouTubeで発信している報告をまとめています。<b>市内全体のこと</b>——住宅の被害、道路や水道の復旧、罹災証明書やブルーシートの手続きなど、避難所の外の話もここで分かります。</p>
+    <details class="fold"><summary>ℹ このまとめについて（出典と読み方）</summary><div class="fbody">
+      <p class="desc" style="margin-top:0">市の災害対応の状況が、議長から市民に向けて説明されています。市議会は、<b>市民から寄せられた困りごとを市へ要望として伝える場</b>でもあります。<br><span class="srcbadge city" style="margin:4px 5px 0 0">📋 宇城市議会の発信から要約</span> 数字は報告の時点のもので、今後変わることがあります。手続きの詳細は市の公式発表をご確認ください。</p>
+    </div></details>
     <a class="hbtn line2" href="https://www.youtube.com/@SHIGIKAIUKI" target="_blank" rel="noopener">▶ 宇城市議会のYouTubeで元の報告を見る</a>
     <div id="briefList"><p class="empty">会議の内容は準備中です。</p></div>
-    <div class="voice">
-      <div class="vt">市に届けたいことはありますか</div>
-      <div class="vs">8月6日の報告では、<b>災害ごみの仮置場を増やしてほしい</b>という要望が市へ出されました。住民の方の困りごとが、こうして市に届いています。<br>ひとりの声だと届きにくくても、<b>同じ困りごとが集まれば、市議会で取り上げられることがあります</b>。困っていること、足りていないものを教えてください。</div>
+    <details class="fold"><summary>💬 市に届けたいことはありますか</summary><div class="fbody">
+      <div class="vs" style="margin-top:0">8月6日の報告では、<b>災害ごみの仮置場を増やしてほしい</b>という要望が市へ出されました。住民の方の困りごとが、こうして市に届いています。<br>ひとりの声だと届きにくくても、<b>同じ困りごとが集まれば、市議会で取り上げられることがあります</b>。困っていること、足りていないものを教えてください。</div>
       <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
-    </div>
+    </div></details>
   </section>
 
   <section class="card hidden" id="voiceCard">
@@ -845,18 +854,21 @@ footer a{color:var(--accent)}
 
   <section class="card" id="secBath">
     <h2><span class="dot" style="background:#d97a26"></span>無料の入浴・シャワー</h2>
-    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。受付での申込・本人確認が必要な施設があります。<b>宇城市から近いエリア順</b>に並べています。<b>エリア名をタップすると、その地域の施設が開きます</b>。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月13日公表分）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
-    <div class="okbox">
-      <div class="okt">◯ 熊本市の施設は、市外の方も対象です</div>
-      <div class="oks">熊本市の「無料入浴支援事業」は、<b>宇城市など市外で被災した方も利用できます</b>（熊本市に確認済み）。受付で住所・氏名を確認できるものの提示を求められます。</div>
-    </div>
-    <div class="bring">
-      <div class="bring-title">🎒 持っていくもの</div>
-      <ul>
-        <li>🧼 石鹸・シャンプー・タオルなど入浴に必要なもの</li>
-        <li>🪪 <b>本人確認書類</b>（運転免許証・マイナンバーカードなど）</li>
-      </ul>
-    </div>
+    <p class="desc">被災により入浴できない方（避難所で生活している方・入浴設備が被災した方など）は<b>無料</b>で利用できます。<b>宇城市から近いエリア順</b>。<b>エリア名をタップすると、その地域の施設が開きます</b>。</p>
+    <details class="fold"><summary>🎒 持っていくもの・利用の条件を見る</summary><div class="fbody">
+      <div class="bring" style="margin-top:0">
+        <div class="bring-title">🎒 持っていくもの</div>
+        <ul>
+          <li>🧼 石鹸・シャンプー・タオルなど入浴に必要なもの</li>
+          <li>🪪 <b>本人確認書類</b>（運転免許証・マイナンバーカードなど）</li>
+        </ul>
+      </div>
+      <div class="okbox">
+        <div class="okt">◯ 熊本市の施設は、市外の方も対象です</div>
+        <div class="oks">熊本市の「無料入浴支援事業」は、<b>宇城市など市外で被災した方も利用できます</b>（熊本市に確認済み）。受付で住所・氏名を確認できるものの提示を求められます。</div>
+      </div>
+      <p class="desc" style="margin-top:8px">受付での申込・本人確認が必要な施設があります。<b>三角東港の支援船は実施内容・時間が日ごとに変わります</b>（掲載は8月13日公表分）。詳細は市の社会福祉課（<a href="tel:0964-32-1387">0964-32-1387</a>）へ。<br><span class="srcbadge" style="margin:4px 5px 0 0">🆕 施設の発表</span> が付いているものは公表リストにない<b>施設独自の支援</b>です。条件が異なるため、各施設の案内をご確認ください。</p>
+    </div></details>
     <div id="bathList"><p class="empty">施設情報は準備中です。</p></div>
   </section>
 
@@ -1195,6 +1207,15 @@ function renderShelters(){
     }
     box.appendChild(row);
   });
+
+  /* すでに閉まった避難所は、行き先を選ぶのにはもう使わない。件数だけ出して畳む */
+  const gone = Array.from(box.querySelectorAll(".shrow.gone"));
+  if (gone.length){
+    const gd = fold(`閉鎖した避難所（${gone.length}か所）を見る`, b0 => {
+      gone.forEach(r => b0.appendChild(r));
+    });
+    if (gd) box.appendChild(gd);
+  }
 }
 
 /* ---------- 鮮度表示 ----------
@@ -1445,10 +1466,14 @@ function renderWaterStatus(){
       const sx = document.createElement("div"); sx.className = "js"; sx.textContent = v.s || "";
       r.append(t, sx); q.appendChild(r);
     });
+    /* ◯／✕ の判断がいちばん大事。濁っているあいだの使い方は、必要な人が開く */
     if ((an.tips || []).length){
-      const ul = document.createElement("ul"); ul.className = "at";
-      an.tips.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-      q.appendChild(ul);
+      const td = fold("💧 濁っているあいだの使い方を見る", b0 => {
+        const ul = document.createElement("ul"); ul.className = "at";
+        an.tips.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+        b0.appendChild(ul);
+      });
+      if (td) q.appendChild(td);
     }
     if (an.source){ const sc = document.createElement("div"); sc.className = "as"; sc.textContent = an.source; q.appendChild(sc); }
     c.appendChild(q);
@@ -1456,21 +1481,23 @@ function renderWaterStatus(){
 
   /* 基準が分かっても、家庭ごとの運用は違う。引き続き集める */
   if (w.ask){
-    const q = document.createElement("div"); q.className = "wask";
-    const h = document.createElement("div"); h.className = "qh"; h.textContent = "🙋 " + (w.ask.head || "教えてください");
-    q.appendChild(h);
-    if (w.ask.body){ const p2 = document.createElement("p"); p2.textContent = w.ask.body; q.appendChild(p2); }
-    if ((w.ask.items || []).length){
-      const ul = document.createElement("ul");
-      w.ask.items.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-      q.appendChild(ul);
-    }
-    const a2 = document.createElement("a"); a2.className = "hbtn";
-    a2.href = "https://ig.me/m/akiyo_8"; a2.target = "_blank"; a2.rel = "noopener";
-    a2.textContent = "✉️ InstagramのDMで教える";
-    q.appendChild(a2);
-    if (w.ask.note){ const n = document.createElement("p"); n.className = "qn"; n.textContent = w.ask.note; q.appendChild(n); }
-    c.appendChild(q);
+    /* 基準は上で答えが出た。募集は見出しだけ残して、答えたい人が開く */
+    const qd = fold("🙋 " + (w.ask.head || "教えてください"), b0 => {
+      const q = document.createElement("div"); q.className = "wask plain";
+      if (w.ask.body){ const p2 = document.createElement("p"); p2.textContent = w.ask.body; q.appendChild(p2); }
+      if ((w.ask.items || []).length){
+        const ul = document.createElement("ul");
+        w.ask.items.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+        q.appendChild(ul);
+      }
+      const a2 = document.createElement("a"); a2.className = "hbtn";
+      a2.href = "https://ig.me/m/akiyo_8"; a2.target = "_blank"; a2.rel = "noopener";
+      a2.textContent = "✉️ InstagramのDMで教える";
+      q.appendChild(a2);
+      if (w.ask.note){ const n = document.createElement("p"); n.className = "qn"; n.textContent = w.ask.note; q.appendChild(n); }
+      b0.appendChild(q);
+    });
+    if (qd) c.appendChild(qd);
   }
 
   const det = fold("📋 " + (w.cautionHead || "注意事項") + "を見る", b0 => {
@@ -1491,14 +1518,17 @@ function renderWaterEnded(){
   box.textContent = "";
   box.classList.toggle("hidden", !e || !(e.places || []).length);
   if (!e || !(e.places || []).length) return;
-  const c = document.createElement("div"); c.className = "wend";
-  const h = document.createElement("div"); h.className = "h"; h.textContent = "⚠ " + (e.head || "終了した場所");
-  c.appendChild(h);
-  const ul = document.createElement("ul");
-  e.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-  c.appendChild(ul);
-  if (e.note){ const n = document.createElement("div"); n.className = "n"; n.textContent = e.note; c.appendChild(n); }
-  box.appendChild(c);
+  /* もう行かない場所なので、見出しだけ出して中身は畳む。
+     行こうとしている方が気づけるよう、件数は見出しに出す */
+  const d = fold(`⚠ ${e.head || "終了した場所"}（${e.places.length}か所）`, b0 => {
+    const c = document.createElement("div"); c.className = "wend plain";
+    const ul = document.createElement("ul");
+    e.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+    c.appendChild(ul);
+    if (e.note){ const n = document.createElement("div"); n.className = "n"; n.textContent = e.note; c.appendChild(n); }
+    b0.appendChild(c);
+  });
+  if (d) box.appendChild(d);
 }
 
 function renderWater(){
@@ -1565,14 +1595,33 @@ function renderToiletCars(){
   w.appendChild(h);
   if (t.note){ const n = document.createElement("p"); n.className = "ts"; n.textContent = t.note; w.appendChild(n); }
 
+  /* 11か所を縦に並べると画面3つ分になる。自分の町だけ開けばいいので、町ごとに畳む。
+     地区で絞り込んでいるときは1グループしかないので、最初から開いておく */
+  const groups = [];
   places.forEach(p => {
-    const row = document.createElement("div"); row.className = "tp";
-    const nm = document.createElement("div"); nm.className = "nm";
-    nm.textContent = p.name;
-    const sm = document.createElement("small"); sm.textContent = p.district; nm.appendChild(sm);
-    row.appendChild(nm);
-    row.appendChild(gmapsLink(gmapsQuery(p)));
-    w.appendChild(row);
+    const area = p.district || "その他";
+    const last = groups[groups.length - 1];
+    if (!last || last.area !== area) groups.push({ area, items:[p] });
+    else last.items.push(p);
+  });
+  groups.forEach(g => {
+    const det = document.createElement("details"); det.className = "areagrp";
+    if (groups.length === 1) det.open = true;
+    const sum = document.createElement("summary"); sum.className = "areahead";
+    const nm0 = document.createElement("span"); nm0.textContent = g.area;
+    const ct = document.createElement("span"); ct.className = "cnt";
+    ct.textContent = g.items.length + "か所";
+    sum.append(nm0, ct);
+    det.appendChild(sum);
+    g.items.forEach(p => {
+      const row = document.createElement("div"); row.className = "tp";
+      const nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = p.name;
+      row.appendChild(nm);
+      row.appendChild(gmapsLink(gmapsQuery(p)));
+      det.appendChild(row);
+    });
+    w.appendChild(det);
   });
 
   /* どこの自治体から来ているかは、トイレを探すのに要らない。読みたい人だけが開く */
@@ -2140,17 +2189,19 @@ function renderWells(){
   box.textContent = "";
   box.classList.toggle("hidden", !w);
   if (!w) return;
-  const c = document.createElement("div"); c.className = "wells";
-  const t = document.createElement("div"); t.className = "wt"; t.textContent = "🪣 防災井戸も使えます";
-  const sdiv = document.createElement("div"); sdiv.className = "ws"; sdiv.innerHTML = w.note || "";
-  const ul = document.createElement("ul");
-  (w.places || []).forEach(pl => { const li = document.createElement("li"); li.textContent = pl; ul.appendChild(li); });
-  c.append(t, sdiv, ul);
-  if (w.source){
-    const src = document.createElement("div"); src.className = "wsrc"; src.textContent = w.source;
-    c.appendChild(src);
-  }
-  box.appendChild(c);
+  const d = fold("🪣 防災井戸も使えます（飲み水以外）", b0 => {
+    const c = document.createElement("div"); c.className = "wells plain";
+    const sdiv = document.createElement("div"); sdiv.className = "ws"; sdiv.innerHTML = w.note || "";
+    const ul = document.createElement("ul");
+    (w.places || []).forEach(pl => { const li = document.createElement("li"); li.textContent = pl; ul.appendChild(li); });
+    c.append(sdiv, ul);
+    if (w.source){
+      const src = document.createElement("div"); src.className = "wsrc"; src.textContent = w.source;
+      c.appendChild(src);
+    }
+    b0.appendChild(c);
+  });
+  if (d) box.appendChild(d);
 }
 
 /* 市外の自治体からの住まいの提供（締切が短いので、期限を最初に見せる） */
@@ -2190,15 +2241,18 @@ function renderKids(){
   });
   c.appendChild(kv);
 
-  if ((k.places || []).length){
-    const pl = document.createElement("div"); pl.className = "pl";
-    const pt = document.createElement("div"); pt.className = "pt"; pt.textContent = "🏠 預かり先（人吉市が委託している施設）";
-    const ul = document.createElement("ul");
-    k.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-    pl.append(pt, ul); c.appendChild(pl);
-  }
-
-  if (k.note){ const n = document.createElement("div"); n.className = "nb"; n.textContent = k.note; c.appendChild(n); }
+  /* 預かり先と細かい注意は、使うと決めた方が開けばいい。電話番号は畳まない */
+  const kd = fold("🏠 預かり先と、利用のときの注意を見る", b0 => {
+    if ((k.places || []).length){
+      const pl = document.createElement("div"); pl.className = "pl";
+      const pt = document.createElement("div"); pt.className = "pt"; pt.textContent = "🏠 預かり先（人吉市が委託している施設）";
+      const ul = document.createElement("ul");
+      k.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      pl.append(pt, ul); b0.appendChild(pl);
+    }
+    if (k.note){ const n = document.createElement("div"); n.className = "nb"; n.textContent = k.note; b0.appendChild(n); }
+  });
+  if (kd) c.appendChild(kd);
 
   (k.contacts || []).forEach((ct, i) => {
     const a = document.createElement("a"); a.className = "hbtn" + (i ? " line2" : "");
@@ -2397,22 +2451,26 @@ function renderHaifu(){
     c.appendChild(tm);
   }
 
+  /* 日付・場所・時間より下は、読みたい人が開けばいい */
   if ((h.cautions || []).length){
-    const cu = document.createElement("div"); cu.className = "cau";
-    const ul = document.createElement("ul");
-    h.cautions.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-    cu.appendChild(ul); c.appendChild(cu);
+    const d1 = fold("※ 配布の注意事項を見る", b0 => {
+      const cu = document.createElement("div"); cu.className = "cau";
+      const ul = document.createElement("ul");
+      h.cautions.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      cu.appendChild(ul); b0.appendChild(cu);
+    });
+    if (d1) c.appendChild(d1);
   }
 
   /* 市の案内に書かれていないこと。分からないまま出す */
   if ((h.gaps || []).length){
-    const g = document.createElement("div"); g.className = "gap";
-    const gh = document.createElement("div"); gh.className = "gh";
-    gh.textContent = "🙋 " + (h.gapHead || "市に確認できていないこと");
-    g.appendChild(gh);
-    const ul = document.createElement("ul");
-    h.gaps.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-    g.appendChild(ul); c.appendChild(g);
+    const d2 = fold("🙋 " + (h.gapHead || "市に確認できていないこと") + "を見る", b0 => {
+      const g = document.createElement("div"); g.className = "gap";
+      const ul = document.createElement("ul");
+      h.gaps.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      g.appendChild(ul); b0.appendChild(g);
+    });
+    if (d2) c.appendChild(d2);
   }
 
   if (h.tel){
@@ -2558,9 +2616,12 @@ function renderRepair(){
   }
 
   if ((r.notes || []).length){
-    const ul = document.createElement("ul"); ul.className = "nb";
-    r.notes.forEach(n => { const li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
-    c.appendChild(ul);
+    const nd = fold("📄 対象になるもの・ならないものを見る", b0 => {
+      const ul = document.createElement("ul"); ul.className = "nb";
+      r.notes.forEach(n => { const li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
+      b0.appendChild(ul);
+    });
+    if (nd) c.appendChild(nd);
   }
 
   if (r.tel){
@@ -2605,25 +2666,29 @@ function renderHousing(){
       c.appendChild(dl);
     }
 
-    const kv = document.createElement("div"); kv.className = "kv";
-    [["対象", o.target], ["期間", o.term], ["費用", o.cost],
-     ["優先", o.priority], ["申込方法", (o.how || []).join("・")]].forEach(([k, v]) => {
-      if (!v) return;
-      const line = document.createElement("div");
-      const ks = document.createElement("span"); ks.className = "k"; ks.textContent = k + "：";
-      line.append(ks, document.createTextNode(v));
-      kv.appendChild(line);
-    });
-    c.appendChild(kv);
+    /* 申請期間と電話は上に出したまま。条件と備品は、検討する方が開く */
+    const hd = fold("📄 対象・費用・備え付けのものを見る", b0 => {
+      const kv = document.createElement("div"); kv.className = "kv";
+      [["対象", o.target], ["期間", o.term], ["費用", o.cost],
+       ["優先", o.priority], ["申込方法", (o.how || []).join("・")]].forEach(([k, v]) => {
+        if (!v) return;
+        const line = document.createElement("div");
+        const ks = document.createElement("span"); ks.className = "k"; ks.textContent = k + "：";
+        line.append(ks, document.createTextNode(v));
+        kv.appendChild(line);
+      });
+      if (kv.childElementCount) b0.appendChild(kv);
 
-    if ((o.equipment || []).length){
-      const eq = document.createElement("div"); eq.className = "eq";
-      const et = document.createElement("div"); et.className = "et";
-      et.textContent = "🛋 備え付けられているもの";
-      const ul = document.createElement("ul");
-      o.equipment.forEach(e => { const li = document.createElement("li"); li.textContent = e; ul.appendChild(li); });
-      eq.append(et, ul); c.appendChild(eq);
-    }
+      if ((o.equipment || []).length){
+        const eq = document.createElement("div"); eq.className = "eq";
+        const et = document.createElement("div"); et.className = "et";
+        et.textContent = "🛋 備え付けられているもの";
+        const ul = document.createElement("ul");
+        o.equipment.forEach(e => { const li = document.createElement("li"); li.textContent = e; ul.appendChild(li); });
+        eq.append(et, ul); b0.appendChild(eq);
+      }
+    });
+    if (hd) c.appendChild(hd);
 
     if (o.tel){
       const a = document.createElement("a"); a.className = "hbtn";
