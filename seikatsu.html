@@ -655,7 +655,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 }
 footer{max-width:860px; margin:26px auto 0; padding:0 20px; font-size:.7rem; color:var(--text-muted); line-height:1.8}
 footer a{color:var(--accent)}
-.contact .hbtn{margin-top:8px}
 </style>
 </head>
 <body>
@@ -665,7 +664,6 @@ footer a{color:var(--accent)}
   <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、トイレカー、洗濯。<br>近隣地域の<b>自主運営の避難所</b>も掲載しています</p>
   <div class="updated" id="updatedAt"></div>
   <a class="tipbtn zaitaku" href="zaitaku.html">🏠 在宅避難の方に必要な物資（地区別）</a>
-  <a class="tipbtn" href="#secContact">🙋 避難所の情報を送る</a>
 </header>
 
 <nav class="secnav" aria-label="ページ内の目次">
@@ -685,7 +683,6 @@ footer a{color:var(--accent)}
     <a href="#secBath">♨️ 入浴</a>
     <a href="#secBrief">📋 市議会</a>
     <a href="#voiceCard">💬 市民の声</a>
-    <a href="#secContact">🙋 情報提供</a>
   </div>
 </nav>
 
@@ -776,14 +773,6 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#a8447a"></span>市民の声</h2>
     <p class="desc">市の会議では説明されていないけれど、暮らしのなかで実際に困っていること。<b>教えていただいた声を、そのまま載せています。</b><br>お名前・連絡先は載せません。同じ困りごとが集まれば、市議会を通して市へ伝えることができます。</p>
     <div id="voiceList"></div>
-  </section>
-
-  <section class="card contact" id="secContact">
-    <h2><span class="dot" style="background:var(--accent)"></span>避難所の様子を教えてください</h2>
-    <p class="desc">物資や設備の情報は、市からデータの提供がありません。このページに載っているのは、<b>住民の方に教えていただいた内容だけ</b>です。<br><b>「◯◯避難所で△△をもらえた」</b>——この一行で十分です。仮設トイレの数、エアコンやシャワーの有無、混み具合など、分かるものだけで助かります。</p>
-    <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
-    <a class="hbtn line2" href="https://www.instagram.com/akiyo_8/" target="_blank" rel="noopener">＠akiyo_8 を開く</a>
-    <p class="desc" style="margin:12px 0 0">いただいた情報は、内容を確認したうえで <span class="srcbadge via" style="margin:0 3px">🙋 市民からの情報提供で掲載</span> と分かる形で載せます。掲載してほしくない場合はその旨をお書き添えください。</p>
   </section>
 
   <section class="card hidden" id="kidsCard">
@@ -1200,7 +1189,7 @@ function renderShelters(){
       if (old){
         const w = document.createElement("div"); w.className = "oldwarn";
         w.textContent = `この報告から${age}日たっています。いまは変わっているかもしれません。`
-          + "最近の様子をご存じの方は、ページ下の「情報提供」から教えてください。";
+          + "最近の様子をご存じの方は、InstagramのDM（＠akiyo_8）で教えてください。";
         det.appendChild(w);
       }
       row.appendChild(det);
