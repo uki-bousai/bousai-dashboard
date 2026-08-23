@@ -385,6 +385,60 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .kyu .hbtn.go{background:#c0392b; color:#fff; border-color:#c0392b}
 .kyu .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
 
+/* 弁当・物資の配布の変更。日付と場所で行き先が変わるので、どちらも畳まずに出す */
+.haifu{margin-top:2px}
+.haifu .top{background:#b8571f; color:#fff; border-radius:14px; padding:14px 17px}
+.haifu .top .h{font-size:1.05rem; font-weight:700; line-height:1.5}
+.haifu .top .s{margin-top:5px; font-size:.8rem; line-height:1.8; color:#fbe4d3}
+.haifu .ph{margin-top:11px; border-radius:12px; padding:11px 14px; background:#fff;
+  border:1px solid var(--border)}
+.haifu .ph.next{border:2px solid #b8571f; background:#fdf6f0}
+.haifu .ph + .ph{margin-top:8px}
+.haifu .ph .pw{font-size:.88rem; font-weight:700}
+.haifu .ph.now .pw{color:var(--text-secondary)}
+.haifu .ph.next .pw{color:#b8571f}
+.haifu .ph .pr{margin-top:6px; display:flex; align-items:baseline; gap:9px;
+  border-top:1px solid var(--border); padding-top:6px}
+.haifu .ph .pr:first-of-type{border-top:0; padding-top:0}
+.haifu .ph .pr .k{flex:0 0 68px; font-size:.7rem; font-weight:700; color:var(--text-muted)}
+.haifu .ph .pr .v{flex:1; font-size:.8rem; line-height:1.75}
+.haifu .idw{margin-top:11px; background:#c0392b; border-radius:12px; padding:12px 15px; color:#fff}
+.haifu .idw b{display:block; font-size:.95rem; line-height:1.5}
+.haifu .idw p{margin-top:4px; font-size:.79rem; line-height:1.8; color:#ffe4e0}
+.haifu .pl{margin-top:11px; background:#fff; border:2px solid #b8571f; border-radius:13px;
+  padding:12px 15px}
+.haifu .pl .plh{font-size:.88rem; font-weight:700; color:#b8571f; line-height:1.55}
+.haifu .pl ol{list-style:none; margin:8px 0 0; padding:0; counter-reset:pl}
+.haifu .pl li{counter-increment:pl; display:flex; align-items:center; gap:9px;
+  font-size:.92rem; font-weight:700; padding:7px 0; border-top:1px solid var(--border)}
+.haifu .pl li:first-child{border-top:0; padding-top:2px}
+.haifu .pl li::before{content:counter(pl); flex:0 0 21px; height:21px; border-radius:99px;
+  background:#b8571f; color:#fff; font-size:.7rem; display:flex; align-items:center;
+  justify-content:center}
+.haifu .pl .pln{margin-top:8px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
+.haifu .tm{margin-top:9px; background:#fff; border:1px solid var(--border); border-radius:12px;
+  padding:10px 14px}
+.haifu .tm .tmh{font-size:.75rem; font-weight:700; color:var(--text-secondary)}
+.haifu .tm .r{display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  padding:5px 0; border-top:1px solid var(--border)}
+.haifu .tm .r:first-of-type{border-top:0; margin-top:4px}
+.haifu .tm .r .k{font-size:.82rem; font-weight:700}
+.haifu .tm .r .v{font-size:.95rem; font-weight:700; color:#b8571f; white-space:nowrap}
+.haifu .cau{margin-top:9px; background:#fdf6f0; border:1px solid #e8c3a4; border-radius:11px;
+  padding:10px 14px}
+.haifu .cau li{list-style:none; font-size:.77rem; line-height:1.8; color:var(--text-secondary);
+  padding-left:15px; text-indent:-15px}
+.haifu .cau li::before{content:"※ "; color:#b8571f}
+.haifu .gap{margin-top:11px; background:#fff; border:1.5px solid #d9a8c2; border-radius:12px;
+  padding:11px 14px}
+.haifu .gap .gh{font-size:.85rem; font-weight:700; color:#a8447a; line-height:1.55}
+.haifu .gap ul{list-style:none; margin:6px 0 0; padding:0}
+.haifu .gap li{font-size:.78rem; line-height:1.8; color:var(--text-secondary);
+  padding-left:15px; text-indent:-15px}
+.haifu .gap li::before{content:"・"; color:var(--text-muted)}
+.haifu .hbtn{border-color:#b8571f; color:#b8571f}
+.haifu .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
+
 /* こどもショートステイ（無料・宿泊預かり） */
 .kids{margin-top:2px; border:1.5px solid #e8b6c8; border-radius:14px; padding:14px 16px;
   background:#fdf5f8}
@@ -611,6 +665,7 @@ footer a{color:var(--accent)}
 
 <nav class="secnav" aria-label="ページ内の目次">
   <div class="secnav-in">
+    <a href="#haifuCard">🍱 弁当・物資</a>
     <a href="#shelterCard">🏫 避難所</a>
     <a href="#mapCard">🗺 地図</a>
     <a href="#kidsCard">👶 子どもの預かり</a>
@@ -654,6 +709,12 @@ footer a{color:var(--accent)}
   </div>
 
   <div class="kpis" id="kpis"></div>
+
+  <section class="card hidden" id="haifuCard">
+    <h2><span class="dot" style="background:#b8571f"></span>弁当・物資の配布が変わります（在宅避難・車中泊の方）</h2>
+    <p class="desc">避難所で配っている<b>弁当や物資の「配る場所」と「もらえる人」が、8月26日から変わります</b>。<b>家で避難している方・車中泊の方</b>に関わる話です。<br>避難所に寝泊まりしている方の食事について、この案内には書かれていません。</p>
+    <div id="haifuBody"></div>
+  </section>
 
   <section class="card hidden" id="mapCard">
     <h2>マップ</h2>
@@ -2270,6 +2331,100 @@ function renderPets(){
 /* 住宅の緊急修理：上限額 → 受付 → 対象 → 注意 の順。工事の前に見積もりが要る点がいちばん大事 */
 /* 災害救助法の応急修理。写真と併用制限を読み飛ばすと取り返しがつかないので、
    お金や条件より先にその2つを出す */
+/* 弁当・物資の配布の変更。いつから・どこで・何が要るか。ここは畳まない */
+function renderHaifu(){
+  const card = document.getElementById("haifuCard");
+  const box = document.getElementById("haifuBody");
+  const h = DATA.haifu;
+  box.textContent = "";
+  card.classList.toggle("hidden", !h);
+  if (!h) return;
+
+  const c = document.createElement("div"); c.className = "haifu";
+
+  const top = document.createElement("div"); top.className = "top";
+  const th = document.createElement("div"); th.className = "h"; th.textContent = h.head;
+  top.appendChild(th);
+  if (h.lead){ const s = document.createElement("div"); s.className = "s"; s.textContent = h.lead; top.appendChild(s); }
+  c.appendChild(top);
+
+  (h.phases || []).forEach(p => {
+    const w = document.createElement("div"); w.className = "ph " + (p.next ? "next" : "now");
+    const pw = document.createElement("div"); pw.className = "pw"; pw.textContent = p.when;
+    w.appendChild(pw);
+    [["配るもの", p.what], ["もらえる人", p.who]].forEach(([k, v]) => {
+      if (!v) return;
+      const r = document.createElement("div"); r.className = "pr";
+      const ks = document.createElement("span"); ks.className = "k"; ks.textContent = k;
+      const vs = document.createElement("span"); vs.className = "v"; vs.textContent = v;
+      r.append(ks, vs); w.appendChild(r);
+    });
+    c.appendChild(w);
+  });
+
+  if (h.idBody){
+    const i = document.createElement("div"); i.className = "idw";
+    const b = document.createElement("b"); b.textContent = "🪪 " + (h.idHead || "身分証を持って行ってください");
+    const p = document.createElement("p"); p.textContent = h.idBody;
+    i.append(b, p); c.appendChild(i);
+  }
+
+  if ((h.places || []).length){
+    const pl = document.createElement("div"); pl.className = "pl";
+    const ph = document.createElement("div"); ph.className = "plh";
+    ph.textContent = h.placeHead || "配る場所";
+    pl.appendChild(ph);
+    const ol = document.createElement("ol");
+    h.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ol.appendChild(li); });
+    pl.appendChild(ol);
+    if (h.placeNote){
+      const n = document.createElement("div"); n.className = "pln"; n.textContent = h.placeNote;
+      pl.appendChild(n);
+    }
+    c.appendChild(pl);
+  }
+
+  if ((h.times || []).length){
+    const tm = document.createElement("div"); tm.className = "tm";
+    const t = document.createElement("div"); t.className = "tmh"; t.textContent = h.timeHead || "配る時間";
+    tm.appendChild(t);
+    h.times.forEach(x => {
+      const r = document.createElement("div"); r.className = "r";
+      const k = document.createElement("span"); k.className = "k"; k.textContent = x[0];
+      const v = document.createElement("span"); v.className = "v"; v.textContent = x[1];
+      r.append(k, v); tm.appendChild(r);
+    });
+    c.appendChild(tm);
+  }
+
+  if ((h.cautions || []).length){
+    const cu = document.createElement("div"); cu.className = "cau";
+    const ul = document.createElement("ul");
+    h.cautions.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+    cu.appendChild(ul); c.appendChild(cu);
+  }
+
+  /* 市の案内に書かれていないこと。分からないまま出す */
+  if ((h.gaps || []).length){
+    const g = document.createElement("div"); g.className = "gap";
+    const gh = document.createElement("div"); gh.className = "gh";
+    gh.textContent = "🙋 " + (h.gapHead || "市に確認できていないこと");
+    g.appendChild(gh);
+    const ul = document.createElement("ul");
+    h.gaps.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+    g.appendChild(ul); c.appendChild(g);
+  }
+
+  if (h.tel){
+    const a = document.createElement("a"); a.className = "hbtn line2";
+    a.href = "tel:" + String(h.tel).replace(/-/g, "");
+    a.textContent = `📞 ${h.dept || "宇城市"}　${h.tel}`;
+    c.appendChild(a);
+  }
+  if (h.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = h.source; c.appendChild(s); }
+  box.appendChild(c);
+}
+
 function renderKyuRepair(){
   const card = document.getElementById("kyuRepairCard");
   const box = document.getElementById("kyuRepairBody");
@@ -2495,6 +2650,7 @@ function renderAll(){
   renderKPIs();
   renderShelters();
   renderTrendCard();
+  renderHaifu();
   renderKids();
   renderLaundry();
   renderPets();
