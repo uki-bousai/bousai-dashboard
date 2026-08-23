@@ -215,6 +215,14 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .vcard{margin-top:12px; border:1.5px solid #e8b6c8; border-radius:14px; padding:14px 16px;
   background:#fdf5f8}
 .vcard:first-child{margin-top:2px}
+.vcard > summary.vh{list-style:none; cursor:pointer; font-size:.95rem; font-weight:700;
+  color:#a8447a; line-height:1.6; display:flex; align-items:flex-start; gap:10px}
+.vcard > summary.vh::-webkit-details-marker{display:none}
+.vcard > summary.vh .vtx{flex:1; min-width:0}
+.vcard > summary.vh .vtag{display:block; margin:0 0 5px}
+.vcard > summary.vh::after{content:"▼"; flex:0 0 auto; margin-top:5px; font-size:.55rem;
+  color:var(--text-muted)}
+.vcard[open] > summary.vh::after{content:"▲"}
 .vcard .vh{font-size:1rem; font-weight:700; color:#a8447a; line-height:1.55}
 .vcard .vtag{display:inline-block; margin-bottom:6px; font-size:.68rem; font-weight:700;
   color:#a8447a; background:#fff; border:1px solid #e8b6c8; border-radius:99px; padding:3px 10px}
@@ -323,6 +331,15 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .hoffer .hh .pv{font-size:1rem; font-weight:700}
 .hoffer .hh .kd{font-size:.68rem; font-weight:700; color:#5b3f8a; background:#fff;
   border:1px solid #d6cbe6; border-radius:99px; padding:3px 9px}
+/* 受付が終わった募集。まだ募集中のものと見た目で分ける */
+.hoffer.over{border-color:var(--border); background:var(--surface-2, #f4f2f0)}
+.hoffer.over .hh .pv, .hoffer.over .hh .kd{color:var(--text-muted)}
+.hoffer.over .hbtn{background:var(--surface-1); color:var(--text-secondary);
+  border:1.5px solid var(--border)}
+.hoffer .hend{margin-top:9px; background:var(--text-secondary); color:#fff; border-radius:10px;
+  padding:9px 13px; font-size:.85rem; font-weight:700; line-height:1.6}
+.hoffer .dl.done{background:none; border:1px solid var(--border); color:var(--text-muted);
+  font-weight:400; text-decoration:line-through}
 .hoffer .dl{margin-top:9px; background:#fdf3f3; border:1.5px solid #e8b2b2; border-radius:10px;
   padding:9px 13px; font-size:.86rem; font-weight:700; color:#c0392b; line-height:1.6}
 .hoffer .dl small{display:block; margin-top:2px; font-size:.74rem; font-weight:400; color:var(--text-secondary)}
@@ -771,7 +788,7 @@ footer a{color:var(--accent)}
 
   <section class="card hidden" id="voiceCard">
     <h2><span class="dot" style="background:#a8447a"></span>市民の声</h2>
-    <p class="desc">市の会議では説明されていないけれど、暮らしのなかで実際に困っていること。<b>教えていただいた声を、そのまま載せています。</b><br>お名前・連絡先は載せません。同じ困りごとが集まれば、市議会を通して市へ伝えることができます。</p>
+    <p class="desc">暮らしのなかで実際に困っていること。<b>教えていただいた声を、そのまま載せています。</b>お名前・連絡先は載せません。見出しをタップすると開きます。</p>
     <div id="voiceList"></div>
   </section>
 
@@ -825,9 +842,8 @@ footer a{color:var(--accent)}
 
   <section class="card" id="secToilet">
     <h2><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</h2>
-    <p class="desc"><b>トイレカー</b>は市が場所を公表しています。<b>仮設トイレ</b>のほうは一覧が出ていないため、<b>市民の方から届いた情報</b>を確認のうえ掲載しています。設置されているのにここに無い場所は、ぜひ教えてください。</p>
+    <p class="desc">市が場所を公表している<b>トイレカー</b>を、町ごとに載せています。町名をタップすると開きます。</p>
     <div id="tcarBox" class="hidden"></div>
-    <div id="toiletList"><p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p></div>
   </section>
 
   <section class="card" id="secWater">
@@ -1548,27 +1564,6 @@ function renderWater(){
     }
   })));
 }
-function renderToilets(){
-  const box = document.getElementById("toiletList");
-  box.textContent = "";
-  const list = fByDistrict(DATA.toilets);
-  if (!list.length){
-    box.innerHTML = (DATA.toilets || []).length
-      ? '<p class="empty">この地区の設置情報はまだありません。</p>'
-      : '<p class="empty">設置情報は準備中です。確認でき次第、掲載します。</p>';
-    return;
-  }
-  list.forEach(t => box.appendChild(rowEl(t.name, t.district, b => {
-    if (t.count){ const c = document.createElement("b"); c.textContent = `${t.count}基`; b.appendChild(c); }
-    if (t.note) b.appendChild(document.createTextNode((t.count ? " ／ " : "") + t.note));
-    b.appendChild(gmapsLink(gmapsQuery(t)));
-    if (t.report){
-      const r = document.createElement("div"); r.className = "report cite";
-      r.textContent = "🙋 " + t.report + (t.reportAt ? `（${t.reportAt} 市民からの報告）` : "");
-      b.appendChild(r);
-    }
-  })));
-}
 /* トイレカーは避難所以外の駐車場にも置かれている。市の一覧が唯一の出どころなので、まとめて先に出す */
 function renderToiletCars(){
   const box = document.getElementById("tcarBox");
@@ -2081,10 +2076,14 @@ function renderVoices(){
   box.textContent = "";
   const list = DATA.voices || [];
   card.classList.toggle("hidden", !list.length);
+  /* 声が増えると縦に伸びるので、見出しだけ並べて、読みたいものを開く形にする */
   list.forEach(v => {
-    const c = document.createElement("div"); c.className = "vcard";
-    if (v.tag){ const t = document.createElement("div"); t.className = "vtag"; t.textContent = v.tag; c.appendChild(t); }
-    const h = document.createElement("div"); h.className = "vh"; h.textContent = "🙋 " + (v.head || "市民の方からの声");
+    const c = document.createElement("details"); c.className = "vcard";
+    const h = document.createElement("summary"); h.className = "vh";
+    const tx = document.createElement("span"); tx.className = "vtx";
+    if (v.tag){ const t = document.createElement("span"); t.className = "vtag"; t.textContent = v.tag; tx.appendChild(t); }
+    tx.appendChild(document.createTextNode("🙋 " + (v.head || "市民の方からの声")));
+    h.appendChild(tx);
     c.appendChild(h);
     const ul = document.createElement("ul");
     (v.lines || []).forEach(l => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
@@ -2644,14 +2643,24 @@ function renderHousing(){
     if (o.units){ const u = document.createElement("span"); u.className = "kd"; u.textContent = o.units; hh.appendChild(u); }
     c.appendChild(hh);
 
+    /* 受付が終わったものは、間違えて連絡してしまわないよう、いちばん上で終了と伝える */
+    const days = o.deadline ? Math.round((Date.parse(o.deadline + "T23:59:59+09:00") - Date.now()) / 86400000) : null;
+    const over = o.ended || (days !== null && days < 0);
+    if (over) c.classList.add("over");
+    if (over){
+      const e = document.createElement("div"); e.className = "hend";
+      e.textContent = "✕ " + (o.endedNote || "申請の受付は終了しました。");
+      c.appendChild(e);
+    }
     if (o.period){
-      const dl = document.createElement("div"); dl.className = "dl";
-      const days = o.deadline ? Math.round((Date.parse(o.deadline + "T23:59:59+09:00") - Date.now()) / 86400000) : null;
+      const dl = document.createElement("div"); dl.className = "dl" + (over ? " done" : "");
       dl.textContent = "⏳ 申請期間：" + o.period
-        + (days !== null && days >= 0 ? `（あと${days}日）` : "");
-      const sm = document.createElement("small");
-      sm.textContent = "戸数が限られています。ご検討中の方はお早めに。";
-      dl.appendChild(sm);
+        + (!over && days !== null && days >= 0 ? `（あと${days}日）` : "");
+      if (!over){
+        const sm = document.createElement("small");
+        sm.textContent = "戸数が限られています。ご検討中の方はお早めに。";
+        dl.appendChild(sm);
+      }
       c.appendChild(dl);
     }
 
@@ -2719,7 +2728,6 @@ function renderAll(){
   renderWells();
   renderBaths();
   renderToiletCars();
-  renderToilets();
   renderBriefings();
   renderVoices();
   renderMap();
