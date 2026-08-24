@@ -1854,9 +1854,10 @@ function renderMap(){
   if (typeof L === "undefined"){ card.classList.add("hidden"); return; }
   // 宇城市内の地点（初期表示の範囲はこれだけで決める）
   const local = [
-    ...fShelters().filter(s => typeof s.lat === "number").map(s => ({...s, kind:"shelter"})),
+    /* 閉鎖した避難所はピンを立てない。地図を見て向かってしまうと行き場を失うので */
+    ...fShelters().filter(s => typeof s.lat === "number" && !(s.notice && s.notice.tone === "closed"))
+      .map(s => ({...s, kind:"shelter"})),
     ...fByDistrict(DATA.water).filter(w => typeof w.lat === "number").map(w => ({...w, kind:"water"})),
-    ...fByDistrict(DATA.toilets).filter(t => typeof t.lat === "number").map(t => ({...t, kind:"toilet"})),
   ];
   // 入浴施設は市外にもあるため、絞り込みの影響を受けず常に表示する。
   // ただし宇城市内のものは初期表示の範囲に含める（市内で入れる場所が一番大事なので）。
