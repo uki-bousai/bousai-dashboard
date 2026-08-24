@@ -606,19 +606,20 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .bednote{margin-top:7px; background:#f0f3ec; border:1px solid #cfd8c4; border-radius:9px;
   padding:7px 12px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
 .shrow .bednote b{color:var(--text-primary)}
-.shrow .shnotice{margin-top:9px; background:#fdf3f3; border:2px solid #c0392b; border-radius:12px;
-  padding:9px 13px}
-.shrow .shnotice .nh{font-size:.88rem; font-weight:700; color:#c0392b; line-height:1.5}
-.shrow .shnotice.open{background:#eef5fb; border-color:#2a78d6}
+/* 行の中のお知らせ。避難所名より目立つと読みにくいので、細い枠の一行にとどめる */
+.shrow .shnotice{display:inline-block; max-width:100%; margin-top:7px; background:#fdf3f3;
+  border:1px solid #e0a9a4; border-radius:9px; padding:6px 12px}
+.shrow .shnotice .nh{font-size:.76rem; font-weight:700; color:#c0392b; line-height:1.65}
+.shrow .shnotice.open{background:#eef5fb; border-color:#a9cbe8}
 .shrow .shnotice.open .nh{color:#1a5f8a}
-.shrow .shnotice.limit{background:#fdf7ef; border-color:#d98d26}
+.shrow .shnotice.limit{background:#fdf7ef; border-color:#e8c3a4}
 .shrow .shnotice.limit .nh{color:#a3620f}
-.shrow .shnotice p{margin-top:6px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
+.shrow .shnotice p{margin-top:5px; font-size:.76rem; line-height:1.8; color:var(--text-secondary)}
 .shrow .shnotice p.why{color:var(--text-muted); font-size:.75rem}
 .shrow .shnotice .tel{white-space:nowrap; display:inline-block}
 /* 電話は大きなボタンにすると箱が重くなるので、行の中の小さなリンクにする */
 .shrow .shnotice .hbtn{display:inline-flex; align-items:center; gap:5px; margin:6px 8px 0 0;
-  font-size:.76rem; font-weight:700; padding:4px 12px; border-radius:99px;
+  font-size:.72rem; font-weight:700; padding:3px 11px; border-radius:99px;
   color:#c0392b; background:var(--surface-1); border:1px solid currentColor}
 .shrow .shnotice.open .hbtn{color:#1a5f8a}
 .shrow .shnotice.limit .hbtn{color:#a3620f}
@@ -629,10 +630,10 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow.gone .acbadge, .shrow.gone .carstay, .shrow.gone .rep{display:none}
 .shrow .shgone{margin-top:7px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
   border-radius:9px; padding:6px 12px; font-size:.75rem; line-height:1.6; color:var(--text-secondary)}
-.shrow .shnotice .nmore{margin-top:6px}
+.shrow .shnotice .nmore{margin-top:5px}
 .shrow .shnotice .nmore > summary{list-style:none; cursor:pointer; display:inline-flex;
-  align-items:center; gap:5px; font-size:.75rem; font-weight:700; color:#c0392b;
-  background:#fff; border:1px solid currentColor; border-radius:99px; padding:4px 12px}
+  align-items:center; gap:4px; font-size:.68rem; font-weight:700; color:#c0392b;
+  background:#fff; border:1px solid currentColor; border-radius:99px; padding:2px 10px}
 .shrow .shnotice .nmore > summary::-webkit-details-marker{display:none}
 .shrow .shnotice .nmore > summary::after{content:"▼"; font-size:.55rem}
 .shrow .shnotice .nmore[open] > summary::after{content:"▲"}
@@ -685,8 +686,8 @@ footer a{color:var(--accent)}
 
 <nav class="secnav" aria-label="ページ内の目次">
   <div class="secnav-in">
-    <a href="#haifuCard">🍱 弁当・物資</a>
     <a href="#shelterCard">🏫 避難所</a>
+    <a href="#haifuCard">🍱 弁当・物資</a>
     <a href="#mapCard">🗺 地図</a>
     <a href="#kidsCard">👶 子どもの預かり</a>
     <a href="#laundryCard">🧺 洗濯</a>
@@ -729,12 +730,6 @@ footer a{color:var(--accent)}
 
   <div class="kpis" id="kpis"></div>
 
-  <section class="card hidden" id="haifuCard">
-    <h2><span class="dot" style="background:#b8571f"></span>弁当・物資の配布が変わります（在宅避難・車中泊の方）</h2>
-    <p class="desc">避難所で配っている<b>弁当や物資の「配る場所」と「もらえる人」が、8月26日から変わります</b>。<b>家で避難している方・車中泊の方</b>に関わる話です。<br>避難所に寝泊まりしている方の食事について、この案内には書かれていません。</p>
-    <div id="haifuBody"></div>
-  </section>
-
   <section class="card hidden" id="mapCard">
     <h2>マップ</h2>
     <p class="desc">避難所のマーカーをタップすると、ページ全体がその避難所のデータに絞り込まれます</p>
@@ -760,6 +755,12 @@ footer a{color:var(--accent)}
     </div></details>
     <div id="facilityLegend" class="fleg hidden"></div>
     <div id="shelterList"></div>
+  </section>
+
+  <section class="card hidden" id="haifuCard">
+    <h2><span class="dot" style="background:#b8571f"></span>弁当・物資の配布が変わります（在宅避難・車中泊の方）</h2>
+    <p class="desc">避難所で配っている<b>弁当や物資の「配る場所」と「もらえる人」が、8月26日から変わります</b>。<b>家で避難している方・車中泊の方</b>に関わる話です。<br>避難所に寝泊まりしている方の食事について、この案内には書かれていません。</p>
+    <div id="haifuBody"></div>
   </section>
 
   <section class="card hidden" id="trendCard">
@@ -1140,11 +1141,15 @@ function renderShelters(){
       val.appendChild(f);
     }
     top.append(nm, val);
-    const track = document.createElement("div"); track.className = "track";
-    const fill = document.createElement("div"); fill.className = "fill" + (st.cls ? " " + st.cls : "");
-    fill.style.width = Math.min(r * 100, 100) + "%";
-    track.appendChild(fill);
-    row.append(top, track);
+    row.appendChild(top);
+    /* 受入可能数が公表されていない避難所は、空のバーを出すと0%に見えるので出さない */
+    if (s.capacity){
+      const track = document.createElement("div"); track.className = "track";
+      const fill = document.createElement("div"); fill.className = "fill" + (st.cls ? " " + st.cls : "");
+      fill.style.width = Math.min(r * 100, 100) + "%";
+      track.appendChild(fill);
+      row.appendChild(track);
+    }
     /* この避難所の数字の読み方。現地をご存じの方に教えていただいた分だけ出す */
     if (s.countNote){
       const cn = document.createElement("div"); cn.className = "bednote";
