@@ -283,13 +283,6 @@ button:disabled{opacity:.45; cursor:not-allowed}
         <label for="saveToken" style="font-weight:400">この端末にトークンを保存する（共用端末では外してください）</label>
       </div>
     </div>
-    <div class="card" style="margin-bottom:12px">
-      <h2>公開設定</h2>
-      <div class="check" style="margin-top:4px">
-        <input type="checkbox" id="provisionalChk">
-        <label for="provisionalChk" style="font-weight:400">市民向けページに「⚠ 仮のデータです」の注意を表示する（正式運用を始めるときに外して保存）</label>
-      </div>
-    </div>
     <div class="card">
       <button id="loadBtn">最新データを読み込み直す</button>
       <div class="notice" id="repoInfo"></div>
@@ -968,7 +961,6 @@ function renderSuggestions(){
 
 /* ---------- フォーム描画 ---------- */
 function renderForms(){
-  $("provisionalChk").checked = data.provisional === true;
   const sb = $("shelterBody"); sb.textContent = "";
   data.shelters.forEach(s => sb.appendChild(shelterRow(s)));
   const pb = $("supplyBody"); pb.textContent = "";
@@ -1097,7 +1089,7 @@ function collect(){
   }
 
   const supplyPoints = [...$("pointsBody").children].map(tr => tr._get()).filter(p => p.name);
-  return { updatedAt: now.stamp, provisional: $("provisionalChk").checked, shelters, supplies, supplyPoints, trend };
+  return { updatedAt: now.stamp, shelters, supplies, supplyPoints, trend };
 }
 
 /* ---------- 履歴（GitHubのコミット履歴を表示） ---------- */
@@ -1145,7 +1137,6 @@ async function loadHistory(force){
   }
 }
 $("historyReload").addEventListener("click", () => loadHistory(true));
-$("provisionalChk").addEventListener("change", markDirty);
 
 /* ---------- 読み込み・保存 ---------- */
 async function loadFromPublic(){

@@ -154,10 +154,6 @@ button:disabled{opacity:.45; cursor:not-allowed}
       <input type="checkbox" id="saveAuth" checked>
       <label for="saveAuth" style="font-weight:400">この端末に合言葉を保存する（共用端末では外してください）</label>
     </div>
-    <div class="check">
-      <input type="checkbox" id="provisionalChk">
-      <label for="provisionalChk" style="font-weight:400">公開ページに「情報は現在集めています」の案内を表示する（給水・物資の掲載が揃ってきたら外して保存）</label>
-    </div>
     <div class="notice">避難所ダッシュボードと同じ名前・合言葉が使えます。入力方法は <a href="https://github.com/uki-bousai/bousai-dashboard/blob/main/MANUAL.md">運用マニュアル</a> を参照。</div>
   </div>
 
@@ -516,14 +512,12 @@ function showMapPicker(name, latInp, lngInp){
 
 /* ---------- 読み込み・保存 ---------- */
 function renderForms(){
-  $("provisionalChk").checked = data.provisional === true;
   const wb = $("waterBody"); wb.textContent = "";
   (data.water || []).forEach(w => wb.appendChild(waterRow(w)));
   const tb = $("toiletBody"); tb.textContent = "";
   (data.toilets || []).forEach(t => tb.appendChild(toiletRow(t)));
   renderHaveSelect();
 }
-$("provisionalChk").addEventListener("change", markDirty);
 
 async function loadFromPublic(){
   setStatus("公開データを読み込み中…");
@@ -556,7 +550,6 @@ function collect(){
   const toilets = [...$("toiletBody").children].map(tr => tr._get()).filter(t => t.name);
   const haves = (data.haves || []).filter(l => (l.items || []).length);
   const next = {
-    provisional: $("provisionalChk").checked,
     updatedAt: jstStamp() + " 更新",
     water, toilets, haves
   };
