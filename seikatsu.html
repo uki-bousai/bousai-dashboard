@@ -332,7 +332,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .hoffer .hh .kd{font-size:.68rem; font-weight:700; color:#5b3f8a; background:#fff;
   border:1px solid #d6cbe6; border-radius:99px; padding:3px 9px}
 /* 受付が終わった募集。まだ募集中のものと見た目で分ける */
-.hoffer.over{border-color:var(--border); background:var(--surface-2, #f4f2f0)}
+.hoffer.over{margin-top:0; border:0; background:none; padding:0}
+.fold > .fbody > .hoffer.over:first-child{margin-top:0}
 .hoffer.over .hh .pv, .hoffer.over .hh .kd{color:var(--text-muted)}
 .hoffer.over .hbtn{background:var(--surface-1); color:var(--text-secondary);
   border:1.5px solid var(--border)}
@@ -831,7 +832,7 @@ footer a{color:var(--accent)}
 
   <section class="card hidden" id="housingCard">
     <h2><span class="dot" style="background:#7a5aa8"></span>市外からの住まいの提供</h2>
-    <p class="desc">被災した住宅に住み続けられない方に向けて、<b>市外の自治体から公営住宅の提供</b>が届いています。ホテル等避難よりも長く住める一方、<b>申請期間が短く、戸数も限られています</b>。</p>
+    <p class="desc"><b>市外の自治体から公営住宅の提供</b>が届いています。ホテル等避難より長く住める一方、<b>申請期間が短く、戸数も限られています</b>。</p>
     <div id="housingBody"></div>
   </section>
 
@@ -2710,6 +2711,21 @@ function renderHousing(){
     if (o.source){
       const sc = document.createElement("div"); sc.className = "src2"; sc.textContent = o.source;
       c.appendChild(sc);
+    }
+    /* 受付が終わった募集は、もう申し込めない。1行に畳んで、開いた人だけが中を読む */
+    if (over){
+      const d = document.createElement("details"); d.className = "fold hover";
+      const sum = document.createElement("summary");
+      const md = o.deadline ? `${+o.deadline.slice(5,7)}月${+o.deadline.slice(8,10)}日で` : "";
+      sum.textContent = `✕ ${o.provider || ""}${o.kind ? "（" + o.kind + "）" : ""} ${md}受付終了`;
+      const bd = document.createElement("div"); bd.className = "fbody";
+      /* 見出しに書いたことは、中でくり返さない */
+      c.querySelector(".hend")?.remove();
+      c.querySelector(".hh")?.remove();
+      bd.appendChild(c);
+      d.append(sum, bd);
+      box.appendChild(d);
+      return;
     }
     box.appendChild(c);
   });
