@@ -714,11 +714,6 @@ footer a{color:var(--accent)}
 </a>
 
 <div class="notice warn hidden" id="countNotice"></div>
-<div class="notice hidden" id="provisionalNotice"><details>
-  <summary>ℹ 仮設トイレの情報は、現在集めています</summary>
-  <div class="nbody">確認でき次第、順次このページに掲載します。避難所の避難者数と給水情報は市の公表資料、受入可能数は市の地域防災計画に基づきます。</div>
-</details></div>
-
 <div class="container">
 
   <div class="filters">
@@ -2001,7 +1996,6 @@ async function loadData(){
     const res3 = await fetch("zaitaku.json?_=" + Date.now(), { cache: "no-store" });
     if (res3.ok) ZAITAKU = await res3.json();
   } catch (e) { /* 前回の表示を維持 */ }
-  document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
   const cn = document.getElementById("countNotice");
   cn.classList.toggle("hidden", !COUNT_NOTE);
   if (COUNT_NOTE){

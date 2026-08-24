@@ -222,7 +222,6 @@ footer a{color:var(--text-secondary)}
 
 <div class="notice hidden" id="fetchNotice"><div>⚠ 最新データを取得できなかったため、ページに内蔵のサンプルデータを表示しています。通信環境を確認して再読み込みしてください。</div></div>
 
-<div class="notice hidden" id="provisionalNotice" style="border-color:var(--status-critical)"><div><b>⚠ 現在は仮のデータです。</b>実際の避難所・物資の状況ではありません。避難や物資の判断には使わないでください。正式なデータでの運用開始に向けて準備中です。</div></div>
 
 <div class="notice hidden" id="staleNotice" style="border-color:var(--status-warning)"><div><b>⚠ 情報が古い可能性があります。</b>最終更新は<b id="staleAgo"></b>です。現地の状況と異なる場合があるため、市の公式情報もあわせて確認してください。</div></div>
 
@@ -371,7 +370,7 @@ let DATA = FALLBACK;
 let currentDistrict = "";   // "" = すべて
 let currentShelter = "";    // "" = すべて（避難所名で絞り込み）
 
-const fmt = n => n.toLocaleString("ja-JP");
+const fmt = n => (n || 0).toLocaleString("ja-JP");
 const pct = r => Math.round(r * 100);
 
 // 必要量: 1人1日あたり(perPerson)が設定されていれば 全避難者数×原単位 で自動計算。
@@ -766,7 +765,7 @@ function renderShelters(shelters){
 
     const zone = document.createElement("div"); zone.className = "barzone";
     const track = document.createElement("div"); track.className = "track";
-    track.style.left = 0; track.style.width = (s.capacity/scaleMax*100) + "%";
+    track.style.left = 0; track.style.width = ((s.capacity || 0)/scaleMax*100) + "%";
     const fillwrap = document.createElement("div"); fillwrap.className = "fillwrap";
     fillwrap.style.left = 0; fillwrap.style.width = (s.occupants/scaleMax*100) + "%";
     const seg = document.createElement("div");
@@ -775,11 +774,12 @@ function renderShelters(shelters){
     fillwrap.appendChild(seg);
 
     const label = document.createElement("div"); label.className = "vlabel";
-    label.style.left = (Math.max(s.capacity, s.occupants)/scaleMax*100) + "%";
+    label.style.left = (Math.max(s.capacity || 0, s.occupants)/scaleMax*100) + "%";
     label.style.paddingLeft = "8px";
     const b = document.createElement("b"); b.textContent = fmt(s.occupants);
     label.appendChild(b);
-    label.appendChild(document.createTextNode(` / ${fmt(s.capacity)}人（${pct(ratio)}%）`));
+    /* 受入可能数が公表されていない避難所は、人数だけを出す */
+    label.appendChild(document.createTextNode(s.capacity ? ` / ${fmt(s.capacity)}人（${pct(ratio)}%）` : "人"));
     if (ratio > 1){
       const f = document.createElement("span"); f.className = "flag crit"; f.textContent = " ⛔超過";
       label.appendChild(f);
@@ -1186,7 +1186,6 @@ async function loadData(){
   }
   renderFreshness();
   document.getElementById("sampleBadge").classList.toggle("hidden", !DATA.sample);
-  document.getElementById("provisionalNotice").classList.toggle("hidden", DATA.provisional !== true);
   rebuildFilter();
   renderAll();
 }
