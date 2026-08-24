@@ -1042,7 +1042,9 @@ function fold(label, fill){
 function renderKPIs(){
   const box = document.getElementById("kpis");
   box.textContent = "";
-  const shelters = fShelters();
+  /* 閉鎖した避難所は「開設◯ヶ所」にも受入可能数にも入れない。
+     いま行ける場所の数と、いま入れる人数を出したいので */
+  const shelters = fShelters().filter(s => !(s.notice && s.notice.tone === "closed"));
   if (!shelters.length){ return; }
   const occ = shelters.reduce((a,s) => a + (s.occupants || 0), 0);
   const cap = shelters.reduce((a,s) => a + (s.capacity || 0), 0);
