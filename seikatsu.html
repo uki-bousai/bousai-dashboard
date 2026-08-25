@@ -259,6 +259,9 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .wst .grp .ar + .ar{margin-top:7px}
 .wst .grp .ar .an{font-size:.88rem; font-weight:700}
 .wst .grp .ar .at{margin-top:3px; font-size:.76rem; line-height:1.75; color:var(--text-secondary)}
+/* 直近で水が出るようになった地区。増えたところが一覧に埋もれないようにする */
+.wst .grp .ar .anew{margin-top:5px; background:#f0faf5; border:1.5px solid #8ccfae; border-radius:8px;
+  padding:7px 11px; font-size:.79rem; font-weight:700; color:#15794f; line-height:1.7}
 /* 小川町のように、同じ区分の中でも扱いが違うところ */
 .wst .grp .ar .aw{margin-top:5px; background:#fdf3f3; border:1px solid #e8b2b2; border-radius:8px;
   padding:6px 10px; font-size:.75rem; font-weight:700; color:#c0392b; line-height:1.7}
@@ -1451,6 +1454,8 @@ function renderWaterStatus(){
       const ar = document.createElement("div"); ar.className = "ar";
       const an = document.createElement("div"); an.className = "an"; an.textContent = a.name;
       ar.appendChild(an);
+      /* 直近で増えた地区。長い一覧のどこが新しいのか分かるように、先に出す */
+      if (a.new){ const nw = document.createElement("div"); nw.className = "anew"; nw.textContent = "🆕 " + a.new; ar.appendChild(nw); }
       /* 同じ区分でも扱いが違うところは、地区名のすぐ下に赤で出す */
       if (a.warn){ const aw = document.createElement("div"); aw.className = "aw"; aw.textContent = "⚠ " + a.warn; ar.appendChild(aw); }
       if (a.note){ const at = document.createElement("div"); at.className = "at"; at.textContent = a.note; ar.appendChild(at); }
