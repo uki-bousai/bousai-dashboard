@@ -259,6 +259,25 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .wst .grp .ar + .ar{margin-top:7px}
 .wst .grp .ar .an{font-size:.88rem; font-weight:700}
 .wst .grp .ar .at{margin-top:3px; font-size:.76rem; line-height:1.75; color:var(--text-secondary)}
+/* 宅内の漏水チェック。「コマ」がどれか分からないので、図をつける */
+.wst .leak{margin-top:11px; background:#fff; border:1.5px solid #b6cede; border-radius:13px;
+  padding:12px 15px}
+.wst .leak .lh{font-size:.95rem; font-weight:700; color:#0f6b8a; line-height:1.5}
+.wst .leak .ll{margin-top:4px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
+.wst .leak .fig{margin:11px auto 0; display:block; width:170px; height:auto}
+.wst .leak .figc{margin-top:4px; text-align:center; font-size:.7rem; color:var(--text-muted)}
+.wst .leak ol{list-style:none; margin:11px 0 0; padding:0; counter-reset:lk}
+.wst .leak li{counter-increment:lk; display:flex; gap:9px; align-items:flex-start;
+  font-size:.8rem; line-height:1.75; padding:5px 0; border-top:1px solid var(--border)}
+.wst .leak li:first-child{border-top:0; padding-top:0}
+.wst .leak li::before{content:counter(lk); flex:0 0 19px; height:19px; margin-top:2px;
+  border-radius:99px; background:#0f6b8a; color:#fff; font-size:.66rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center}
+.wst .leak .lng{margin-top:9px; background:#fdf3f3; border:1px solid #e8b2b2; border-radius:9px;
+  padding:8px 12px; font-size:.78rem; font-weight:700; color:#c0392b; line-height:1.75}
+.wst .leak .lwho{margin-top:7px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
+.wst .leak .lsrc{margin-top:7px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
+
 /* 直近で水が出るようになった地区。増えたところが一覧に埋もれないようにする */
 .wst .grp .ar .anew{margin-top:5px; background:#f0faf5; border:1.5px solid #8ccfae; border-radius:8px;
   padding:7px 11px; font-size:.79rem; font-weight:700; color:#15794f; line-height:1.7}
@@ -1463,6 +1482,50 @@ function renderWaterStatus(){
     });
     c.appendChild(gw);
   });
+
+  /* 宅内の漏水チェック。文字だけだと「コマ」がどこか分からないので図を添える */
+  if (w.leak){
+    const lk = w.leak;
+    const box = document.createElement("div"); box.className = "leak";
+    const h = document.createElement("div"); h.className = "lh"; h.textContent = "🔧 " + lk.head;
+    box.appendChild(h);
+    if (lk.lead){ const p2 = document.createElement("div"); p2.className = "ll"; p2.textContent = lk.lead; box.appendChild(p2); }
+
+    /* 水道メーターの絵。市の写真は使えないので、同じところを指す図をこちらで描いている */
+    const fig = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    fig.setAttribute("viewBox", "0 0 200 200");
+    fig.setAttribute("class", "fig");
+    fig.setAttribute("role", "img");
+    fig.setAttribute("aria-label", "水道メーターの図。左下の小さな丸が「コマ」です");
+    fig.innerHTML =
+      '<circle cx="100" cy="100" r="94" fill="#e7e3d8" stroke="#b9b3a4" stroke-width="4"/>' +
+      '<circle cx="100" cy="100" r="78" fill="#fbfaf7" stroke="#cfc9ba" stroke-width="2"/>' +
+      '<rect x="52" y="52" width="96" height="30" rx="4" fill="#2b2b2b"/>' +
+      '<g fill="#fff" font-family="monospace" font-size="21" text-anchor="middle">' +
+      '<text x="66" y="75">0</text><text x="88" y="75">0</text>' +
+      '<text x="110" y="75">3</text><text x="132" y="75">5</text></g>' +
+      '<circle cx="72" cy="118" r="19" fill="#fff" stroke="#c0392b" stroke-width="4"/>' +
+      '<path d="M72 104 A14 14 0 0 1 84 118 L72 118 Z" fill="#c0392b"/>' +
+      '<circle cx="72" cy="118" r="3" fill="#8a867c"/>' +
+      '<circle cx="132" cy="112" r="16" fill="#fff" stroke="#cfc9ba" stroke-width="2"/>' +
+      '<line x1="132" y1="112" x2="132" y2="100" stroke="#c0392b" stroke-width="3"/>' +
+      '<circle cx="112" cy="148" r="14" fill="#fff" stroke="#cfc9ba" stroke-width="2"/>' +
+      '<line x1="112" y1="148" x2="122" y2="141" stroke="#c0392b" stroke-width="3"/>';
+    box.appendChild(fig);
+    const fc = document.createElement("div"); fc.className = "figc";
+    fc.textContent = "赤い丸で囲んだ小さな羽根が「コマ」です";
+    box.appendChild(fc);
+
+    if ((lk.steps || []).length){
+      const ol = document.createElement("ol");
+      lk.steps.forEach(x => { const li = document.createElement("li"); li.textContent = x; ol.appendChild(li); });
+      box.appendChild(ol);
+    }
+    if (lk.ng){ const n = document.createElement("div"); n.className = "lng"; n.textContent = "⚠ " + lk.ng; box.appendChild(n); }
+    if (lk.who){ const o = document.createElement("div"); o.className = "lwho"; o.textContent = lk.who; box.appendChild(o); }
+    if (lk.source){ const sc = document.createElement("div"); sc.className = "lsrc"; sc.textContent = lk.source; box.appendChild(sc); }
+    c.appendChild(box);
+  }
 
   /* 判断の基準。教えていただいた答えは、質問より先に出す */
   if (w.answer){
