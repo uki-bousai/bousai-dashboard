@@ -620,7 +620,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
   .shrow .top{display:block}
   .shrow .top .val{display:block; margin-top:3px}
 }
-/* 現地の様子は畳んでおく。一覧の比較を邪魔しないため */
 .shrow .carstay{margin-left:6px; font-size:.7rem; font-weight:700; color:#41556b;
   background:#eef1f4; border:1px solid #cdd6de; border-radius:99px; padding:2px 8px;
   white-space:nowrap; display:inline-block}
@@ -649,8 +648,8 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice .src3{margin-top:7px; font-size:.68rem; color:var(--text-muted)}
 /* 閉鎖済みの避難所。開いている避難所と見間違えないよう、色を落として1行だけにする */
 .shrow.gone .name, .shrow.gone .val, .shrow.gone .track{opacity:.45}
-/* 設備・車中泊・現地の様子は、閉まったあとは古い情報にしかならないので出さない */
-.shrow.gone .acbadge, .shrow.gone .carstay, .shrow.gone .rep{display:none}
+/* 設備と車中泊は、閉まったあとは古い情報にしかならないので出さない */
+.shrow.gone .acbadge, .shrow.gone .carstay{display:none}
 .shrow .shgone{margin-top:7px; background:var(--surface-2, #f4f2f0); border:1px solid var(--border);
   border-radius:9px; padding:6px 12px; font-size:.75rem; line-height:1.6; color:var(--text-secondary)}
 .shrow .shnotice .nmore{margin-top:5px}
@@ -662,22 +661,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice .nmore[open] > summary::after{content:"▲"}
 .shrow .shnotice.open .nmore > summary{color:#1a5f8a}
 .shrow .shnotice.limit .nmore > summary{color:#a3620f}
-/* 住宅修理の .rep と同じ名前だが、こちらは行の中の小さな開閉なので枠を持たせない */
-.shrow .rep{margin-top:6px; border:0; padding:0; background:none; border-radius:0}
-.shrow .rep > summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
-  font-size:.7rem; font-weight:700; color:#1a5f8a; background:#eaf3fa;
-  border:1px solid #b6d4e8; border-radius:99px; padding:3px 11px;
-  -webkit-tap-highlight-color:transparent}
-.shrow .rep > summary::-webkit-details-marker{display:none}
-.shrow .rep > summary::after{content:"▾"; font-size:.66rem}
-.shrow .rep[open] > summary::after{content:"▴"}
-.shrow .rep .report{margin-top:6px}
-/* 数日たった報告。いまの様子として読まれないよう、青ではなく灰色で出す */
-.shrow .rep.old > summary{color:var(--text-muted); background:var(--surface-2, #f4f2f0);
-  border-color:var(--border)}
-.shrow .rep.old .report{color:var(--text-secondary); background:var(--surface-2, #f4f2f0);
-  border-color:var(--border)}
-.shrow .rep .oldwarn{margin-top:6px; font-size:.72rem; line-height:1.7; color:var(--text-muted)}
 .shrow .flag{font-size:.7rem; font-weight:700}
 .shrow .flag.crit{color:var(--status-critical)}
 .shrow .flag.warn{color:#b97a10}
@@ -768,7 +751,7 @@ footer a{color:var(--accent)}
     <h2>避難所別 受入状況</h2>
     <p class="desc" id="shelterDesc">避難者数は市の公表資料、受入可能数は市の地域防災計画にある指定避難所の収容者数（3㎡／1人）です。利用率の高い順</p>
     <details class="fold"><summary>ℹ 数字の出どころと、受入可能数の注意</summary><div class="fbody">
-      <p class="desc" style="margin-top:0"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジ・車中泊の台数・段ボールベッドの台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の設備や現地の様子は、市民の方に教えていただいた内容です。</p>
+      <p class="desc" style="margin-top:0"><span class="srcbadge" style="margin:0 5px 0 0">市公表</span><b>設備のバッジ・車中泊の台数・段ボールベッドの台数は、市の公表資料</b>（8月10日22時から公表が始まりました）。それ以外の設備は、市民の方に教えていただいた内容です。</p>
       <p class="desc" style="margin-top:6px"><b>⚠ 受入可能数は被災前の想定です。</b>建物が被災して使えない部屋がある避難所では、実際に入れる人数はこれより少なくなります。利用率が低くても余裕があるとは限りません。</p>
     </div></details>
     <div id="facilityLegend" class="fleg hidden"></div>
@@ -1019,27 +1002,6 @@ const ITEM_ICONS = [
 ];
 const itemLabel = n => ((ITEM_ICONS.find(([re]) => re.test(n)) || [null, "📦"])[1]) + " " + n;
 
-/* 「2026-08-05 12:08」→「今日 12:08 時点」 */
-const jstDay = ms => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
-/* 報告から何日たったか。日付が読めないときは null */
-function daysSince(v){
-  const m = String(v || "").match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (!m) return null;
-  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], 3, 0);   // 日本時間の正午あたり
-  return Math.max(0, Math.round((Date.parse(jstDay(Date.now())) - Date.parse(jstDay(t))) / 86400000));
-}
-function whenLabel(v){
-  // 時刻まで分かっているとは限らないので、日付だけの報告も受け付ける
-  const m = String(v || "").match(/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
-  if (!m) return v || "";
-  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], (m[4] ? +m[4] : 12) - 9, m[5] ? +m[5] : 0);
-  const days = Math.round((Date.parse(jstDay(Date.now())) - Date.parse(jstDay(t))) / 86400000);
-  const hm = m[4] ? ` ${m[4]}:${m[5]} ` : "";
-  if (days <= 0) return `今日${hm}時点`;
-  if (days === 1) return `昨日${hm}時点`;
-  return `${+m[2]}/${+m[3]}${hm}時点`;
-}
-
 /* ---------- 避難所の受入状況 ---------- */
 function shelterStatus(s){
   if (!s.capacity) return { color: cssVar("--text-muted"), label: "データ入力待ち", cls: "" };
@@ -1215,25 +1177,6 @@ function renderShelters(){
       }
       if (det.childElementCount > 1) n.appendChild(det);
       row.appendChild(n);
-    }
-    if (s.report){
-      /* 報告は日がたつほど当てにならない。何日前かを見出しに出して、古いものは色で分ける */
-      const age = daysSince(s.reportAt);
-      const old = age !== null && age >= 4;
-      const det = document.createElement("details"); det.className = "rep" + (old ? " old" : "");
-      const sum = document.createElement("summary");
-      sum.textContent = "🙋 現地の様子"
-        + (age === null ? "" : `（${age === 0 ? "今日" : age === 1 ? "昨日" : age + "日前"}）`);
-      const rp = document.createElement("div"); rp.className = "report cite";
-      rp.textContent = s.report + `（${s.reportAt ? whenLabel(s.reportAt) + " " : ""}${s.reportBy || "市民からの報告"}）`;
-      det.append(sum, rp);
-      if (old){
-        const w = document.createElement("div"); w.className = "oldwarn";
-        w.textContent = `この報告から${age}日たっています。いまは変わっているかもしれません。`
-          + "最近の様子をご存じの方は、InstagramのDM（＠akiyo_8）で教えてください。";
-        det.appendChild(w);
-      }
-      row.appendChild(det);
     }
     box.appendChild(row);
   });
