@@ -5,7 +5,7 @@
    ============================================================ */
 "use strict";
 
-const VERSION = "v90";
+const VERSION = "v91";
 const APP_CACHE = "app-" + VERSION;
 const TILE_CACHE = "tiles-" + VERSION;
 const TILE_MAX = 300;   // 地図タイルの最大キャッシュ枚数
