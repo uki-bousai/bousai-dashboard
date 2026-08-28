@@ -377,10 +377,7 @@ function renderDistricts(){
     // 列見出し（「3日分の数量」はここに1回だけ）
     const ihead = el("div", "ihead");
     const both = hasSup;
-    ihead.append(el("span", "", "必要な物資"),
-      el("span", "", hasSup || !g.householdsKnown
-        ? `要支援${g.support}世帯ぶん（${g.itemList[0].buffer}日分）`
-        : `在宅避難${g.households}世帯ぶん（${g.itemList[0].buffer}日分）`));
+    ihead.append(el("span", "", "必要な物資"), el("span", "", needBasis(g)));
     body.appendChild(ihead);
     g.itemList.forEach(it => {
       const row = el("div", "irow");
@@ -443,6 +440,19 @@ function renderNav(groups){
   $("secnav").style.display = "";
 }
 
+/* 数量をどの世帯数で出しているかの見出し。区カードと地図の吹き出しで同じ文言を使う。
+   届ける相手は「要支援の世帯」なので、表に出す数量は常に needSupport のほう */
+function needBasis(g){
+  const buffer = g.itemList.length
+    ? g.itemList[0].buffer : ZCALC.setting(DATA.settings, "buffer_days");
+  if (Number.isFinite(g.support)){
+    if (!g.householdsKnown || g.support !== g.households)
+      return `要支援${g.support}世帯ぶん（${buffer}日分）`;
+    return `全世帯が要支援・${g.support}世帯ぶん（${buffer}日分）`;
+  }
+  return `在宅避難${g.households}世帯ぶん（${buffer}日分）`;
+}
+
 /* 集積場所の地図（位置が設定された区だけ表示。地図が読み込めない環境では自動的に隠す） */
 let mapObj = null, markerLayer = null;
 function renderMap(groups){
@@ -467,11 +477,19 @@ function renderMap(groups){
     site.textContent = `📍 ${g.site || "集積場所 調整中"}`
       + (g.site_hours ? `（受付 ${g.site_hours}）` : "");
     const items = document.createElement("div");
-    items.style.cssText = "font-size:.85em; margin-top:4px";
-    items.textContent = g.itemList.length
-      ? "必要: " + g.itemList.slice(0, 4).map(c => `${c.rule.name} ${ZCALC.fmtQty(c.need, c.rule.unit)}`).join("、")
-        + (g.itemList.length > 4 ? " ほか" : "")
-      : "現在、必要な物資の報告はありません";
+    items.style.cssText = "font-size:.85em; margin-top:6px";
+    if (g.itemList.length){
+      const ih = document.createElement("div");
+      ih.style.cssText = "font-weight:700";
+      ih.textContent = `必要な物資 ─ ${needBasis(g)}`;
+      const il = document.createElement("div");
+      il.textContent = g.itemList.slice(0, 4)
+        .map(c => `${c.rule.name} ${ZCALC.fmtQty(c.needSupport, c.rule.unit)}`).join("、")
+        + (g.itemList.length > 4 ? " ほか" : "");
+      items.append(ih, il);
+    } else {
+      items.textContent = "現在、必要な物資の報告はありません";
+    }
     box.append(title, site);
     if (g.staff){
       const st = document.createElement("div");
