@@ -667,7 +667,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .shrow .shnotice.open .nh{color:#1a5f8a}
 .shrow .shnotice.limit{background:#fdf7ef; border-color:#e8c3a4}
 .shrow .shnotice.limit .nh{color:#a3620f}
-.shrow .shnotice p{margin-top:5px; font-size:.76rem; line-height:1.8; color:var(--text-secondary)}
 /* 閉鎖済みの避難所。開いている避難所と見間違えないよう、色を落として1行だけにする */
 .shrow.gone .name, .shrow.gone .val, .shrow.gone .track{opacity:.45}
 /* 設備と車中泊は、閉まったあとは古い情報にしかならないので出さない */
@@ -1172,11 +1171,6 @@ function renderShelters(){
       const h = document.createElement("div"); h.className = "nh";
       h.textContent = mark + (s.notice.kind || "お知らせ");
       n.appendChild(h);
-      /* 見出しの下に一行だけ。開いて読ませるほどの分量ではないので、そのまま出す */
-      if (s.notice.note){
-        const p2 = document.createElement("p"); p2.textContent = s.notice.note;
-        n.appendChild(p2);
-      }
       row.appendChild(n);
     }
     box.appendChild(row);
