@@ -435,18 +435,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .haifu .top{background:#b8571f; color:#fff; border-radius:14px; padding:14px 17px}
 .haifu .top .h{font-size:1.05rem; font-weight:700; line-height:1.5}
 .haifu .top .s{margin-top:5px; font-size:.8rem; line-height:1.8; color:#fbe4d3}
-.haifu .ph{margin-top:11px; border-radius:12px; padding:11px 14px; background:#fff;
-  border:1px solid var(--border)}
-.haifu .ph.next{border:2px solid #b8571f; background:#fdf6f0}
-.haifu .ph + .ph{margin-top:8px}
-.haifu .ph .pw{font-size:.88rem; font-weight:700}
-.haifu .ph.now .pw{color:var(--text-secondary)}
-.haifu .ph.next .pw{color:#b8571f}
-.haifu .ph .pr{margin-top:6px; display:flex; align-items:baseline; gap:9px;
-  border-top:1px solid var(--border); padding-top:6px}
-.haifu .ph .pr:first-of-type{border-top:0; padding-top:0}
-.haifu .ph .pr .k{flex:0 0 68px; font-size:.7rem; font-weight:700; color:var(--text-muted)}
-.haifu .ph .pr .v{flex:1; font-size:.8rem; line-height:1.75}
 .haifu .idw{margin-top:11px; background:#c0392b; border-radius:12px; padding:12px 15px; color:#fff}
 .haifu .idw b{display:block; font-size:.95rem; line-height:1.5}
 .haifu .idw p{margin-top:4px; font-size:.79rem; line-height:1.8; color:#ffe4e0}
@@ -772,8 +760,8 @@ footer a{color:var(--accent)}
   </section>
 
   <section class="card hidden" id="haifuCard">
-    <h2><span class="dot" style="background:#b8571f"></span>弁当・物資の配布が変わります（在宅避難・車中泊の方）</h2>
-    <p class="desc">避難所で配っている<b>弁当や物資の「配る場所」と「もらえる人」が、8月26日から変わります</b>。<b>家で避難している方・車中泊の方</b>に関わる話です。<br>避難所に寝泊まりしている方の食事について、この案内には書かれていません。</p>
+    <h2><span class="dot" style="background:#b8571f"></span>弁当・物資の配布（在宅避難・車中泊の方）</h2>
+    <p class="desc"><b>家で避難している方・車中泊の方</b>への配布です。避難所に寝泊まりしている方の食事について、この案内には書かれていません。</p>
     <div id="haifuBody"></div>
   </section>
 
@@ -2455,20 +2443,6 @@ function renderHaifu(){
   top.appendChild(th);
   if (h.lead){ const s = document.createElement("div"); s.className = "s"; s.textContent = h.lead; top.appendChild(s); }
   c.appendChild(top);
-
-  (h.phases || []).forEach(p => {
-    const w = document.createElement("div"); w.className = "ph " + (p.next ? "next" : "now");
-    const pw = document.createElement("div"); pw.className = "pw"; pw.textContent = p.when;
-    w.appendChild(pw);
-    [["配るもの", p.what], ["もらえる人", p.who]].forEach(([k, v]) => {
-      if (!v) return;
-      const r = document.createElement("div"); r.className = "pr";
-      const ks = document.createElement("span"); ks.className = "k"; ks.textContent = k;
-      const vs = document.createElement("span"); vs.className = "v"; vs.textContent = v;
-      r.append(ks, vs); w.appendChild(r);
-    });
-    c.appendChild(w);
-  });
 
   if (h.idBody){
     const i = document.createElement("div"); i.className = "idw";
