@@ -504,6 +504,7 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .stores .st .slink a{font-size:.72rem; font-weight:700; color:#5b3f8a; background:#f6f3fb;
   border:1px solid #d6cbe6; border-radius:99px; padding:3px 11px; text-decoration:none}
 .fold > .fbody > .stores-in:first-child{margin-top:0}
+.stores .hbtn{border-color:#5b3f8a; color:#5b3f8a}
 .stores .src2{margin-top:11px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
 
 /* 体育施設の一部再開。再開日と「市内在住の方限定」がいちばん大事 */
@@ -2299,6 +2300,13 @@ function renderStores(){
       drawGroup(st.outside, "out"); b0.appendChild(c.lastElementChild);
     });
     if (od) c.appendChild(od);
+  }
+  /* 一覧はここでまとめたものなので、市のページへ行けるようにしておく */
+  if (st.sourceUrl){
+    const a = document.createElement("a"); a.className = "hbtn line2";
+    a.href = st.sourceUrl; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = st.sourceLabel || "宇城市のページを見る";
+    c.appendChild(a);
   }
   if (st.source){ const sc = document.createElement("div"); sc.className = "src2"; sc.textContent = st.source; c.appendChild(sc); }
   box.appendChild(c);
