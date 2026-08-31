@@ -501,8 +501,11 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .stores .st .sw{margin-top:5px; background:#fdf7ef; border:1px solid #e8c3a4; border-radius:8px;
   padding:6px 10px; font-size:.72rem; line-height:1.7; color:#a3620f}
 .stores .st .slink{margin-top:6px; display:flex; flex-wrap:wrap; gap:6px}
+.stores .st .sa{margin-top:2px; font-size:.73rem; color:var(--text-muted); line-height:1.6}
+.stores .grp .gn{margin-top:3px; font-size:.76rem; line-height:1.75; color:var(--text-secondary)}
 .stores .st .slink a{font-size:.72rem; font-weight:700; color:#5b3f8a; background:#f6f3fb;
   border:1px solid #d6cbe6; border-radius:99px; padding:3px 11px; text-decoration:none}
+.stores .st .slink a.tel{color:#15794f; background:#f0faf5; border-color:#8ccfae; font-size:.78rem}
 .fold > .fbody > .stores-in:first-child{margin-top:0}
 .stores .hbtn{border-color:#5b3f8a; color:#5b3f8a}
 .stores .src2{margin-top:11px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
@@ -2259,17 +2262,26 @@ function renderStores(){
     const gh = document.createElement("div"); gh.className = "gh";
     gh.textContent = (MARK[tone] || "") + (g.label || "");
     gw.appendChild(gh);
+    if (g.note){ const gn = document.createElement("div"); gn.className = "gn"; gn.textContent = g.note; gw.appendChild(gn); }
     (g.items || []).forEach(x => {
       const r = document.createElement("div"); r.className = "st";
       const n = document.createElement("div"); n.className = "sn"; n.textContent = x.name;
       r.appendChild(n);
+      if (x.addr){ const ad = document.createElement("div"); ad.className = "sa"; ad.textContent = "📍 " + x.addr; r.appendChild(ad); }
       if (x.hours){ const h = document.createElement("div"); h.className = "sh"; h.textContent = "🕘 " + x.hours; r.appendChild(h); }
       if (x.note){ const p2 = document.createElement("div"); p2.className = "snote"; p2.textContent = x.note; r.appendChild(p2); }
       /* 推定で「営業中」としているものは、そのことを店名のすぐ下に出す */
       if (x.warn){ const w2 = document.createElement("div"); w2.className = "sw"; w2.textContent = "⚠ " + x.warn; r.appendChild(w2); }
       const urls = [x.url, x.url2].filter(Boolean);
-      if (urls.length){
+      if (x.tel || urls.length){
         const ls = document.createElement("div"); ls.className = "slink";
+        /* 営業しているか分からない店は、電話がいちばん早い。先に置く */
+        if (x.tel){
+          const t = document.createElement("a"); t.className = "tel";
+          t.href = "tel:" + String(x.tel).replace(/-/g, "");
+          t.textContent = "📞 " + x.tel;
+          ls.appendChild(t);
+        }
         urls.forEach((u, i) => {
           const a = document.createElement("a");
           a.href = u; a.target = "_blank"; a.rel = "noopener";
