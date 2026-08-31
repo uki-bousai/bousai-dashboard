@@ -2297,6 +2297,7 @@ function renderStores(){
 
   /* 開いている店を探しに来る人が多い。休業中と市外は、件数を見出しに出して畳む */
   (st.groups || []).forEach(g => {
+    if (!(g.items || []).length) return;
     const tone = g.tone || "open";
     if (tone === "closed"){
       const fd = fold(`✕ ${g.label}（${(g.items || []).length}店）を見る`, b0 => {
