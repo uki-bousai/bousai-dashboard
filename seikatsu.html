@@ -472,6 +472,40 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .haifu .hbtn{border-color:#b8571f; color:#b8571f}
 .haifu .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
 
+/* お店の営業状況。◯△？✕ を色で分けて、探している人がすぐ絞れるようにする */
+.stores{margin-top:2px}
+.stores .swarn{background:#fdf7ef; border:1.5px solid #d98d26; border-radius:11px;
+  padding:10px 13px; font-size:.8rem; font-weight:700; color:#a3620f; line-height:1.7}
+.stores .sup{margin-top:6px; font-size:.7rem; color:var(--text-muted)}
+.stores .grp{margin-top:12px; border-radius:13px; padding:11px 13px}
+.fold > .fbody > .grp{margin-top:0; border:0; background:none; padding:0}
+.fold > .fbody > .grp > .gh{display:none}
+.stores .grp.open{background:#f0faf5; border:1.5px solid #8ccfae}
+.stores .grp.part{background:#fdf7ef; border:1.5px solid #e8c3a4}
+.stores .grp.unknown{background:var(--surface-2, #f4f2f0); border:1.5px solid var(--border)}
+.stores .grp.closed{background:#fdf3f3; border:1.5px solid #e8b2b2}
+.stores .grp.out{background:#f6f3fb; border:1.5px solid #d6cbe6}
+.stores .grp .gh{font-size:.92rem; font-weight:700; line-height:1.5}
+.stores .grp.open .gh{color:#15794f}
+.stores .grp.part .gh{color:#a3620f}
+.stores .grp.unknown .gh{color:var(--text-secondary)}
+.stores .grp.closed .gh{color:#c0392b}
+.stores .grp.out .gh{color:#5b3f8a}
+.stores .st{margin-top:9px; background:#fff; border-radius:10px; padding:9px 12px}
+.stores .st + .st{margin-top:7px}
+.stores .st .sn{font-size:.88rem; font-weight:700; line-height:1.5}
+.stores .st .sh{margin-top:2px; font-size:.8rem; font-weight:700; color:#15794f}
+.stores .grp.part .st .sh{color:#a3620f}
+.stores .grp.unknown .st .sh, .stores .grp.out .st .sh{color:var(--text-secondary)}
+.stores .st .snote{margin-top:3px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
+.stores .st .sw{margin-top:5px; background:#fdf7ef; border:1px solid #e8c3a4; border-radius:8px;
+  padding:6px 10px; font-size:.72rem; line-height:1.7; color:#a3620f}
+.stores .st .slink{margin-top:6px; display:flex; flex-wrap:wrap; gap:6px}
+.stores .st .slink a{font-size:.72rem; font-weight:700; color:#5b3f8a; background:#f6f3fb;
+  border:1px solid #d6cbe6; border-radius:99px; padding:3px 11px; text-decoration:none}
+.fold > .fbody > .stores-in:first-child{margin-top:0}
+.stores .src2{margin-top:11px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
+
 /* 体育施設の一部再開。再開日と「市内在住の方限定」がいちばん大事 */
 .sports{margin-top:2px; border:1.5px solid #a9d6bd; border-radius:14px; padding:14px 16px;
   background:#f4faf6}
@@ -694,6 +728,7 @@ footer a{color:var(--accent)}
   <div class="secnav-in">
     <a href="#shelterCard">🏫 避難所</a>
     <a href="#haifuCard">🍱 弁当・物資</a>
+    <a href="#storeCard">🛒 お店</a>
     <a href="#mapCard">🗺 地図</a>
     <a href="#kidsCard">👶 子どもの預かり</a>
     <a href="#sportsCard">⚽ 体育施設</a>
@@ -763,6 +798,12 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#b8571f"></span>弁当・物資の配布（在宅避難・車中泊の方）</h2>
     <p class="desc"><b>家で避難している方・車中泊の方</b>への配布です。避難所に寝泊まりしている方の食事について、この案内には書かれていません。</p>
     <div id="haifuBody"></div>
+  </section>
+
+  <section class="card hidden" id="storeCard">
+    <h2><span class="dot" style="background:#7a5aa8"></span>お店の営業状況</h2>
+    <p class="desc">食料や日用品を買えるお店です。</p>
+    <div id="storeBody"></div>
   </section>
 
   <section class="card hidden" id="trendCard">
@@ -2191,6 +2232,78 @@ function renderWells(){
 
 /* 市外の自治体からの住まいの提供（締切が短いので、期限を最初に見せる） */
 /* 物資のお届け：届ける側と受け取る側で必要な情報が違うので、ブロックを分けて出す */
+/* お店の営業状況。リンク先は直接確認できていないので、出典の但し書きを必ず出す */
+function renderStores(){
+  const card = document.getElementById("storeCard");
+  const box = document.getElementById("storeBody");
+  const st = DATA.stores;
+  box.textContent = "";
+  card.classList.toggle("hidden", !st);
+  if (!st) return;
+
+  const c = document.createElement("div"); c.className = "stores";
+  if (st.warn){
+    const w = document.createElement("div"); w.className = "swarn";
+    w.textContent = "⚠ " + st.warn;
+    c.appendChild(w);
+  }
+  if (st.updatedAt){
+    const u = document.createElement("div"); u.className = "sup"; u.textContent = st.updatedAt;
+    c.appendChild(u);
+  }
+
+  const MARK = { open: "◯ ", part: "△ ", unknown: "？ ", closed: "✕ ", out: "📍 " };
+  const drawGroup = (g, tone) => {
+    const gw = document.createElement("div"); gw.className = "grp " + tone;
+    const gh = document.createElement("div"); gh.className = "gh";
+    gh.textContent = (MARK[tone] || "") + (g.label || "");
+    gw.appendChild(gh);
+    (g.items || []).forEach(x => {
+      const r = document.createElement("div"); r.className = "st";
+      const n = document.createElement("div"); n.className = "sn"; n.textContent = x.name;
+      r.appendChild(n);
+      if (x.hours){ const h = document.createElement("div"); h.className = "sh"; h.textContent = "🕘 " + x.hours; r.appendChild(h); }
+      if (x.note){ const p2 = document.createElement("div"); p2.className = "snote"; p2.textContent = x.note; r.appendChild(p2); }
+      /* 推定で「営業中」としているものは、そのことを店名のすぐ下に出す */
+      if (x.warn){ const w2 = document.createElement("div"); w2.className = "sw"; w2.textContent = "⚠ " + x.warn; r.appendChild(w2); }
+      const urls = [x.url, x.url2].filter(Boolean);
+      if (urls.length){
+        const ls = document.createElement("div"); ls.className = "slink";
+        urls.forEach((u, i) => {
+          const a = document.createElement("a");
+          a.href = u; a.target = "_blank"; a.rel = "noopener";
+          a.textContent = i === 0 ? "🔗 店舗のページ" : "📢 お知らせ";
+          ls.appendChild(a);
+        });
+        r.appendChild(ls);
+      }
+      gw.appendChild(r);
+    });
+    c.appendChild(gw);
+  };
+
+  /* 開いている店を探しに来る人が多い。休業中と市外は、件数を見出しに出して畳む */
+  (st.groups || []).forEach(g => {
+    const tone = g.tone || "open";
+    if (tone === "closed"){
+      const fd = fold(`✕ ${g.label}（${(g.items || []).length}店）を見る`, b0 => {
+        const keep = c; drawGroup(g, tone); b0.appendChild(keep.lastElementChild);
+      });
+      if (fd) c.appendChild(fd);
+      return;
+    }
+    drawGroup(g, tone);
+  });
+  if (st.outside && (st.outside.items || []).length){
+    const od = fold(`📍 ${st.outside.label}`, b0 => {
+      drawGroup(st.outside, "out"); b0.appendChild(c.lastElementChild);
+    });
+    if (od) c.appendChild(od);
+  }
+  if (st.source){ const sc = document.createElement("div"); sc.className = "src2"; sc.textContent = st.source; c.appendChild(sc); }
+  box.appendChild(c);
+}
+
 /* 体育施設の一部再開。9月1日と「市内在住の方（団体）限定」は畳まない */
 function renderSports(){
   const card = document.getElementById("sportsCard");
@@ -2769,6 +2882,7 @@ function renderAll(){
   renderShelters();
   renderTrendCard();
   renderHaifu();
+  renderStores();
   renderKids();
   renderSports();
   renderLaundry();
