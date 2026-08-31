@@ -2260,5 +2260,116 @@
     "dept": "宇城市 教育部 文化スポーツ課 スポーツ振興係",
     "tel": "0964-32-1945",
     "source": "宇城市「令和8年熊本地震に伴う教育委員会所管施設（体育施設）の利用一部再開について」2026年8月25日更新"
+  },
+  "stores": {
+    "updatedAt": "2026年8月30日 時点",
+    "lead": "食料や日用品を買えるお店の状況です。",
+    "warn": "営業状況は日々変わります。出かける前に、店舗のページか電話でご確認ください。",
+    "groups": [
+      {
+        "tone": "open",
+        "label": "営業しています",
+        "groups_note": "",
+        "items": [
+          {
+            "name": "ゆめマート三角店",
+            "hours": "9:00〜21:00",
+            "note": "8月28日から営業を再開。一部の専門店は営業時間の変更・見合わせがあります",
+            "url": "https://youme-mart.com/uto_uki/misumi/"
+          },
+          {
+            "name": "スーパーフレッシュくまい",
+            "hours": "9:30〜18:00",
+            "note": "短縮営業。宇土店は8月30日、不知火店は8月31日が棚卸のため休業",
+            "url": "https://www.fresh-kumai.com/"
+          },
+          {
+            "name": "ラ・ムー宇城店",
+            "hours": "営業時間は要確認",
+            "note": "公式サイトに再開のお知らせが出ています",
+            "url": "https://www.mammys.jp/store/lamu_uki.html",
+            "url2": "https://mammys.jp/information/news/2663/"
+          },
+          {
+            "name": "ドラッグストアモリ松橋店",
+            "hours": "9:00〜24:00",
+            "warn": "休業のお知らせが出ていないことからの推定です。営業しているかは直接確認できていません",
+            "url": "https://www.doramori.co.jp/store/1661.html/"
+          }
+        ]
+      },
+      {
+        "tone": "part",
+        "label": "一部だけ営業しています",
+        "items": [
+          {
+            "name": "ミスターマックス松橋店",
+            "hours": "臨時 10:00〜18:00",
+            "note": "水・紙・家電など一部の商品のみ。駐車場を開放しています",
+            "url": "https://www.mrmax.co.jp/shops/0000000013/"
+          }
+        ]
+      },
+      {
+        "tone": "unknown",
+        "label": "確認できていません",
+        "items": [
+          {
+            "name": "ゆめマート松橋店",
+            "hours": "通常は9:00〜22:00",
+            "note": "最新の状況は、8月28日更新の営業状況一覧（画像）でご確認ください",
+            "url": "https://www.izumi.jp/info/20260730-604128"
+          },
+          {
+            "name": "コスモス薬品（市内各店）",
+            "note": "店舗ごとの状況は公表されていません",
+            "url": "https://www.cosmospc.co.jp/shop/shop-search.html?pref=kumamoto&city=uki"
+          }
+        ]
+      },
+      {
+        "tone": "closed",
+        "label": "休業しています",
+        "items": [
+          {
+            "name": "イオン宇城店",
+            "note": "7月31日に営業見合わせを告知。天井の崩落などの被害が報じられています",
+            "url": "https://tenpo.aeon-kyushu.info/detail/uki/important-notice/1873938/"
+          },
+          {
+            "name": "マルショク松橋駅前店",
+            "note": "臨時休業。再開は「決まり次第お知らせ」とのことです",
+            "url": "https://www.sunlive.co.jp/shop/%E3%83%9E%E3%83%AB%E3%82%B7%E3%83%A7%E3%82%AF%E6%9D%BE%E6%A9%8B%E9%A7%85%E5%89%8D%E5%BA%97/"
+          },
+          {
+            "name": "トライアル宇城店",
+            "note": "営業休止。再開時期は未定（8月28日付 第七報）",
+            "url": "https://trial-holdings.inc/news/release/6a900922110c872e88c49499/"
+          },
+          {
+            "name": "マルエイ松橋店",
+            "note": "7月28日から休業。再開のめどは未定",
+            "url": "https://www.maruei-net.com/news/8922/"
+          },
+          {
+            "name": "鮮ど市場宇城店",
+            "note": "「当面休業」。再開は未定",
+            "url": "https://www.sendo.jp/news/7198"
+          }
+        ]
+      }
+    ],
+    "outside": {
+      "label": "市外のお店（参考）",
+      "items": [
+        {
+          "name": "トライアル宇土店（宇土市）",
+          "hours": "7:00〜24:00",
+          "note": "8月28日から一部営業を再開。生鮮は一部の商品のみ",
+          "url": "https://trial-holdings.inc/news/release/6a900922110c872e88c49499/"
+        }
+      ]
+    },
+    "source": "各社の公式サイト・お知らせページをまとめたものです。リンク先の内容はこちらで直接確認できていないため、最新の営業状況は必ずリンク先か店舗にご確認ください"
   }
 }
