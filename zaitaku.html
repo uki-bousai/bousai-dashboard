@@ -28,6 +28,7 @@
   --grid:#e1e0d9; --border:rgba(11,11,11,.10);
   --accent:#2a78d6;
   --good-text:#006300;
+  --stale:#a8501e;
 }
 @media (prefers-color-scheme: dark){
   :root{
@@ -35,7 +36,7 @@
     --surface-1:#1a1a19; --page:#0d0d0d;
     --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
     --grid:#2c2c2a; --border:rgba(255,255,255,.10);
-    --accent:#3987e5; --good-text:#0ca30c;
+    --accent:#3987e5; --good-text:#0ca30c; --stale:#e59152;
   }
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -101,8 +102,13 @@ details.dcard[open] > summary::after{content:"▲"}
   background:color-mix(in srgb, var(--accent) 8%, var(--page))}
 .dmeta span.itm{font-weight:700; color:var(--text-primary)}
 .dmeta span.upd{color:var(--text-muted)}
+/* しばらく更新のない区は、情報が古いことが分かるようにする */
+.dmeta span.upd.old{color:var(--stale); font-weight:700;
+  border-color:color-mix(in srgb, var(--stale) 40%, transparent);
+  background:color-mix(in srgb, var(--stale) 8%, var(--page))}
 .dupd{font-size:.72rem; color:var(--text-muted); margin-top:10px; padding-top:8px;
   border-top:1px dashed var(--grid)}
+.dupd.old{color:var(--stale); font-weight:700}
 .dbody{padding:0 16px 16px}
 .dhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
 .dhead .meta{font-size:.78rem; color:var(--text-secondary)}
@@ -346,7 +352,10 @@ function renderDistricts(){
     meta.appendChild(el("span", "itm",
       g.itemList.length ? `必要 ${g.itemList.length}品目` : "必要品なし"));
     // いつの情報かは、開かなくても分かるようにしておく
-    if (g.updatedAt) meta.appendChild(el("span", "upd", `${updatedShort(g.updatedAt)} 更新`));
+    if (g.updatedAt){
+      const d = daysAgo(g.updatedAt);
+      meta.appendChild(el("span", "upd" + (d !== null && d >= 4 ? " old" : ""), agoLabel(g.updatedAt)));
+    }
     sum.appendChild(meta);
     card.appendChild(sum);
     const body = el("div", "dbody");
@@ -376,7 +385,8 @@ function renderDistricts(){
     if (g.notes) body.appendChild(el("div", "dnote", `📝 区からの情報: ${g.notes}`));
     if (!g.itemList.length){
       body.appendChild(el("div", "empty", "現在、必要と報告された物資はありません。"));
-      if (g.updatedAt) body.appendChild(el("div", "dupd", `🕓 この区の情報の更新: ${g.updatedAt}`));
+      if (g.updatedAt) body.appendChild(el("div", "dupd" + ((daysAgo(g.updatedAt) || 0) >= 4 ? " old" : ""),
+        `🕓 ${agoLabel(g.updatedAt)}です（${g.updatedAt} 更新）`));
       box.appendChild(card);
       return;
     }
@@ -416,7 +426,8 @@ function renderDistricts(){
       row.append(ZICON.svg(it.rule.id), nm, qt);
       body.appendChild(row);
     });
-    if (g.updatedAt) body.appendChild(el("div", "dupd", `🕓 この区の情報の更新: ${g.updatedAt}`));
+    if (g.updatedAt) body.appendChild(el("div", "dupd" + ((daysAgo(g.updatedAt) || 0) >= 4 ? " old" : ""),
+        `🕓 ${agoLabel(g.updatedAt)}です（${g.updatedAt} 更新）`));
     box.appendChild(card);
   });
 }
@@ -452,6 +463,27 @@ function updatedShort(v){
   const m = String(v || "").match(/^\d{4}-(\d{2})-(\d{2})(?:\s+(\d{2}:\d{2}))?/);
   if (!m) return String(v || "");
   return `${Number(m[1])}/${Number(m[2])}` + (m[3] ? ` ${m[3]}` : "");
+}
+
+/* 何日前の情報か。日付だけで数えるので「昨日の23時」は1日前になる */
+function daysAgo(v){
+  const m = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  const then = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (isNaN(then)) return null;
+  const n = new Date();
+  const today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  const d = Math.round((today - then) / 86400000);
+  return d >= 0 ? d : 0;
+}
+
+/* 「7日前の情報」。物資はもう届いているかもしれないので、古さが伝わる言い方にする */
+function agoLabel(v){
+  const d = daysAgo(v);
+  if (d === null) return "";
+  if (d === 0) return "今日の情報";
+  if (d === 1) return "昨日の情報";
+  return `${d}日前の情報`;
 }
 
 /* 数量をどの世帯数で出しているかの見出し。区カードと地図の吹き出しで同じ文言を使う。
@@ -514,7 +546,9 @@ function renderMap(groups){
     if (g.updatedAt){
       const up = document.createElement("div");
       up.style.cssText = "font-size:.8em; color:#6b6a66; margin-top:6px";
-      up.textContent = `🕓 ${updatedShort(g.updatedAt)} 更新`;
+      const d = daysAgo(g.updatedAt);
+      if (d !== null && d >= 4) up.style.color = "#a8501e";
+      up.textContent = `🕓 ${agoLabel(g.updatedAt)}（${updatedShort(g.updatedAt)} 更新）`;
       box.append(up);
     }
     if (g.site){
