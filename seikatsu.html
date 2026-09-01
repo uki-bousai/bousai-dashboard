@@ -435,6 +435,18 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .haifu .top{background:#b8571f; color:#fff; border-radius:14px; padding:14px 17px}
 .haifu .top .h{font-size:1.05rem; font-weight:700; line-height:1.5}
 .haifu .top .s{margin-top:5px; font-size:.8rem; line-height:1.8; color:#fbe4d3}
+/* 期間ごとの配布内容。9月5日から中身が変わるので、変わるほうを目立たせる */
+.haifu .hphase{margin-top:11px; background:#fff; border:1px solid var(--border); border-radius:12px;
+  padding:4px 13px 10px}
+.haifu .hphase .r{display:flex; align-items:baseline; gap:11px; padding:9px 0;
+  border-top:1px solid var(--border)}
+.haifu .hphase .r:first-child{border-top:0}
+.haifu .hphase .r .w{flex:0 0 96px; font-size:.78rem; font-weight:700; color:var(--text-secondary);
+  line-height:1.5}
+.haifu .hphase .r .v{flex:1; font-size:.86rem; font-weight:700; line-height:1.55}
+.haifu .hphase .r.next .w, .haifu .hphase .r.next .v{color:#b8571f}
+.haifu .hphase .n{margin-top:7px; padding-top:7px; border-top:1px solid var(--border);
+  font-size:.73rem; line-height:1.75; color:var(--text-muted)}
 .haifu .idw{margin-top:11px; background:#c0392b; border-radius:12px; padding:12px 15px; color:#fff}
 .haifu .idw b{display:block; font-size:.95rem; line-height:1.5}
 .haifu .idw p{margin-top:4px; font-size:.79rem; line-height:1.8; color:#ffe4e0}
@@ -2577,6 +2589,22 @@ function renderHaifu(){
   top.appendChild(th);
   if (h.lead){ const s = document.createElement("div"); s.className = "s"; s.textContent = h.lead; top.appendChild(s); }
   c.appendChild(top);
+
+  /* 9月5日で中身が変わる。日付と何がもらえるかを並べて出す */
+  if ((h.steps || []).length){
+    const st = document.createElement("div"); st.className = "hphase";
+    h.steps.forEach(x => {
+      const r = document.createElement("div"); r.className = "r" + (x.next ? " next" : "");
+      const w = document.createElement("div"); w.className = "w"; w.textContent = x.when;
+      const v = document.createElement("div"); v.className = "v"; v.textContent = x.what;
+      r.append(w, v); st.appendChild(r);
+    });
+    if (h.stepsNote){
+      const n = document.createElement("div"); n.className = "n"; n.textContent = h.stepsNote;
+      st.appendChild(n);
+    }
+    c.appendChild(st);
+  }
 
   if (h.idBody){
     const i = document.createElement("div"); i.className = "idw";
