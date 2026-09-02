@@ -700,7 +700,6 @@ footer a{color:var(--accent)}
     <a href="#repairCard">🔨 住宅修理</a>
     <a href="#kyuRepairCard">🔧 応急修理</a>
     <a href="#hotelCard">🏨 住まい</a>
-    <a href="#refreshCard">🏞 南阿蘇</a>
     <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
@@ -832,12 +831,6 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#7a5aa8"></span>市外からの住まいの提供</h2>
     <p class="desc"><b>市外の自治体から公営住宅の提供</b>が届いています。ホテル等避難より長く住める一方、<b>戸数が限られています</b>。</p>
     <div id="housingBody"></div>
-  </section>
-
-  <section class="card hidden" id="refreshCard">
-    <h2><span class="dot" style="background:#2f8f6b"></span>南阿蘇村に、無料で泊まれます</h2>
-    <p class="desc" id="refreshDesc"></p>
-    <div id="refreshBody"></div>
   </section>
 
   <section class="card" id="secToilet">
@@ -2057,73 +2050,6 @@ function renderBriefings(){
   });
 }
 
-/* 市に対応する報告がない困りごと。市議会のまとめに並べられないので、ここに独立して置く */
-/* 南阿蘇村のリフレッシュ宿泊支援（期間限定・宇城市民が対象） */
-function renderRefresh(){
-  const card = document.getElementById("refreshCard");
-  const box = document.getElementById("refreshBody");
-  const r = DATA.refresh;
-  box.textContent = "";
-  if (!r){ card.classList.add("hidden"); return; }
-  card.classList.remove("hidden");
-  document.getElementById("refreshDesc").textContent =
-    `${r.title}。${r.lead || ""}（${r.source || ""}）`;
-
-  const cost = document.createElement("div"); cost.className = "hcost";
-  const cb = document.createElement("b"); cb.textContent = "💰 " + (r.cost || "");
-  cost.appendChild(cb);
-  box.appendChild(cost);
-
-  const kv = [["📅 期間", r.period], ["🙋 対象", r.target], ["🛏 空き状況", r.rooms]];
-  kv.forEach(([k, v]) => {
-    if (!v) return;
-    const el = document.createElement("div"); el.className = "hstep";
-    el.textContent = `${k}：${v}`;
-    box.appendChild(el);
-  });
-  if ((r.targetNotes || []).length){
-    const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
-    n.textContent = r.targetNotes.join(" / ");
-    box.appendChild(n);
-  }
-
-  const rdet = fold("📋 予約の手順と、知っておいてほしいことを見る", b0 => {
-    (r.steps || []).forEach(t => {
-      const el = document.createElement("div"); el.className = "hstep"; el.textContent = t;
-      b0.appendChild(el);
-    });
-
-    if ((r.notes || []).length){
-      const nb = document.createElement("div"); nb.className = "bring";
-      const t = document.createElement("div"); t.className = "bring-title"; t.textContent = "⚠ 知っておいてください";
-      const ul = document.createElement("ul");
-      r.notes.forEach(n => { const li = document.createElement("li"); li.textContent = "・" + n; ul.appendChild(li); });
-      nb.append(t, ul);
-      b0.appendChild(nb);
-    }
-  });
-  if (rdet) box.appendChild(rdet);
-
-  if (r.pageUrl){
-    const a = document.createElement("a"); a.className = "hbtn"; a.href = r.pageUrl;
-    a.target = "_blank"; a.rel = "noopener";
-    a.textContent = "🏞 対象の宿を見る（南阿蘇村の特設ページ）";
-    box.appendChild(a);
-  }
-  if (r.tel){
-    const a = document.createElement("a"); a.className = "hbtn line2";
-    a.href = "tel:" + r.tel.replace(/-/g, "");
-    a.textContent = `📞 ${r.dept || ""} ${r.tel}`;
-    box.appendChild(a);
-    if (r.telNote){
-      const n = document.createElement("p"); n.className = "desc"; n.style.margin = "6px 0 0";
-      n.textContent = `受付時間 ${r.telNote}。特設ページが開けないときは、こちらでも確認できます。`;
-      box.appendChild(n);
-    }
-  }
-}
-
-
 /* 防災井戸（飲めないので、生活用水としての案内） */
 function renderWells(){
   const box = document.getElementById("wellBox");
@@ -2779,7 +2705,6 @@ function renderAll(){
   renderRepair();
   renderHotel();
   renderHousing();
-  renderRefresh();
   renderWaterStatus();
   renderWater();
   renderWaterEnded();
