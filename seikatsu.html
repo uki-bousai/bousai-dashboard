@@ -211,34 +211,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .btopic .voice li::before{content:"「"; }
 .btopic .voice li::after{content:"」"}
 .btopic .voice .vs{margin-top:6px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
-/* 市民の声。市の会議で説明がないことを、そのままの言葉で残す場所 */
-.vcard{margin-top:12px; border:1.5px solid #e8b6c8; border-radius:14px; padding:14px 16px;
-  background:#fdf5f8}
-.vcard:first-child{margin-top:2px}
-.vcard > summary.vh{list-style:none; cursor:pointer; font-size:.95rem; font-weight:700;
-  color:#a8447a; line-height:1.6; display:flex; align-items:flex-start; gap:10px}
-.vcard > summary.vh::-webkit-details-marker{display:none}
-.vcard > summary.vh .vtx{flex:1; min-width:0}
-.vcard > summary.vh .vtag{display:block; margin:0 0 5px}
-.vcard > summary.vh::after{content:"▼"; flex:0 0 auto; margin-top:5px; font-size:.55rem;
-  color:var(--text-muted)}
-.vcard[open] > summary.vh::after{content:"▲"}
-.vcard .vh{font-size:1rem; font-weight:700; color:#a8447a; line-height:1.55}
-.vcard .vtag{display:inline-block; margin-bottom:6px; font-size:.68rem; font-weight:700;
-  color:#a8447a; background:#fff; border:1px solid #e8b6c8; border-radius:99px; padding:3px 10px}
-.vcard ul{list-style:none; margin:9px 0 0; padding:0}
-.vcard li{font-size:.82rem; line-height:1.85; color:var(--text-primary);
-  padding-left:16px; text-indent:-16px; margin-bottom:5px}
-.vcard li::before{content:"「"; color:#a8447a}
-.vcard li::after{content:"」"; color:#a8447a}
-/* 市の説明。声と混ざらないよう白地にする */
-.vcard .vcity{margin-top:10px; background:#fff; border:1px solid var(--border);
-  border-radius:11px; padding:9px 13px}
-.vcard .vcity .h{font-size:.75rem; font-weight:700; color:var(--text-secondary)}
-.vcard .vcity p{margin-top:3px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
-.vcard .vmore{margin-top:9px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
-.vcard .vmore b{color:var(--text-primary)}
-.vcard .vsrc{margin-top:9px; font-size:.68rem; color:var(--text-muted); line-height:1.7}
 /* いま水が出るのか。「制限＝飲めない」と誤解されやすいので、飲めることを最初に大きく出す */
 .wst{margin-top:2px}
 .wst .top{background:#0f6b8a; color:#fff; border-radius:14px; padding:14px 17px}
@@ -553,30 +525,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .sports .hbtn{border-color:#2f8f5b; color:#2f8f5b}
 .sports .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted); line-height:1.7}
 
-/* こどもショートステイ（無料・宿泊預かり） */
-.kids{margin-top:2px; border:1.5px solid #e8b6c8; border-radius:14px; padding:14px 16px;
-  background:#fdf5f8}
-.kids .kh{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
-.kids .kh .tt{font-size:1rem; font-weight:700}
-.kids .kh .pv{font-size:.68rem; font-weight:700; color:#a8447a; background:#fff;
-  border:1px solid #e8b6c8; border-radius:99px; padding:3px 9px}
-.kids .free{margin-top:10px; display:flex; align-items:center; justify-content:space-between;
-  gap:10px; background:#fff; border:1.5px solid #a8447a; border-radius:11px; padding:10px 14px}
-.kids .free .fl{font-size:.78rem; font-weight:700; color:#a8447a; line-height:1.5}
-.kids .free .fv{font-size:1.35rem; font-weight:700; color:#a8447a; white-space:nowrap}
-.kids .kv{margin-top:10px; font-size:.8rem; line-height:1.9; color:var(--text-secondary)}
-.kids .kv .k{font-weight:700; color:#a8447a}
-.kids .kv b{color:var(--text-primary)}
-.kids .pl{margin-top:10px}
-.kids .pl .pt{font-size:.78rem; font-weight:700; color:#a8447a}
-.kids .pl ul{list-style:none; margin:5px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
-.kids .pl li{font-size:.74rem; font-weight:700; color:#a8447a; background:#fff;
-  border:1px solid #e8b6c8; border-radius:99px; padding:4px 10px}
-.kids .nb{margin-top:10px; background:#fff; border:1px solid var(--border); border-radius:10px;
-  padding:9px 13px; font-size:.79rem; line-height:1.8; color:var(--text-secondary)}
-.kids .tel{white-space:nowrap; display:inline-block}
-.kids .src2{margin-top:10px; font-size:.7rem; color:var(--text-muted)}
-
 /* ランドリーカー・猫の預かり。手順と「持ち込めないもの」を取り違えないよう色で分ける */
 .lnd{margin-top:2px; border:1.5px solid #a9cfe2; border-radius:14px; padding:14px 16px;
   background:#f2f8fc}
@@ -746,7 +694,6 @@ footer a{color:var(--accent)}
     <a href="#haifuCard">🍱 弁当・物資</a>
     <a href="#storeCard">🛒 お店</a>
     <a href="#mapCard">🗺 地図</a>
-    <a href="#kidsCard">👶 子どもの預かり</a>
     <a href="#sportsCard">⚽ 体育施設</a>
     <a href="#laundryCard">🧺 洗濯</a>
     <a href="#petCard">🐈 猫の預かり</a>
@@ -758,7 +705,6 @@ footer a{color:var(--accent)}
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
     <a href="#secBrief">📋 市議会</a>
-    <a href="#voiceCard">💬 市民の声</a>
   </div>
 </nav>
 
@@ -844,18 +790,6 @@ footer a{color:var(--accent)}
       <div class="vs" style="margin-top:0">8月6日の報告では、<b>災害ごみの仮置場を増やしてほしい</b>という要望が市へ出されました。住民の方の困りごとが、こうして市に届いています。<br>ひとりの声だと届きにくくても、<b>同じ困りごとが集まれば、市議会で取り上げられることがあります</b>。困っていること、足りていないものを教えてください。</div>
       <a class="hbtn" href="https://ig.me/m/akiyo_8" target="_blank" rel="noopener">✉️ InstagramのDMで送る</a>
     </div></details>
-  </section>
-
-  <section class="card hidden" id="voiceCard">
-    <h2><span class="dot" style="background:#a8447a"></span>市民の声</h2>
-    <p class="desc">暮らしのなかで実際に困っていること。<b>教えていただいた声を、そのまま載せています。</b>お名前・連絡先は載せません。見出しをタップすると開きます。</p>
-    <div id="voiceList"></div>
-  </section>
-
-  <section class="card hidden" id="kidsCard">
-    <h2><span class="dot" style="background:#a8447a"></span>こどもショートステイ（無料の宿泊預かり）</h2>
-    <p class="desc">片づけや手続きに追われて、<b>お子さんを見る手が足りない</b>——そんなご家庭のために、<b>人吉市がお子さんを泊まりで預かってくれる制度</b>です。宇城市の窓口からも申し込めます。</p>
-    <div id="kidsBody"></div>
   </section>
 
   <section class="card hidden" id="sportsCard">
@@ -2124,40 +2058,6 @@ function renderBriefings(){
 }
 
 /* 市に対応する報告がない困りごと。市議会のまとめに並べられないので、ここに独立して置く */
-function renderVoices(){
-  const card = document.getElementById("voiceCard");
-  const box = document.getElementById("voiceList");
-  box.textContent = "";
-  const list = DATA.voices || [];
-  card.classList.toggle("hidden", !list.length);
-  /* 声が増えると縦に伸びるので、見出しだけ並べて、読みたいものを開く形にする */
-  list.forEach(v => {
-    const c = document.createElement("details"); c.className = "vcard";
-    const h = document.createElement("summary"); h.className = "vh";
-    const tx = document.createElement("span"); tx.className = "vtx";
-    if (v.tag){ const t = document.createElement("span"); t.className = "vtag"; t.textContent = v.tag; tx.appendChild(t); }
-    tx.appendChild(document.createTextNode("🙋 " + (v.head || "市民の方からの声")));
-    h.appendChild(tx);
-    c.appendChild(h);
-    const ul = document.createElement("ul");
-    (v.lines || []).forEach(l => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
-    c.appendChild(ul);
-    if (v.note){ const n = document.createElement("div"); n.className = "vmore"; n.textContent = v.note; c.appendChild(n); }
-    /* 市の説明と出典は、声そのものより後で読めばいい */
-    const vdet = fold("📋 市の説明と出典を見る", b0 => {
-      if (v.city){
-        const cy = document.createElement("div"); cy.className = "vcity"; cy.style.marginTop = "0";
-        const ch = document.createElement("div"); ch.className = "h"; ch.textContent = "📋 市の説明";
-        const cp = document.createElement("p"); cp.textContent = v.city;
-        cy.append(ch, cp); b0.appendChild(cy);
-      }
-      if (v.source){ const s = document.createElement("div"); s.className = "vsrc"; s.textContent = v.source; b0.appendChild(s); }
-    });
-    if (vdet) c.appendChild(vdet);
-    box.appendChild(c);
-  });
-}
-
 /* 南阿蘇村のリフレッシュ宿泊支援（期間限定・宇城市民が対象） */
 function renderRefresh(){
   const card = document.getElementById("refreshCard");
@@ -2391,67 +2291,6 @@ function renderSports(){
     c.appendChild(a);
   }
   if (sp.source){ const sc = document.createElement("div"); sc.className = "src2"; sc.textContent = sp.source; c.appendChild(sc); }
-  box.appendChild(c);
-}
-
-function renderKids(){
-  const card = document.getElementById("kidsCard");
-  const box = document.getElementById("kidsBody");
-  const k = DATA.childcare;
-  box.textContent = "";
-  card.classList.toggle("hidden", !k);
-  if (!k) return;
-
-  const c = document.createElement("div"); c.className = "kids";
-
-  const kh = document.createElement("div"); kh.className = "kh";
-  const tt = document.createElement("span"); tt.className = "tt"; tt.textContent = k.title || "";
-  kh.appendChild(tt);
-  if (k.provider){ const pv = document.createElement("span"); pv.className = "pv"; pv.textContent = k.provider + "が実施"; kh.appendChild(pv); }
-  c.appendChild(kh);
-
-  if (k.lead){ const p = document.createElement("p"); p.className = "desc"; p.style.margin = "8px 0 0"; p.textContent = k.lead; c.appendChild(p); }
-
-  if (k.cost){
-    const f = document.createElement("div"); f.className = "free";
-    const fl = document.createElement("div"); fl.className = "fl"; fl.textContent = k.costNote || "利用料";
-    const fv = document.createElement("div"); fv.className = "fv"; fv.textContent = k.cost;
-    f.append(fl, fv); c.appendChild(f);
-  }
-
-  const kv = document.createElement("div"); kv.className = "kv";
-  [["対象", k.target], ["預かれる期間", k.period], ["送迎", k.transport]].forEach(([key, v]) => {
-    if (!v) return;
-    const line = document.createElement("div");
-    const ks = document.createElement("span"); ks.className = "k"; ks.textContent = key + "：";
-    line.append(ks, document.createTextNode(v));
-    kv.appendChild(line);
-  });
-  c.appendChild(kv);
-
-  /* 預かり先と細かい注意は、使うと決めた方が開けばいい。電話番号は畳まない */
-  const kd = fold("🏠 預かり先と、利用のときの注意を見る", b0 => {
-    if ((k.places || []).length){
-      const pl = document.createElement("div"); pl.className = "pl";
-      const pt = document.createElement("div"); pt.className = "pt"; pt.textContent = "🏠 預かり先（人吉市が委託している施設）";
-      const ul = document.createElement("ul");
-      k.places.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-      pl.append(pt, ul); b0.appendChild(pl);
-    }
-    if (k.note){ const n = document.createElement("div"); n.className = "nb"; n.textContent = k.note; b0.appendChild(n); }
-  });
-  if (kd) c.appendChild(kd);
-
-  (k.contacts || []).forEach((ct, i) => {
-    const a = document.createElement("a"); a.className = "hbtn" + (i ? " line2" : "");
-    a.href = "tel:" + String(ct.tel).replace(/-/g, "");
-    const num = document.createElement("span"); num.className = "tel"; num.textContent = ct.tel;
-    a.append(document.createTextNode(`📞 ${ct.name}　`), num);
-    c.appendChild(a);
-    if (ct.note){ const n = document.createElement("p"); n.className = "desc"; n.style.margin = "5px 0 0"; n.textContent = ct.note; c.appendChild(n); }
-  });
-
-  if (k.source){ const s = document.createElement("div"); s.className = "src2"; s.textContent = k.source; c.appendChild(s); }
   box.appendChild(c);
 }
 
@@ -2933,7 +2772,6 @@ function renderAll(){
   renderTrendCard();
   renderHaifu();
   renderStores();
-  renderKids();
   renderSports();
   renderLaundry();
   renderPets();
@@ -2949,7 +2787,6 @@ function renderAll(){
   renderBaths();
   renderToiletCars();
   renderBriefings();
-  renderVoices();
   renderMap();
 }
 loadData();
