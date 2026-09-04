@@ -1244,7 +1244,8 @@ function renderBaths(){
     if (bt.formUrl){
       const a = document.createElement("a"); a.className = "gmap";
       a.href = bt.formUrl; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = "📝 申込フォーム";
+      /* 施設によっては申込ではなく予約カレンダー。呼び名はデータ側で決める */
+      a.textContent = bt.formLabel || "📝 申込フォーム";
       b.appendChild(a);
     }
     if (bt.note){
