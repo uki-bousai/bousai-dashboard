@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="宇城市の避難者数・避難所の受入状況（市の公表資料に基づき毎日更新）、給水、無料入浴、トイレカー、洗濯などの生活支援情報を公開するページ。">
+<meta name="description" content="宇城市の避難者数・避難所の受入状況（市の公表資料に基づき毎日更新）、給水、無料入浴、洗濯などの生活支援情報を公開するページ。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="宇城市 生活支援情報">
 <meta property="og:title" content="避難者数・避難所の受入状況 ─ 宇城市 生活支援情報">
-<meta property="og:description" content="市の公表資料に基づき毎日更新。給水・無料入浴・トイレカー・洗濯の情報も。">
+<meta property="og:description" content="市の公表資料に基づき毎日更新。給水・無料入浴・洗濯の情報も。">
 <meta property="og:url" content="https://uki-bousai.github.io/bousai-dashboard/seikatsu.html">
 <meta property="og:image" content="https://uki-bousai.github.io/bousai-dashboard/ogp.png">
 <meta property="og:image:width" content="1200">
@@ -568,22 +568,6 @@ summary.areahead .cnt{font-weight:400; color:var(--text-muted)}
 .lnd.pet .free{border-color:#a86410}
 .lnd.pet .free .fl, .lnd.pet .free .fv{color:#a86410}
 
-/* トイレカーの設置場所。避難所以外にもあるので、避難所の一覧とは別枠にする */
-.tcar{margin:2px 0 14px; border:1.5px solid var(--toilet); border-radius:14px; padding:13px 15px;
-  background:#f6f4fa}
-.tcar .th{font-size:.92rem; font-weight:700}
-.tcar .ts{margin-top:5px; font-size:.78rem; line-height:1.8; color:var(--text-secondary)}
-.tcar .tp{margin-top:10px; background:#fff; border:1px solid var(--border); border-radius:11px;
-  padding:9px 13px}
-.tcar .tp .nm{font-size:.86rem; font-weight:700}
-.tcar .tp .nm small{margin-left:6px; font-size:.7rem; font-weight:400; color:var(--text-muted)}
-.tcar .tp ul{list-style:none; margin:6px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:5px}
-.tcar .tp li{font-size:.72rem; font-weight:700; color:#5b4b8a; background:#f6f4fa;
-  border:1px solid #cfc6e4; border-radius:99px; padding:3px 9px}
-.tcar .tp .gmap{margin-top:7px}
-.tcar .tpart{margin-top:10px; font-size:.75rem; line-height:1.75; color:var(--text-secondary)}
-.tcar .tsrc{margin-top:7px; font-size:.7rem; color:var(--text-muted)}
-
 /* 防災井戸（飲用不可） */
 .wells{margin-top:14px; background:#eef5fb; border:1px solid #b6d4e8; border-radius:12px;
   padding:13px 15px}
@@ -683,7 +667,7 @@ footer a{color:var(--accent)}
 
 <header>
   <h1>宇城市 生活支援情報</h1>
-  <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、トイレカー、洗濯。<br>近隣地域の<b>自主運営の避難所</b>も掲載しています</p>
+  <p class="sub">市内の避難者数・避難所の受入状況（毎日更新）、給水、無料入浴、洗濯。<br>近隣地域の<b>自主運営の避難所</b>も掲載しています</p>
   <div class="updated" id="updatedAt"></div>
   <a class="tipbtn zaitaku" href="zaitaku.html">🏠 在宅避難の方に必要な物資（地区別）</a>
 </header>
@@ -700,7 +684,6 @@ footer a{color:var(--accent)}
     <a href="#repairCard">🔨 住宅修理</a>
     <a href="#kyuRepairCard">🔧 応急修理</a>
     <a href="#hotelCard">🏨 住まい</a>
-    <a href="#secToilet">🚻 トイレ</a>
     <a href="#secWater">💧 給水</a>
     <a href="#secBath">♨️ 入浴</a>
     <a href="#secBrief">📋 市議会</a>
@@ -737,7 +720,6 @@ footer a{color:var(--accent)}
       <span class="key"><span class="dot" style="background:var(--status-warning)"></span>⚠ 逼迫（90%以上）</span>
       <span class="key"><span class="dot" style="background:var(--status-critical)"></span>⛔ 定員超過</span>
       <span class="key"><span class="dot" style="background:var(--water)"></span>給水</span>
-      <span class="key"><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</span>
       <span class="key"><span class="dot" style="background:#d97a26"></span>無料入浴・シャワー</span>
       <button class="clearbtn hidden" id="zoomBaths" type="button">♨️ 入浴施設まで表示</button>
       <button class="clearbtn hidden" id="zoomLocal" type="button">🏫 宇城市に戻す</button>
@@ -831,12 +813,6 @@ footer a{color:var(--accent)}
     <h2><span class="dot" style="background:#7a5aa8"></span>市外からの住まいの提供</h2>
     <p class="desc"><b>市外の自治体から公営住宅の提供</b>が届いています。ホテル等避難より長く住める一方、<b>戸数が限られています</b>。</p>
     <div id="housingBody"></div>
-  </section>
-
-  <section class="card" id="secToilet">
-    <h2><span class="dot" style="background:var(--toilet)"></span>仮設トイレ</h2>
-    <p class="desc">市が場所を公表している<b>トイレカー</b>を、町ごとに載せています。町名をタップすると開きます。</p>
-    <div id="tcarBox" class="hidden"></div>
   </section>
 
   <section class="card" id="secWater">
@@ -1545,67 +1521,6 @@ function renderWater(){
     }
   })));
 }
-/* トイレカーは避難所以外の駐車場にも置かれている。市の一覧が唯一の出どころなので、まとめて先に出す */
-function renderToiletCars(){
-  const box = document.getElementById("tcarBox");
-  const t = DATA.toiletCars;
-  box.textContent = "";
-  const places = ((t && t.places) || []).filter(p => !currentDistrict || p.district === currentDistrict);
-  box.classList.toggle("hidden", !places.length);
-  if (!places.length) return;
-
-  const w = document.createElement("div"); w.className = "tcar";
-  const h = document.createElement("div"); h.className = "th";
-  h.textContent = `🚽 トイレカーの設置場所（${places.length}か所）`;
-  w.appendChild(h);
-  if (t.note){ const n = document.createElement("p"); n.className = "ts"; n.textContent = t.note; w.appendChild(n); }
-
-  /* 11か所を縦に並べると画面3つ分になる。自分の町だけ開けばいいので、町ごとに畳む。
-     地区で絞り込んでいるときは1グループしかないので、最初から開いておく */
-  const groups = [];
-  places.forEach(p => {
-    const area = p.district || "その他";
-    const last = groups[groups.length - 1];
-    if (!last || last.area !== area) groups.push({ area, items:[p] });
-    else last.items.push(p);
-  });
-  groups.forEach(g => {
-    const det = document.createElement("details"); det.className = "areagrp";
-    if (groups.length === 1) det.open = true;
-    const sum = document.createElement("summary"); sum.className = "areahead";
-    const nm0 = document.createElement("span"); nm0.textContent = g.area;
-    const ct = document.createElement("span"); ct.className = "cnt";
-    ct.textContent = g.items.length + "か所";
-    sum.append(nm0, ct);
-    det.appendChild(sum);
-    g.items.forEach(p => {
-      const row = document.createElement("div"); row.className = "tp";
-      const nm = document.createElement("div"); nm.className = "nm";
-      nm.textContent = p.name;
-      row.appendChild(nm);
-      row.appendChild(gmapsLink(gmapsQuery(p)));
-      det.appendChild(row);
-    });
-    w.appendChild(det);
-  });
-
-  /* どこの自治体から来ているかは、トイレを探すのに要らない。読みたい人だけが開く */
-  const fdet = fold("🙏 どこから来ているか（派遣元の自治体）", b0 => {
-    places.forEach(p => {
-      if (!(p.from || []).length) return;
-      const r = document.createElement("div"); r.className = "tp";
-      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = p.name;
-      const ul = document.createElement("ul");
-      p.from.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
-      r.append(nm, ul); b0.appendChild(r);
-    });
-  });
-  if (fdet) w.appendChild(fdet);
-
-  if (t.partial){ const n = document.createElement("div"); n.className = "tpart"; n.textContent = "※ " + t.partial; w.appendChild(n); }
-  if (t.source){ const s = document.createElement("div"); s.className = "tsrc"; s.textContent = t.source; w.appendChild(s); }
-  box.appendChild(w);
-}
 function renderTrendCard(){
   const card = document.getElementById("trendCard");
   const box = document.getElementById("trendChart");
@@ -1860,7 +1775,7 @@ function renderMap(){
     const t = document.createElement("div"); t.className = "popup-title"; t.textContent = p.name;
     const s = document.createElement("div"); s.className = "popup-sub";
     s.textContent = (p.district || p.area ? (p.district || p.area) + " ／ " : "") +
-      (p.kind === "water" ? "給水" : p.kind === "toilet" ? "仮設トイレ"
+      (p.kind === "water" ? "給水"
         : p.kind === "bath" ? "無料の入浴・シャワー" : "避難所");
     div.append(t, s);
     let fillColor;
@@ -1909,7 +1824,7 @@ function renderMap(){
         tr.appendChild(a); div.appendChild(tr);
       }
     } else {
-      fillColor = cssVar(p.kind === "water" ? "--water" : "--toilet");
+      fillColor = cssVar("--water");
       const r = document.createElement("div"); r.className = "popup-row";
       const b = document.createElement("b");
       b.textContent = p.kind === "water" ? (p.schedule || "") : (p.count ? p.count + "基" : "");
@@ -2710,7 +2625,6 @@ function renderAll(){
   renderWaterEnded();
   renderWells();
   renderBaths();
-  renderToiletCars();
   renderBriefings();
   renderMap();
 }
